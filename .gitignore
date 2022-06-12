@@ -1,0 +1,8 @@
+.vscode/
+lib/headers/*
+!lib/headers/loader/
+__pycache__/
+build.ninja
+.headers/
+.ninja_log
+.build/

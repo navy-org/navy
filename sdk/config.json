@@ -1,0 +1,31 @@
+{
+    "qemu-exec": "qemu-system-x86_64",
+    "qemuflags": [
+        "-m 4G",
+        "-enable-kvm",
+        "-no-reboot",
+        "-serial stdio"
+    ],
+
+    "cc": "clang",
+    "cflags": [
+        "-ggdb",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-std=gnu2x",
+        "-Wvla",
+        "-Ilib/headers",
+        "-I.headers"
+    ],
+
+    "ld": "ld.lld",
+    "ldflags": [],
+
+    "as": "nasm",
+    "asflags": [
+        "-felf64",
+        "-Fdwarf",
+        "-g"
+    ]
+}

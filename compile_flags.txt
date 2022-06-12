@@ -1,0 +1,10 @@
+-xc++
+-std=gnu++2b
+-fno-exceptions
+-fno-rtti
+-fsanitize=address
+-fsanitize=undefined
+-Wall
+-Wextra
+-Werror
+-I.headers/

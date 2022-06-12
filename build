@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import argparse 
+
+from json import load as json_load
+from sdk.build import buildAll
+from shutil import rmtree
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Navy Build System")
+    parser.add_argument("-b", "--build", action="store_true", help="Compile the system")
+    parser.add_argument("-B", "--boot",  action="store_true", help="Boot the system using QEMU")
+    parser.add_argument("-c", "--clean", action="store_true", help="Clean the build directory")
+    args = parser.parse_args()
+
+    if not sum(vars(args).values()):
+        parser.print_help()
+
+
+    cfgFile = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "sdk", "config.json"))
+    cfg = json_load(cfgFile)
+        
+    if args.build:
+        buildAll(cfg)
+
+    if args.clean:
+        rmtree(".build")
