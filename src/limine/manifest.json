@@ -2,17 +2,14 @@
     "id": "limine",
     "description": "x86/x86_64 BIOS/UEFI Bootloader.",
     "type": "lib",
-    "download": {
-        "src": "https://github.com/limine-bootloader/limine/raw/v3.5.3-binary/BOOTX64.EFI",
-        "dst": "/EFI/BOOT/BOOTX64.EFI",
-        "sysroot": true
-    },
-    
-    "to-sysroot": [
+    "install": [ 
+        {
+            "url": "https://github.com/limine-bootloader/limine/raw/v3.5.3-binary/BOOTX64.EFI",
+            "dst": "/EFI/BOOT/BOOTX64.EFI"
+        },
         {
             "src": "limine.cfg",
             "dst": "/boot/limine.cfg"
         }
     ]
-        
 }

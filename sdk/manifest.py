@@ -34,28 +34,28 @@ def compileManifests(basedir: path) -> dict[path, json]:
         result[manifest["id"]] = manifest
         result[manifest["id"]]["src"] = find_source(os.path.join(basedir, src))
 
-        if "download" in manifest:
-            tmp = manifest["download"]
-            downloadFile(tmp["src"], tmp["dst"], tmp["sysroot"])
+        if "install" in manifest:
+            for install in manifest["install"]:
+                if len(install.keys()) > 2 or "dst" not in install:
+                    raise Exception("What are you doing ?")
 
-        if "to-sysroot" in manifest:
-            for file in manifest["to-sysroot"]:
-                dst_dir = os.path.join(
-                    os.path.dirname(os.path.realpath(__file__)),
-                    "..",
-                    ".build",
-                    "sysroot",
-                    os.path.dirname(file["dst"][1:]),
-                )
-
-                if not os.path.isdir(dst_dir):
-                    Path(dst_dir).mkdir(
-                        parents=True, exist_ok=True
+                if "url" in install:
+                    downloadFile(install["url"], install["dst"], True)
+                elif "src" in install:
+                    dst_dir = os.path.join(
+                        os.path.dirname(os.path.realpath(__file__)),
+                        "..",
+                        ".build",
+                        "sysroot",
+                        os.path.dirname(install["dst"][1:]),
                     )
-                copyfile(
-                    os.path.join(os.path.dirname(manifest_path), file["src"]),
-                    os.path.join(dst_dir, os.path.basename(file["dst"])),
-                )
+
+                    if not os.path.isdir(dst_dir):
+                        Path(dst_dir).mkdir(parents=True, exist_ok=True)
+                    copyfile(
+                        os.path.join(os.path.dirname(manifest_path), install["src"]),
+                        os.path.join(dst_dir, os.path.basename(install["dst"])),
+                    )
 
         if manifest["type"] == "lib":
             compile_header(os.path.join(basedir, src))

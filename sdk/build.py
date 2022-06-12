@@ -9,10 +9,11 @@ import os
 from json import load as json_load
 from typing import TextIO
 
+
 def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
     if len(manifest["src"]) == 0:
         return
-    
+
     objs = []
     cc = "cc"
     ld = "ld"
@@ -50,12 +51,16 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
             objs.append(os.path.join(out, "..", "sysroot", "lib", f"{deps}.a"))
 
     bin = ""
-    
+
     if manifest["type"] == "exe":
-        bin = os.path.join(os.path.join(out, "..", "sysroot", "bin", f"{manifest['id']}.elf"))
+        bin = os.path.join(
+            os.path.join(out, "..", "sysroot", "bin", f"{manifest['id']}.elf")
+        )
         writer.build(bin, ld, objs)
     elif manifest["type"] == "lib":
-        bin = os.path.join(os.path.join(out, "..", "sysroot", "lib", f"{manifest['id']}.a"))
+        bin = os.path.join(
+            os.path.join(out, "..", "sysroot", "lib", f"{manifest['id']}.a")
+        )
         writer.build(bin, "ar", objs)
     else:
         return None
@@ -64,9 +69,11 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
     return bin
 
 
-def deps_track(config: json, manifests: json, module: json, writer: Writer, built: list[str]):
+def deps_track(
+    config: json, manifests: json, module: json, writer: Writer, built: list[str]
+):
     ret = []
-    
+
     if "depends" in module and module["depends"]:
         for mod in module["depends"]:
             if mod not in built:
@@ -77,6 +84,7 @@ def deps_track(config: json, manifests: json, module: json, writer: Writer, buil
     built.append(module["id"])
 
     return ret
+
 
 def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
     all = []
@@ -106,6 +114,7 @@ def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
 
     all = list(filter(lambda s: s is not None, all))
     writer.build("all", "phony", all)
+
 
 def buildAll(cfg: json) -> None:
     manifests = compileManifests(
