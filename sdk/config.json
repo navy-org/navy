@@ -27,5 +27,8 @@
         "-felf64",
         "-Fdwarf",
         "-g"
-    ]
+    ],
+
+    "ar": "llvm-ar",
+    "arflags": "rcs"
 }

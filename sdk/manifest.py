@@ -30,15 +30,16 @@ def compileManifests(basedir: path) -> dict[path, json]:
             raise Exception("Invalid package")
 
         fp = open(manifest_path, "r")
-        result[manifest_path] = json_load(fp)
-        result[manifest_path]["src"] = find_source(os.path.join(basedir, src))
+        manifest = json_load(fp)
+        result[manifest["id"]] = manifest
+        result[manifest["id"]]["src"] = find_source(os.path.join(basedir, src))
 
-        if "download" in result[manifest_path]:
-            tmp = result[manifest_path]["download"]
+        if "download" in manifest:
+            tmp = manifest["download"]
             downloadFile(tmp["src"], tmp["dst"], tmp["sysroot"])
 
-        if "to-sysroot" in result[manifest_path]:
-            for file in result[manifest_path]["to-sysroot"]:
+        if "to-sysroot" in manifest:
+            for file in manifest["to-sysroot"]:
                 dst_dir = os.path.join(
                     os.path.dirname(os.path.realpath(__file__)),
                     "..",
@@ -56,7 +57,7 @@ def compileManifests(basedir: path) -> dict[path, json]:
                     os.path.join(dst_dir, os.path.basename(file["dst"])),
                 )
 
-        if result[manifest_path]["type"] == "lib":
+        if manifest["type"] == "lib":
             compile_header(os.path.join(basedir, src))
 
     return result

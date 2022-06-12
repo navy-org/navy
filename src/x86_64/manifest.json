@@ -1,0 +1,8 @@
+{
+    "id": "x86_64",
+    "description": "Kernel dependant code for amd64",
+    "type": "lib",
+    "depends": [
+        "copland"
+    ]
+}

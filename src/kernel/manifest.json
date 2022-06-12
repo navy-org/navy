@@ -2,6 +2,10 @@
     "id": "kernel",
     "description": "The main component",
     "type": "exe",
+    "depends": [
+        "copland",
+        "x86_64"
+    ],
 
     "flag_addons": {
         "cflags": [
