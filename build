@@ -8,6 +8,17 @@ from json import load as json_load
 from sdk.build import buildAll
 from shutil import rmtree
 
+from sdk.utils import downloadFile, json
+
+
+def bootSystem(cfg: json):
+    downloadFile(
+        "https://retrage.github.io/edk2-nightly/bin/DEBUGX64_OVMF.fd", "bios", False
+    )
+    os.system(
+        f"{cfg['qemu-exec']} -bios {os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bios')} {' '.join(cfg['qemuflags'])} -drive file=fat:rw:{os.path.join(os.path.dirname(os.path.realpath(__file__)), '.build', 'sysroot')},media=disk,format=raw"
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Navy Build System")
@@ -33,6 +44,7 @@ if __name__ == "__main__":
     cfgFile = open(
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "sdk", "config.json")
     )
+
     cfg = json_load(cfgFile)
 
     if args.build:
@@ -41,9 +53,11 @@ if __name__ == "__main__":
 
     if args.clean:
         rmtree(".build")
-    
+
     if args.boot:
-        bootSystem()
+        buildAll(cfg)
+        os.system("ninja")
+        bootSystem(cfg)
 
     if args.nuke:
         try:

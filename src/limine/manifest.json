@@ -6,5 +6,13 @@
         "src": "https://github.com/limine-bootloader/limine/raw/v3.5.3-binary/BOOTX64.EFI",
         "dst": "/EFI/BOOT/BOOTX64.EFI",
         "sysroot": true
-    }
+    },
+    
+    "to-sysroot": [
+        {
+            "src": "limine.cfg",
+            "dst": "/boot/limine.cfg"
+        }
+    ]
+        
 }

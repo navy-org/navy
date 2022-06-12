@@ -53,7 +53,7 @@ def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
             writer.newline()
 
         out = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "..", ".build", manifest["id"]
+            os.path.dirname(os.path.realpath(__file__)), "..", ".build"
         )
 
         for file in manifest["src"]:
@@ -61,8 +61,9 @@ def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
             writer.build(objs[-1], cc, file)
 
         bin = ""
-        if manifest["type"] != "lib":
-            bin = os.path.join(out, f"{out}.elf")
+        if manifest["type"] == "exe":
+            bin = os.path.join(os.path.join(out, "sysroot", "bin", f"{manifest['id']}.elf"))
+            print(bin)
             writer.build(bin, ld, objs)
         else:
             continue

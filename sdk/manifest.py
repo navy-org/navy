@@ -6,6 +6,7 @@ from .header_compiler import compile_header
 
 import os
 from json import load as json_load
+from shutil import copyfile
 
 
 def find_source(basedir) -> list[path]:
@@ -35,6 +36,25 @@ def compileManifests(basedir: path) -> dict[path, json]:
         if "download" in result[manifest_path]:
             tmp = result[manifest_path]["download"]
             downloadFile(tmp["src"], tmp["dst"], tmp["sysroot"])
+
+        if "to-sysroot" in result[manifest_path]:
+            for file in result[manifest_path]["to-sysroot"]:
+                dst_dir = os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)),
+                    "..",
+                    ".build",
+                    "sysroot",
+                    os.path.dirname(file["dst"][1:]),
+                )
+
+                if not os.path.isdir(dst_dir):
+                    Path(dst_dir).mkdir(
+                        parents=True, exist_ok=True
+                    )
+                copyfile(
+                    os.path.join(os.path.dirname(manifest_path), file["src"]),
+                    os.path.join(dst_dir, os.path.basename(file["dst"])),
+                )
 
         if result[manifest_path]["type"] == "lib":
             compile_header(os.path.join(basedir, src))
