@@ -1,5 +1,0 @@
-{
-    "id": "loader",
-    "description": "Mostly third party stuff. Bootloader for the kernel",
-    "type": "lib"
-}

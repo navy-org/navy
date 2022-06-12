@@ -50,25 +50,28 @@ def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
                     case _:
                         raise Exception(f"Unknown addon flag: {manifest}")
 
-            writer.newline() 
+            writer.newline()
 
-        out = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".build", manifest["id"])
+        out = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "..", ".build", manifest["id"]
+        )
 
-        for file in manifest['src']:
+        for file in manifest["src"]:
             objs.append(os.path.join(out, f"{os.path.basename(file)}.o"))
             writer.build(objs[-1], cc, file)
-        
+
         bin = ""
-        if manifest['type'] != 'lib':
+        if manifest["type"] != "lib":
             bin = os.path.join(out, f"{out}.elf")
             writer.build(bin, ld, objs)
         else:
             continue
-        
+
         all.append(bin)
         writer.newline()
-     
+
     writer.build("all", "phony", all)
+
 
 def buildAll(cfg: json) -> None:
     manifests = compileManifests(
@@ -76,6 +79,7 @@ def buildAll(cfg: json) -> None:
     )
 
     ninjaFp = open(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "build.ninja"), "w"
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "build.ninja"),
+        "w",
     )
     genNinja(ninjaFp, cfg, manifests)

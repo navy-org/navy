@@ -2,28 +2,53 @@
 # -*- coding: utf-8 -*-
 
 import os
-import argparse 
+import argparse
 
 from json import load as json_load
 from sdk.build import buildAll
 from shutil import rmtree
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Navy Build System")
-    parser.add_argument("-b", "--build", action="store_true", help="Compile the system")
-    parser.add_argument("-B", "--boot",  action="store_true", help="Boot the system using QEMU")
-    parser.add_argument("-c", "--clean", action="store_true", help="Clean the build directory")
+
+    parser.add_argument(
+        "-b", "--build", action="store_true", help="Compile the Navy system"
+    )
+    parser.add_argument(
+        "-B", "--boot", action="store_true", help="Boot the system using QEMU"
+    )
+    parser.add_argument(
+        "-c", "--clean", action="store_true", help="Clean the build directory"
+    )
+    parser.add_argument(
+        "-n", "--nuke", action="store_true", help="Nuke the project! Like in fallout"
+    )
+
     args = parser.parse_args()
 
     if not sum(vars(args).values()):
         parser.print_help()
 
-
-    cfgFile = open(os.path.join(os.path.dirname(os.path.realpath(__file__)), "sdk", "config.json"))
+    cfgFile = open(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "sdk", "config.json")
+    )
     cfg = json_load(cfgFile)
-        
+
     if args.build:
         buildAll(cfg)
+        os.system("ninja")
 
     if args.clean:
         rmtree(".build")
+    
+    if args.boot:
+        bootSystem()
+
+    if args.nuke:
+        try:
+            rmtree(".headers")
+            os.remove("build.ninja")
+            rmtree(".build")
+        except FileNotFoundError:
+            pass

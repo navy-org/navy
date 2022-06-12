@@ -38,13 +38,13 @@ def merge_headers(path: path, fp: TextIO) -> None:
 
 
 def compile_header(lib_path):
-    header_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".headers")
+    header_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", ".headers"
+    )
     if not os.path.isdir(header_path):
         os.mkdir(header_path)
 
-    if need_compile(
-        lib_path, header_path
-    ):
+    if need_compile(lib_path, header_path):
         fp = open(os.path.join(header_path, os.path.basename(lib_path)), "w")
         fp.write("#pragma once\n")
         merge_headers(lib_path, fp)

@@ -7,6 +7,7 @@ from .header_compiler import compile_header
 import os
 from json import load as json_load
 
+
 def find_source(basedir) -> list[path]:
     ret = []
     for node in os.listdir(basedir):
@@ -16,8 +17,9 @@ def find_source(basedir) -> list[path]:
                 ret.append(filename)
         elif os.path.isdir(node):
             ret += find_source(filename)
-    
+
     return ret
+
 
 def compileManifests(basedir: path) -> dict[path, json]:
     result: dict[path, json] = {}
@@ -25,12 +27,16 @@ def compileManifests(basedir: path) -> dict[path, json]:
         manifest_path = os.path.join(basedir, src, "manifest.json")
         if not os.path.isfile(manifest_path):
             raise Exception("Invalid package")
-        
+
         fp = open(manifest_path, "r")
         result[manifest_path] = json_load(fp)
         result[manifest_path]["src"] = find_source(os.path.join(basedir, src))
 
+        if "download" in result[manifest_path]:
+            tmp = result[manifest_path]["download"]
+            downloadFile(tmp["src"], tmp["dst"], tmp["sysroot"])
+
         if result[manifest_path]["type"] == "lib":
             compile_header(os.path.join(basedir, src))
-    
+
     return result
