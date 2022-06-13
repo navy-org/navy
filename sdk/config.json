@@ -1,9 +1,11 @@
 {
     "qemu-exec": "qemu-system-x86_64",
     "qemuflags": [
+        "-d int",
         "-m 4G",
         "-enable-kvm",
         "-no-reboot",
+        "-no-shutdown",
         "-serial stdio"
     ],
 

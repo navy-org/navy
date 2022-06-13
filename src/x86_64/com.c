@@ -1,6 +1,7 @@
-#include <x86_64>
+#include "com.h"
+#include "asm.h" 
 
-void com_putc(Io *self, char c)
+void com_putc(Writer *self, char c)
 {
     Com *com = (Com *) self;
     
@@ -21,7 +22,7 @@ Com com_init(ComPort port)
     asm_out8(port + 4, 0x0f);
 
     return (Com) {
-        .funcs = io_init(com_putc),
+        .funcs = writer_init(com_putc),
         .port = port
     };
 }

@@ -20,9 +20,12 @@ def downloadFile(source: path, dest: path, is_sysroot: bool):
     if r.status_code != 200:
         assert Exception(f"Impossible to download {dest}")
 
-    dst_path = os.path.join(dst_path, os.path.dirname(dest[1:]))
-    if not os.path.isdir(os.path.dirname(dst_path)):
+    if dest[0] == '/':
+        dest = dest[1:]
+    
+    dst_path = os.path.join(dst_path, os.path.dirname(dest))
+    if not os.path.isdir(dst_path):
         Path(dst_path).mkdir(parents=True, exist_ok=True)
 
-    with open(os.path.join(dst_path, os.path.basename(dest[1:])), "wb") as f:
+    with open(os.path.join(dst_path, os.path.basename(dest)), "wb") as f:
         f.write(r.content)

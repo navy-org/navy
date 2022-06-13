@@ -1,10 +1,10 @@
 #pragma once 
 
-typedef struct _Io
+typedef struct _Writer 
 {
-    void (*putc)(struct _Io *self, char c);
-    void (*puts)(struct _Io *self, char const *s);
-} Io;
+    void (*putc)(struct _Writer *self, char c);
+    void (*puts)(struct _Writer *self, char const *s);
+} Writer;
 
-void io_puts(Io *self, char const *s);
-Io io_init(void (*putc)(Io *, char));
+void writer_puts(Writer *self, char const *s);
+Writer writer_init(void (*putc)(Writer *, char));

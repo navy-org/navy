@@ -5,6 +5,7 @@ from .utils import *
 
 import os
 from typing import TextIO
+from shutil import copyfile
 
 
 def need_compile(path: path, header_path: path) -> bool:
@@ -49,3 +50,16 @@ def compile_header(lib_path):
         fp.write("#pragma once\n")
         merge_headers(lib_path, fp)
         fp.close()
+
+
+def copy_header(lib_path):
+    header_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "..", ".headers"
+    )
+
+    if not os.path.isdir(header_path):
+        os.mkdir(header_path)
+
+    for file in os.listdir(lib_path):
+        if file.endswith(".h"):
+            copyfile(os.path.join(lib_path, file), os.path.join(header_path, file))

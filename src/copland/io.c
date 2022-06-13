@@ -1,6 +1,6 @@
 #include <copland>
 
-void io_puts(Io *self, char const *s)
+void writer_puts(Writer *self, char const *s)
 {
     while (*s)
     {
@@ -8,10 +8,10 @@ void io_puts(Io *self, char const *s)
     }
 }
 
-Io io_init(void (*putc)(Io *, char))
+Writer writer_init(void (*putc)(Writer *, char))
 {
-    return (Io) {
+    return (Writer) {
         .putc = putc,
-        .puts = io_puts
+        .puts = writer_puts
     };
 }

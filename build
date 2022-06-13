@@ -20,6 +20,26 @@ def bootSystem(cfg: json):
     )
 
 
+def bootSystemLegacy(cfg: json):
+    os.system(
+        f"xorriso -as mkisofs -b /boot/limine-cd.bin \
+		-no-emul-boot -boot-load-size 4 -boot-info-table \
+		--efi-boot /boot/limine-cd-efi.bin \
+		-efi-boot-part --efi-boot-image --protective-msdos-label \
+		{os.path.join(os.path.dirname(os.path.realpath(__file__)), '.build', 'sysroot')} -o navy.iso"
+    )
+
+    if not os.path.isfile("./limine-deploy"):
+        downloadFile("https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-deploy.c", "limine-deploy.c", False)
+        downloadFile("https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-hdd.h", "limine-hdd.h", False)
+        os.system("cc -g -O2 -pipe -Wall -Wextra -std=c99 limine-deploy.c -o limine-deploy")
+        os.remove("limine-deploy.c")
+        os.remove("limine-hdd.h")
+
+    os.system("./limine-deploy ./navy.iso")
+    os.system(f"{cfg['qemu-exec']} {' '.join(cfg['qemuflags'])} -cdrom navy.iso")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Navy Build System")
 
@@ -29,6 +49,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "-B", "--boot", action="store_true", help="Boot the system using QEMU"
     )
+
+    parser.add_argument(
+        "-l",
+        "--legacy",
+        action="store_true",
+        help="Boot the system in legacy mode using QEMU",
+    )
+
     parser.add_argument(
         "-c", "--clean", action="store_true", help="Clean the build directory"
     )
@@ -58,6 +86,11 @@ if __name__ == "__main__":
         buildAll(cfg)
         os.system("ninja")
         bootSystem(cfg)
+
+    if args.legacy:
+        buildAll(cfg)
+        os.system("ninja")
+        bootSystemLegacy(cfg)
 
     if args.nuke:
         try:

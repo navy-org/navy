@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from .utils import *
-from .header_compiler import compile_header
+from .header_compiler import compile_header, copy_header
 
 import os
 from json import load as json_load
@@ -27,7 +27,7 @@ def compileManifests(basedir: path) -> dict[path, json]:
     for src in os.listdir(basedir):
         manifest_path = os.path.join(basedir, src, "manifest.json")
         if not os.path.isfile(manifest_path):
-            raise Exception("Invalid package")
+            raise Exception(f"Invalid package: {manifest_path}")
 
         fp = open(manifest_path, "r")
         manifest = json_load(fp)
@@ -58,6 +58,9 @@ def compileManifests(basedir: path) -> dict[path, json]:
                     )
 
         if manifest["type"] == "lib":
-            compile_header(os.path.join(basedir, src))
+            if "donotcompile" in manifest and manifest["donotcompile"] == True:
+                copy_header(os.path.join(basedir, src))
+            else:
+                compile_header(os.path.join(basedir, src))
 
     return result

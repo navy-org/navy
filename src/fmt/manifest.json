@@ -1,0 +1,9 @@
+{
+    "id": "fmt",
+    "description": "Based of the public concept libcfmt by Sleepy Monax",
+    "type": "lib",
+    "depends": [
+        "copland",
+        "libc"
+    ]
+}

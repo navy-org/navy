@@ -79,6 +79,8 @@ def deps_track(
             if mod not in built:
                 ret += deps_track(config, manifests, manifests[mod], writer, built)
 
+        module["depends"] = list(set(module["depends"] + built))
+
     bin = build_manifest(config, module, writer)
     ret.append(bin)
     built.append(module["id"])
@@ -104,13 +106,13 @@ def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
     writer.rule("ar", f"{config['ar']} {config['arflags']} $out $in")
     writer.newline()
 
-    # for manifest in manifests.values():
+    built = []
     while manifests:
-        built = []
         all += deps_track(config, manifests, list(manifests.values())[0], writer, built)
 
         for mod in built:
-            del manifests[mod]
+            if mod in manifests:
+                del manifests[mod]
 
     all = list(filter(lambda s: s is not None, all))
     writer.build("all", "phony", all)

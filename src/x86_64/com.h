@@ -17,10 +17,9 @@ typedef enum
 
 typedef struct 
 {
-    Io funcs;
+    Writer funcs;
     ComPort port;
 } Com;
 
-void com_putc(Io *self, char c);
-void com_puts(Io *self, char const *s);
+void com_putc(Writer *self, char c);
 Com com_init(ComPort port);

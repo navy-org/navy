@@ -8,3 +8,5 @@ build.ninja
 .build/
 bios
 ios
+limine-deploy
+navy.iso

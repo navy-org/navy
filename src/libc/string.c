@@ -1,0 +1,23 @@
+#include <string.h>
+
+size_t strlen(char const *s)
+{
+    size_t size = 0;
+    while (*s) 
+    {
+        size++;
+    }
+
+    return size;
+}
+
+void *memset(void *s, int c, size_t n)
+{
+    int *sc = (int *) s;
+    for (size_t i = 0; i < n; i++)
+    {
+        sc[i] = c;
+    }
+
+    return (void *) sc;
+}
