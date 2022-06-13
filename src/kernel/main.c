@@ -12,7 +12,6 @@ int _start(void)
     (void) terminal_request;
 
     Com debug = com_init(COM1);
-    debug.funcs.puts((Writer *) &debug, "Ok !\n");
     fmt$(&debug, "Hello {}", "World");
 
     loop;

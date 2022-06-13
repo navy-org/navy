@@ -33,8 +33,6 @@ void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
         .offset = 0
     };
 
-    return;
-
     size_t current_value = 0;
 
     while (current(&parser) != '\0')
@@ -155,5 +153,9 @@ void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
         {
             writer->putc(writer, current(&parser));
         }
+
+        next(&parser);
     }
+
+    writer->putc(writer, '\n');
 }

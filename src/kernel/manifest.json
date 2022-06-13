@@ -12,7 +12,6 @@
         "cflags": [
             "-ffreestanding",
             "-target x86_64-elf-none",
-            "-fno-stack-protector",
             "-mno-80387",
             "-mno-mmx", 
             "-mno-3dnow",

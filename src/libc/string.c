@@ -2,13 +2,15 @@
 
 size_t strlen(char const *s)
 {
-    size_t size = 0;
-    while (*s) 
+    size_t i = 0;
+
+    if (s == NULL)
     {
-        size++;
+        return 0;
     }
 
-    return size;
+    while (s[i++] != '\0');
+    return i - 1;
 }
 
 void *memset(void *s, int c, size_t n)
