@@ -1,7 +1,7 @@
 #pragma once 
 
-#include <map-macro>
-#include <copland>
+#include <map-macro/map.h>
+#include <copland/io.h>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -33,6 +33,12 @@ typedef struct
     size_t offset;
 } FmtParser;
 
+typedef struct
+{
+    size_t count;
+    FmtValue *values;
+} FmtArgs;
+
 static inline FmtValue fmtvali(int64_t val)
 {
     return (FmtValue) {
@@ -60,17 +66,26 @@ static inline FmtValue fmtvalc(char val)
 #define SELECT_VALUE(__value) _Generic (                \
     (__value),                                          \
     int: fmtvali,                                       \
+    size_t: fmtvali,                                    \
     char const *: fmtvalcs,                             \
     char *: fmtvalcs,                                   \
     char: fmtvalc                                       \
 )(__value),
 
-#define fmt$(w, __format, __arguments...)               \
-    fmt_impl(                                           \
-        (Writer *) (w),                                 \
-        (__format),                                     \
-        (FmtValue[]){MAP(SELECT_VALUE, __arguments)},   \
-        GET_ARG_COUNT(__arguments)                      \
-    )                                                   \
+#define PRINT_ARGS_(...)                                                                           \
+    (FmtArgs)                                                                                      \
+    {                                                                                              \
+        0, (FmtValue[]){},                                                                         \
+    }
 
-void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count);
+#define PRINT_ARGS_N(...)                                                                          \
+    (FmtArgs)                                                                                      \
+    {                                                                                              \
+        GET_ARG_COUNT(__VA_ARGS__), (FmtValue[]){MAP(SELECT_VALUE, __VA_ARGS__)},                  \
+    }
+
+#define PRINT_ARGS(...) PRINT_ARGS_##__VA_OPT__(N)(__VA_ARGS__)
+
+#define fmt$(WRITER, FORMAT, ...) fmt_impl((Writer *) WRITER, FORMAT, PRINT_ARGS(__VA_ARGS__))
+
+void fmt_impl(Writer *writer, char const *fmt, FmtArgs args);

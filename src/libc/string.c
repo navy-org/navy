@@ -15,11 +15,30 @@ size_t strlen(char const *s)
 
 void *memset(void *s, int c, size_t n)
 {
-    int *sc = (int *) s;
-    for (size_t i = 0; i < n; i++)
+    if (n)
     {
-        sc[i] = c;
+        char *d = (char *) s;
+
+        while (n--)
+        {
+            *d++ = c;
+        }
     }
 
-    return (void *) sc;
+    return s;
+}
+
+char *strrchr(const char *s, int c)
+{
+    size_t length = strlen(s);
+    size_t pos = length;
+
+    while (s[pos] != c && pos-- > 0);
+
+    if (pos == length)
+    {
+        return NULL;
+    }
+
+    return (char *) s + pos;
 }

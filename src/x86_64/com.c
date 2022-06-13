@@ -1,5 +1,5 @@
 #include "com.h"
-#include "asm.h" 
+#include "asm.h"
 
 void com_putc(Writer *self, char c)
 {

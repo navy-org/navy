@@ -30,9 +30,19 @@ def bootSystemLegacy(cfg: json):
     )
 
     if not os.path.isfile("./limine-deploy"):
-        downloadFile("https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-deploy.c", "limine-deploy.c", False)
-        downloadFile("https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-hdd.h", "limine-hdd.h", False)
-        os.system("cc -g -O2 -pipe -Wall -Wextra -std=c99 limine-deploy.c -o limine-deploy")
+        downloadFile(
+            "https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-deploy.c",
+            "limine-deploy.c",
+            False,
+        )
+        downloadFile(
+            "https://raw.githubusercontent.com/limine-bootloader/limine/v3.5.4-binary/limine-hdd.h",
+            "limine-hdd.h",
+            False,
+        )
+        os.system(
+            "cc -g -O2 -pipe -Wall -Wextra -std=c99 limine-deploy.c -o limine-deploy"
+        )
         os.remove("limine-deploy.c")
         os.remove("limine-hdd.h")
 
@@ -84,17 +94,21 @@ if __name__ == "__main__":
 
     if args.boot:
         buildAll(cfg)
-        os.system("ninja")
+        if os.system("ninja") != 0:
+            exit(1)
+
         bootSystem(cfg)
 
     if args.legacy:
         buildAll(cfg)
-        os.system("ninja")
+
+        if os.system("ninja") != 0:
+            exit(1)
+
         bootSystemLegacy(cfg)
 
     if args.nuke:
         try:
-            rmtree(".headers")
             os.remove("build.ninja")
             rmtree(".build")
         except FileNotFoundError:

@@ -1,6 +1,6 @@
-#include <limine>
-#include <x86_64>
-#include <fmt>
+#include <limine/limine.h>
+#include <x86_64/com.h>
+#include <copland/base.h>
 
 static struct limine_terminal_request terminal_request = {
     .id = LIMINE_TERMINAL_REQUEST,
@@ -12,7 +12,8 @@ int _start(void)
     (void) terminal_request;
 
     Com debug = com_init(COM1);
-    fmt$(&debug, "Hello {}", "World");
+    define_debug_out((Writer *) &debug);
+    log$("Hello, World !");
 
     loop;
 }

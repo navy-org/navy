@@ -25,7 +25,7 @@ static char next(FmtParser *parser)
     return current(parser);
 }
 
-void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
+void fmt_impl(Writer *writer, char const *fmt, FmtArgs args)
 {
     FmtParser parser = (FmtParser) {
         .fmt = fmt,
@@ -51,32 +51,31 @@ void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
                 }
             }
 
-            if (current_value < count)
+            if (current_value < args.count)
             {
-                switch (value[current_value].type)
+                switch (args.values[current_value].type)
                 {
                     case FMT_CHAR:
                     {
-                        writer->putc(writer, value[current_value]._char);
+                        writer->putc(writer, args.values[current_value]._char);
                         break;
                     }
 
                     case FMT_STR:
                     case FMT_CSTR:
                     {
-                        writer->puts(writer, value[current_value]._str);
+                        writer->puts(writer, args.values[current_value]._str);
                         break;
                     }
 
                     case FMT_INT:
                     {
                         char unit[3] = {0, 'B', 0};
-                        char buffer[256];
+                        char buffer[256] = {0};
                         char padBuffer[32] = {0};
                         char base = 10;
                         size_t pad = 0;
-                        int64_t nbr = value[current_value]._int;
-                        memset(buffer, 0, 256);
+                        int64_t nbr = args.values[current_value]._int;
 
                         switch (mode)
                         {
@@ -146,6 +145,8 @@ void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
                         break;
                     }
                 }
+
+                current_value++;
             }
 
         }
@@ -156,6 +157,4 @@ void fmt_impl(Writer *writer, char const *fmt, FmtValue *value, size_t count)
 
         next(&parser);
     }
-
-    writer->putc(writer, '\n');
 }

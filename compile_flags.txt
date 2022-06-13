@@ -7,4 +7,5 @@
 -Wall
 -Wextra
 -Werror
--I.headers/
+-I./src
+-I./src/libc

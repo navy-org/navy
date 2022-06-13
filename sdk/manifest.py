@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from .utils import *
-from .header_compiler import compile_header, copy_header
 
 import os
 from json import load as json_load
@@ -56,11 +55,5 @@ def compileManifests(basedir: path) -> dict[path, json]:
                         os.path.join(os.path.dirname(manifest_path), install["src"]),
                         os.path.join(dst_dir, os.path.basename(install["dst"])),
                     )
-
-        if manifest["type"] == "lib":
-            if "donotcompile" in manifest and manifest["donotcompile"] == True:
-                copy_header(os.path.join(basedir, src))
-            else:
-                compile_header(os.path.join(basedir, src))
 
     return result

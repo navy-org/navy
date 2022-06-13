@@ -1,4 +1,8 @@
 {
     "id": "copland",
-    "type": "lib"
+    "type": "lib",
+
+    "depends": [
+        "fmt"
+    ]
 }

@@ -11,6 +11,8 @@
 
     "cc": "clang",
     "cflags": [
+        "-mno-sse",
+        "-mno-sse2",
         "-fno-stack-protector",
         "-ggdb",
         "-Wall",
@@ -19,7 +21,8 @@
         "-std=gnu2x",
         "-Wvla",
         "-Ilib/headers",
-        "-I.headers"
+        "-I./src",
+        "-I./src/libc"
     ],
 
     "ld": "ld.lld",
