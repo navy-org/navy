@@ -5,3 +5,4 @@
 -I./src
 -I./src/libc
 -DLIMINE_BOOTLOADER
+-DARCH_X86_64

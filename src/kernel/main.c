@@ -2,7 +2,10 @@
 #include <limine/base.h>
 #endif
 
-#include <x86_64/com.h>
+#ifdef ARCH_X86_64
+#include <x86_64/base.h>
+#endif
+
 #include <copland/base.h>
 #include <handover/handover.h>
 

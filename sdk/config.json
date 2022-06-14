@@ -22,7 +22,8 @@
         "-Wvla",
         "-I./src",
         "-I./src/libc",
-        "-DLIMINE_BOOTLOADER"
+        "-DLIMINE_BOOTLOADER",
+        "-DARCH_x86_64"
     ],
 
     "ld": "ld.lld",
