@@ -1,5 +1,6 @@
 #pragma once 
 
+#include <copland/macro.h>
 #include <stdint.h>
 
 static inline uint8_t asm_in8(uint16_t port)
@@ -65,7 +66,7 @@ static inline void write_cr0(uintptr_t val)
     asm volatile("mov %0, %%cr0" ::"a"(val));
 }
 
-[[maybe_unused]] static void asm_invlpg(uintptr_t addr)
+MAYBE_UNUSED static void asm_invlpg(uintptr_t addr)
 {
     asm volatile("invlpg (%0)" ::"r"(addr): "memory");
 }

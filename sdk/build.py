@@ -17,6 +17,7 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
     objs = []
     cc = "cc"
     ld = "ld"
+    asm = "as"
 
     if "flag_addons" in manifest:
         for add in manifest["flag_addons"]:
@@ -44,7 +45,12 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
 
     for file in manifest["src"]:
         objs.append(os.path.join(out, f"{os.path.basename(file)}.o"))
-        writer.build(objs[-1], cc, file)
+
+        if file.endswith(".c"):
+            writer.build(objs[-1], cc, file)
+        elif file.endswith(".s"):
+            writer.build(objs[-1], asm, file)
+
 
     if "depends" in manifest:
         for deps in manifest["depends"]:

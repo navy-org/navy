@@ -13,7 +13,7 @@ def find_source(basedir) -> list[path]:
     for node in os.listdir(basedir):
         filename = os.path.join(basedir, node)
         if os.path.isfile(filename):
-            if filename.endswith(".c"):
+            if filename.endswith(".c") or filename.endswith(".s"):
                 ret.append(filename)
         elif os.path.isdir(node):
             ret += find_source(filename)

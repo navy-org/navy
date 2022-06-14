@@ -21,5 +21,8 @@ int _start(void)
         panic$("{}", resHandover.err);
     }
 
+    Handover handover = UNWRAP(resHandover);
+    hardware_init(&handover);
+
     loop;
 }

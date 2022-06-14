@@ -14,7 +14,7 @@ static struct limine_hhdm_request hhdm_request = {
     .revision = 0
 };
 
-[[maybe_unused]] static struct limine_module_request module_request = {
+MAYBE_UNUSED static struct limine_module_request module_request = {
     .id = LIMINE_MODULE_REQUEST,
     .revision = 0
 };
@@ -70,7 +70,7 @@ static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, s
     }
 }
 
-[[maybe_unused]] static void parse_module(Handover *handover, struct limine_file **entries, size_t count)
+MAYBE_UNUSED static void parse_module(Handover *handover, struct limine_file **entries, size_t count)
 {
     handover->module_count = count;
 
