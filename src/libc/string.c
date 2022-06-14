@@ -42,3 +42,23 @@ char *strrchr(const char *s, int c)
 
     return (char *) s + pos;
 }
+
+void *memcpy(void *dest, const void *src, size_t n)
+{
+    if (src == NULL)
+    {
+        dest = NULL;
+        return NULL;
+    }
+
+    size_t i;
+    char *cdest = (char *) dest;
+    char *csrc = (char *) src;
+
+    for (i = 0; i < n; i++)
+    {
+        cdest[i] = csrc[i];
+    }
+
+    return (void *) cdest;
+}

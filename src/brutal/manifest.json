@@ -1,0 +1,7 @@
+{
+    "id": "brutal",
+    "description": "Library from the brutal microkernel",
+    "license": "MIT",
+    "author": "Supercyp & Sleepy-Monax",
+    "type": "lib"
+}

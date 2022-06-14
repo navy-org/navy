@@ -20,9 +20,9 @@
         "-Werror",
         "-std=gnu2x",
         "-Wvla",
-        "-Ilib/headers",
         "-I./src",
-        "-I./src/libc"
+        "-I./src/libc",
+        "-DLIMINE_BOOTLOADER"
     ],
 
     "ld": "ld.lld",

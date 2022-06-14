@@ -3,6 +3,7 @@
     "type": "lib",
 
     "depends": [
-        "fmt"
+        "fmt",
+        "brutal"
     ]
 }

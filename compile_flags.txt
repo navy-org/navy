@@ -1,11 +1,7 @@
--xc++
--std=gnu++2b
--fno-exceptions
--fno-rtti
--fsanitize=address
--fsanitize=undefined
+-std=gnu2x
 -Wall
 -Wextra
 -Werror
 -I./src
 -I./src/libc
+-DLIMINE_BOOTLOADER

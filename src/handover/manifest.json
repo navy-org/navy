@@ -1,0 +1,4 @@
+{
+    "id": "handover",
+    "description": "An abstraction layer for bootloaders"
+}

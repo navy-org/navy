@@ -44,17 +44,35 @@ void fmt_impl(Writer *writer, char const *fmt, FmtArgs args)
             next(&parser);
             while (current(&parser) != '}' && current(&parser) != '\0')
             {
-                next(&parser);
                 if (current(&parser) != '}')
                 {
                     mode = current(&parser);
                 }
+                next(&parser);
             }
 
             if (current_value < args.count)
             {
                 switch (args.values[current_value].type)
                 {
+                    case FMT_RANGE:
+                    {
+                        switch (mode)
+                        {
+                            case 'e':
+                            {
+                                fmt$(writer, "{a}-{a}", args.values[current_value]._range.base, range_end$(args.values[current_value]._range));
+                                break;
+                            }
+                            default:
+                            {
+                                fmt$(writer, "(base: 0x{a}, length: {})", args.values[current_value]._range.base, args.values[current_value]._range.length);
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
                     case FMT_CHAR:
                     {
                         writer->putc(writer, args.values[current_value]._char);
@@ -62,7 +80,6 @@ void fmt_impl(Writer *writer, char const *fmt, FmtArgs args)
                     }
 
                     case FMT_STR:
-                    case FMT_CSTR:
                     {
                         writer->puts(writer, args.values[current_value]._str);
                         break;

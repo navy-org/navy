@@ -6,3 +6,4 @@
 size_t strlen(char const *s);
 char *strrchr(const char *s, int c);
 void *memset(void *s, int c, size_t n);
+void *memcpy(void *dest, const void *src, size_t n);

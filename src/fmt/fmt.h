@@ -1,7 +1,10 @@
 #pragma once 
 
 #include <map-macro/map.h>
+
+#include <brutal/str.h>
 #include <copland/io.h>
+#include <copland/range.h>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -10,8 +13,8 @@ typedef enum
 {
     FMT_INT, 
     FMT_CHAR,
-    FMT_CSTR,
     FMT_STR,
+    FMT_RANGE,
 } FmtValueType;
 
 typedef struct 
@@ -23,6 +26,7 @@ typedef struct
         int64_t _int;
         char _char;
         char const *_str;
+        Range _range;
     };
 } FmtValue;
 
@@ -50,7 +54,7 @@ static inline FmtValue fmtvali(int64_t val)
 static inline FmtValue fmtvalcs(char const *val)
 {
     return (FmtValue) {
-        .type = FMT_CSTR,
+        .type = FMT_STR,
         ._str = val
     };
 }
@@ -63,13 +67,31 @@ static inline FmtValue fmtvalc(char val)
     };
 }
 
+static inline FmtValue fmtvalr(Range val)
+{
+    return (FmtValue) {
+        .type = FMT_RANGE,
+        ._range = val
+    };
+}
+
+static inline FmtValue fmtvals(Str str)
+{
+    return (FmtValue) {
+        .type = FMT_STR,
+        ._str = str.buf
+    };
+}
+
 #define SELECT_VALUE(__value) _Generic (                \
     (__value),                                          \
     int: fmtvali,                                       \
     size_t: fmtvali,                                    \
     char const *: fmtvalcs,                             \
     char *: fmtvalcs,                                   \
-    char: fmtvalc                                       \
+    char: fmtvalc,                                      \
+    Range: fmtvalr,                                     \
+    Str: fmtvals                                        \
 )(__value),
 
 #define PRINT_ARGS_(...)                                                                           \
