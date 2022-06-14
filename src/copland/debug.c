@@ -9,6 +9,11 @@ void define_debug_out(Writer *writer)
     debugDevice = writer;
 }
 
+Writer *get_debug_out(void)
+{
+    return debugDevice;
+}
+
 void define_dbg_func(void (*dbg)(void))
 {
     dbg_fn = dbg;

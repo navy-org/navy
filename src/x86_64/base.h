@@ -2,6 +2,8 @@
 
 #include "asm.h"
 #include "com.h"
+#include "rtc.h"
+#include "regs.h"
 
 #include <handover/handover.h>
 

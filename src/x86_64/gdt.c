@@ -2,6 +2,14 @@
 
 #include <copland/debug.h>
 
+static Gdt gdt;
+static Tss tss = {0};
+
+static GdtPointer gdtDescriptor = {
+    .limit = sizeof(Gdt) - 1,
+    .base = (uintptr_t) &gdt
+};
+
 static void init_descriptor(GdtEntry *self, uint32_t base, uint32_t limit, uint8_t access)
 {
     if (access != GDT_DATA)
@@ -40,13 +48,6 @@ static TssEntry init_tss(uintptr_t self)
 
 void gdt_init(void)
 {
-    Gdt gdt;
-    Tss tss = {0};
-
-    GdtPointer gdtDescriptor = {
-        .limit = sizeof(Gdt) - 1,
-        .base = (uintptr_t) &gdt
-    };
     
     init_descriptor(&gdt.entries[GDT_NULL], 0, 0, 0);
 

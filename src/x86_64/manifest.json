@@ -3,6 +3,7 @@
     "description": "Kernel dependant code for amd64",
     "type": "lib",
     "depends": [
-        "copland"
+        "copland",
+        "libc"
     ]
 }

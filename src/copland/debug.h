@@ -15,5 +15,6 @@
 void log_impl(char const *filename, size_t line_nbr, char const *format, FmtArgs args);
 void panic_impl(char const *filename, size_t line_nbr, char const *format, FmtArgs args);
 void define_debug_out(Writer *writer);
+Writer *get_debug_out(void);
 void define_dbg_func(void (*dbg)(void));
 void raise_debug(void);

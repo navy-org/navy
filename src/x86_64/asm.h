@@ -201,3 +201,23 @@ static inline uint64_t asm_read_msr(enum msr_registers msr)
     asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"((uint64_t)msr));
     return ((uint64_t) high << 32) | low;
 }
+
+static inline void hlt(void) 
+{
+    asm ("hlt");
+}
+
+static inline void cli(void)
+{
+    asm ("cli");
+}
+
+static inline void sti(void)
+{
+    asm ("sti");
+}
+
+static inline void debug_interrupt(void)
+{
+    asm ("int $1");
+}
