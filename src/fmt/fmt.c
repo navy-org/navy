@@ -1,6 +1,6 @@
 #include "fmt.h"
 
-#include <itoa.h>
+#include "itoa.h"
 #include <string.h>
 
 static char current(FmtParser *parser)
