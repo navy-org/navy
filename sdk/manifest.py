@@ -30,8 +30,13 @@ def compileManifests(basedir: path) -> dict[path, json]:
 
         fp = open(manifest_path, "r")
         manifest = json_load(fp)
+        srcs = find_source(os.path.join(basedir, src))
+
+        if not srcs:
+            continue
+
         result[manifest["id"]] = manifest
-        result[manifest["id"]]["src"] = find_source(os.path.join(basedir, src))
+        result[manifest["id"]]["src"] = srcs
 
         if "install" in manifest:
             for install in manifest["install"]:
