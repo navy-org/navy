@@ -144,7 +144,7 @@ void fmt_impl(Writer *writer, char const *fmt, FmtArgs args)
                             }
                         }
 
-                        itoa(nbr, buffer, base);
+                        itoa(nbr, buffer, base, 256);
 
                         if (strlen(buffer) < pad)
                         {
