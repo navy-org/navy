@@ -82,7 +82,7 @@ void pmm_init(Handover *handover)
     });
 }
 
-PmmOption pmm_alloc(size_t size)
+RangeOption pmm_alloc(size_t size)
 {
     Range range = {0};
 
@@ -112,12 +112,12 @@ PmmOption pmm_alloc(size_t size)
     {
         if (last_index == 0)
         {
-            return NONE(PmmOption);
+            return NONE(RangeOption);
         }
 
         last_index = 0;
         return pmm_alloc(size);
     }
 
-    return SOME(PmmOption, range);
+    return SOME(RangeOption, range);
 }
