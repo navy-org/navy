@@ -76,7 +76,11 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "-d", "--debug", action="store_true", help="Down with the gdb !"
+        "-d", "--soft-debug", action="store_true", help="Maybe there is something wrong with the IDT"
+    )
+
+    parser.add_argument(
+        "-D", "--hard-debug", action="store_true", help="Down with the gdb !"
     )
 
     args = parser.parse_args()
@@ -119,7 +123,18 @@ if __name__ == "__main__":
         except FileNotFoundError:
             pass
 
-    if args.debug:
+    if args.soft_debug:
+        buildAll(cfg)
+
+        if os.system("ninja") != 0:
+            exit(1)
+
+        cfg["qemuflags"].remove("-enable-kvm")
+        cfg["qemuflags"].append("-d int")
+
+        bootSystem(cfg)
+
+    if args.hard_debug:
         try:
             os.remove("build.ninja")
             rmtree(".build")
@@ -128,6 +143,8 @@ if __name__ == "__main__":
 
         cfg["cflags"].append("-DKERNEL_DEBUG")
         cfg["qemuflags"].append("-s -S")
+        cfg["qemuflags"].append("-d int")
+        cfg["qemuflags"].remove("-enable-kvm")
 
         buildAll(cfg)
         if os.system("ninja") != 0:
