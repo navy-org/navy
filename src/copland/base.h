@@ -6,3 +6,4 @@
 #include "range.h"
 #include "option.h"
 #include "debug.h"
+#include "bitmap.h"

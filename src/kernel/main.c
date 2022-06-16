@@ -2,9 +2,8 @@
 #include <limine/base.h>
 #endif
 
-#ifdef ARCH_X86_64
-#include <x86_64/base.h>
-#endif
+#include "pmm.h"
+#include "abstraction.h"
 
 #include <copland/base.h>
 #include <handover/handover.h>
@@ -22,6 +21,7 @@ int _start(void)
     }
 
     Handover handover = UNWRAP(resHandover);
+    pmm_init(&handover);
     hardware_init(&handover);
 
     loop;

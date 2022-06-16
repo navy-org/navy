@@ -40,7 +40,7 @@ typedef struct
     size_t mmap_count;
     size_t module_count;
 
-    uint64_t hddm_offset;
+    uint64_t hhdm_offset;
 
     MmapEntry mmaps[LIMIT_ENTRIES];
     Module modules[LIMIT_ENTRIES];

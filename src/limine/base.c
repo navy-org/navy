@@ -114,7 +114,7 @@ ResultHandover handover_create(void)
     //     return ERR(ResultHandover, str$("Couldn't get modules"));
     // }
 
-    result.hddm_offset = hhdm_request.response->offset;
+    result.hhdm_offset = hhdm_request.response->offset;
     parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
     // parse_module(&result, module_request.response->modules, module_request.response->module_count);
 
