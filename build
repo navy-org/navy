@@ -70,8 +70,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "-c", "--clean", action="store_true", help="Clean the build directory"
     )
+
     parser.add_argument(
         "-n", "--nuke", action="store_true", help="Nuke the project! Like in fallout"
+    )
+
+    parser.add_argument(
+        "-d", "--debug", action="store_true", help="Down with the gdb !"
     )
 
     args = parser.parse_args()
@@ -113,3 +118,19 @@ if __name__ == "__main__":
             rmtree(".build")
         except FileNotFoundError:
             pass
+
+    if args.debug:
+        try:
+            os.remove("build.ninja")
+            rmtree(".build")
+        except FileNotFoundError:
+            pass
+
+        cfg["cflags"].append("-DKERNEL_DEBUG")
+        cfg["qemuflags"].append("-s -S")
+
+        buildAll(cfg)
+        if os.system("ninja") != 0:
+            exit(1)
+
+        bootSystem(cfg)

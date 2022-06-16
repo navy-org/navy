@@ -7,4 +7,4 @@
 
 #include <handover/handover.h>
 
-void hardware_init(Handover *handover);
+void hardware_init(Handover const *handover);
