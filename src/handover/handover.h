@@ -42,6 +42,9 @@ typedef struct
 
     uint64_t hhdm_offset;
 
+    uint64_t kernel_pbase;
+    uint64_t kernel_vbase;
+
     MmapEntry mmaps[LIMIT_ENTRIES];
     Module modules[LIMIT_ENTRIES];
 } Handover;

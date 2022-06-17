@@ -105,7 +105,7 @@ uint64_t interrupts_handler(uint64_t rsp)
     {
         exception_handler(regs);
         
-        for (;;)
+        loop
         {
             cli();
             hlt();

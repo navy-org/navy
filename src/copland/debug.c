@@ -1,5 +1,4 @@
-#include "debug.h"
-#include "io.h"
+#include "base.h"
 
 static Writer *debugDevice = NULL;
 static void (*dbg_fn)(void) = NULL;
@@ -39,7 +38,7 @@ void raise_debug(void)
 {
     if (dbg_fn == NULL)
     {
-        for (;;);
+        loop;
     } 
     else 
     {

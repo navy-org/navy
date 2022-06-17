@@ -19,6 +19,11 @@ MAYBE_UNUSED static struct limine_module_request module_request = {
     .revision = 0
 };
 
+static struct limine_kernel_address_request addr_request = {
+    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
+    .revision = 0
+};
+
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
     MmapEntry *m;
@@ -109,12 +114,19 @@ ResultHandover handover_create(void)
         return ERR(ResultHandover, str$("Couldn't get HHDM"));
     }
 
+    if (addr_request.response == NULL)
+    {
+        return ERR(ResultHandover, str$("Couldn't get kernel address"));
+    }
+
     // if (module_request.response == NULL)
     // {
     //     return ERR(ResultHandover, str$("Couldn't get modules"));
     // }
 
     result.hhdm_offset = hhdm_request.response->offset;
+    result.kernel_vbase = addr_request.response->virtual_base;
+    result.kernel_pbase = addr_request.response->physical_base;
     parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
     // parse_module(&result, module_request.response->modules, module_request.response->module_count);
 

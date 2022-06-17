@@ -16,5 +16,7 @@ void hardware_init(MAYBE_UNUSED Handover const *handover)
 
     define_dbg_func(debug_interrupt);
 
+    vmm_init(handover);
+
     return;
 }

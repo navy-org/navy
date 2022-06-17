@@ -4,6 +4,7 @@
 #include "com.h"
 #include "rtc.h"
 #include "regs.h"
+#include "vmm.h"
 
 #include <handover/handover.h>
 
