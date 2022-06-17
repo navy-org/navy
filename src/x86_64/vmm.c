@@ -1,6 +1,4 @@
 #include "base.h"
-#include "handover/handover.h"
-#include "x86_64/asm.h"
 
 #include <copland/base.h>
 
