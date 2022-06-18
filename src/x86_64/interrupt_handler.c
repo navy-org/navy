@@ -112,5 +112,11 @@ uint64_t interrupts_handler(uint64_t rsp)
         }
     }
 
+    else if (regs->intno >= 48)
+    {
+        log$("{}", regs->intno);
+    }
+
+    lapic_eoi();
     return rsp;
 }

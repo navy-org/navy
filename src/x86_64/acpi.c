@@ -7,7 +7,6 @@ void acpi_init(const Handover *handover)
 {
     hhdm_offset = handover->hhdm_offset;
     Rsdp *rsdp = (Rsdp *) (handover->rsdp_address);
-    log$("{a}", handover->rsdp_address);
     rsdt = (Rsdt *) (rsdp->rsdtAddress + hhdm_offset);
 }
 

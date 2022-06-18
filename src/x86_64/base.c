@@ -1,11 +1,11 @@
 #include "base.h"
 #include "gdt.h"
 #include "idt.h"
-
+#include "x86_64/pic.h"
 
 #include <copland/debug.h>
 
-void hardware_init(MAYBE_UNUSED Handover const *handover)
+void hardware_init(Handover const *handover)
 {
     gdt_init();
 
@@ -20,7 +20,10 @@ void hardware_init(MAYBE_UNUSED Handover const *handover)
     vmm_init(handover);
     acpi_init(handover);
     pic_mask_interrupts();
-    apic_init();
+    pic_disable();
+    pit_init();
+    acpi_init(handover);
+    apic_init(handover);
 
     return;
 }

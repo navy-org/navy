@@ -6,6 +6,7 @@
 #include "regs.h"
 #include "vmm.h"
 #include "pic.h"
+#include "pit.h"
 #include "acpi.h"
 #include "apic.h"
 

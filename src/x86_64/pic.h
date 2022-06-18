@@ -9,4 +9,5 @@
 #define PIC2_COMMAND	PIC2
 #define PIC2_DATA	    (PIC2+1)
 
+void pic_disable(void);
 void pic_mask_interrupts(void);
