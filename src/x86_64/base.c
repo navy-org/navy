@@ -2,6 +2,7 @@
 #include "gdt.h"
 #include "idt.h"
 
+
 #include <copland/debug.h>
 
 void hardware_init(MAYBE_UNUSED Handover const *handover)
@@ -17,6 +18,9 @@ void hardware_init(MAYBE_UNUSED Handover const *handover)
     define_dbg_func(debug_interrupt);
 
     vmm_init(handover);
+    acpi_init(handover);
+    pic_mask_interrupts();
+    apic_init();
 
     return;
 }

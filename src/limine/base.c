@@ -24,6 +24,11 @@ static struct limine_kernel_address_request addr_request = {
     .revision = 0
 };
 
+static struct limine_rsdp_request rsdp_request = {
+    .id = LIMINE_RSDP_REQUEST,
+    .revision = 0
+};
+
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
     MmapEntry *m;
@@ -119,6 +124,11 @@ ResultHandover handover_create(void)
         return ERR(ResultHandover, str$("Couldn't get kernel address"));
     }
 
+    if (rsdp_request.response == NULL)
+    {
+        return ERR(ResultHandover, str$("Couldn't find RSDP address"));
+    }
+
     // if (module_request.response == NULL)
     // {
     //     return ERR(ResultHandover, str$("Couldn't get modules"));
@@ -127,6 +137,7 @@ ResultHandover handover_create(void)
     result.hhdm_offset = hhdm_request.response->offset;
     result.kernel_vbase = addr_request.response->virtual_base;
     result.kernel_pbase = addr_request.response->physical_base;
+    result.rsdp_address = (uintptr_t) rsdp_request.response->address;
     parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
     // parse_module(&result, module_request.response->modules, module_request.response->module_count);
 

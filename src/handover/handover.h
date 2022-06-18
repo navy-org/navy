@@ -44,6 +44,7 @@ typedef struct
 
     uint64_t kernel_pbase;
     uint64_t kernel_vbase;
+    uint64_t rsdp_address;
 
     MmapEntry mmaps[LIMIT_ENTRIES];
     Module modules[LIMIT_ENTRIES];
