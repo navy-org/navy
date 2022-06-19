@@ -1,5 +1,6 @@
 #include "pmm.h"
 #include "const.h"
+#include "handover/handover.h"
 
 #include <kernel/spinlock.h>
 #include <copland/base.h>
@@ -44,7 +45,7 @@ void pmm_init(Handover *handover)
     {
         MmapEntry *entry = &handover->mmaps[i];
 
-        if (entry->type == MEMMAP_USABLE && entry->range.length >= bitmap.length)
+        if ((entry->type == MEMMAP_USABLE || entry->type == MEMMAP_BOOTLOADER_RECLAIMABLE) && entry->range.length >= bitmap.length)
         {
             bitmap.range.base = entry->range.base + handover->hhdm_offset;
             log$("Allocated bitmap at {e}", bitmap.range);
@@ -67,7 +68,7 @@ void pmm_init(Handover *handover)
     {
         MmapEntry entry = handover->mmaps[i];
 
-        if (entry.type == MEMMAP_USABLE)
+        if (entry.type == MEMMAP_USABLE || entry.type == MEMMAP_BOOTLOADER_RECLAIMABLE)
         {
             pmm_free((Range) {
                 .base = align_down$(entry.range.base, PAGE_SIZE),

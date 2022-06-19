@@ -9,6 +9,7 @@
 #define LAPIC_INIT          0x380
 #define LAPIC_CURRENT       0x390
 #define LAPIC_TIMER_DIV     0x3e0
+#define LAPIC_ENABLE        0x800
 
 #define LAPIC_TIMER_MASK 0x10000
 #define LAPIC_TIMER_PERIODIC 0x20000
@@ -16,9 +17,10 @@
 typedef struct PACKED
 {
     AcpiSdt header;
+
     uint32_t lapic_address;
     uint32_t flags;
-} Apic;
+} Madt;
 
 void apic_init(Handover const *handover);
 void lapic_eoi(void);

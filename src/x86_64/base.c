@@ -22,7 +22,6 @@ void hardware_init(Handover const *handover)
     pic_mask_interrupts();
     pic_disable();
     pit_init();
-    acpi_init(handover);
     apic_init(handover);
 
     return;

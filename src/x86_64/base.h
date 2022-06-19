@@ -8,7 +8,7 @@
 #include "pic.h"
 #include "pit.h"
 #include "acpi.h"
-#include "apic.h"
+#include "madt.h"
 
 #include <handover/handover.h>
 

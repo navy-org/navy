@@ -29,3 +29,31 @@ void pic_mask_interrupts(void)
         asm_out8(port, value);
     }
 }
+
+void pic_init(void)
+{
+    asm_out8(PIC1_COMMAND, 0x10 | 0x01);
+    io_wait();
+    asm_out8(PIC2_COMMAND, 0x10 | 0x01);
+    io_wait();
+
+    asm_out8(PIC1_DATA, PIC1);
+    io_wait();
+    asm_out8(PIC2_DATA, PIC2);
+    io_wait();
+
+    asm_out8(PIC1_DATA, 4);
+    io_wait();
+    asm_out8(PIC2_DATA, 2);
+    io_wait();
+
+    asm_out8(PIC1_DATA, 0x01);
+    io_wait();
+    asm_out8(PIC2_DATA, 0x01);
+    io_wait();
+
+    asm_out8(PIC1_DATA, 0);
+    io_wait();
+    asm_out8(PIC2_DATA, 0);
+    io_wait();
+}

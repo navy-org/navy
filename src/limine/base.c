@@ -4,11 +4,6 @@
 #include <copland/base.h>
 #include <handover/handover.h>
 
-static struct limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0,
-};
-
 static struct limine_hhdm_request hhdm_request = {
     .id = LIMINE_HHDM_REQUEST,
     .revision = 0
@@ -29,6 +24,11 @@ static struct limine_rsdp_request rsdp_request = {
     .revision = 0
 };
 
+static struct limine_memmap_request memmap_request = {
+    .id = LIMINE_MEMMAP_REQUEST,
+    .revision = 0,
+};
+
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
     MmapEntry *m;
@@ -45,6 +45,16 @@ static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, s
 
         switch(entry->type)
         {
+            case LIMINE_MEMMAP_ACPI_RECLAIMABLE:
+            {
+                m->type = MEMMAP_ACPI_RECLAIMABLE;
+                break;
+            }
+            case LIMINE_MEMMAP_ACPI_NVS:
+            {
+                m->type = MEMMAP_ACPI_NVS;
+                break;
+            }
             case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
             {
                 m->type = MEMMAP_BOOTLOADER_RECLAIMABLE;
@@ -65,9 +75,14 @@ static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, s
                 m->type = MEMMAP_USABLE;
                 break;
             }
-            default:
+            case LIMINE_MEMMAP_RESERVED:
             {
                 m->type = MEMMAP_RESERVED;
+                break;
+            }
+            default:
+            {
+                panic$("Unknown memmap type {}", entry->type);
             }
         }
 
@@ -133,6 +148,7 @@ ResultHandover handover_create(void)
     // {
     //     return ERR(ResultHandover, str$("Couldn't get modules"));
     // }
+
 
     result.hhdm_offset = hhdm_request.response->offset;
     result.kernel_vbase = addr_request.response->virtual_base;

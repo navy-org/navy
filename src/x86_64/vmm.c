@@ -49,6 +49,7 @@ static void vmm_map_page(Pml *pml, uintptr_t virt, uintptr_t phys, bool is_user)
 
 void vmm_map_range(Pml *pml, Range virt, Range phys, bool is_user)
 {
+
     if(virt.length != phys.length)
     {
         panic$("virt.length {} != phys.length {}", virt.length, phys.length);
@@ -85,6 +86,16 @@ void vmm_init(const Handover *handover)
 
     kernel_pml = (Pml *) (UNWRAP(pmm_alloc(1)).base + hhdm_offset);
     memset(kernel_pml, 0, PAGE_SIZE);
+
+    vmm_map_range(kernel_pml,
+        (Range) {
+            .base = hhdm_offset,
+            .length = gib$(4)
+        }, 
+        (Range) {
+            .base = 0,
+            .length = gib$(4)
+        }, false);
 
     vmm_map_range(kernel_pml, 
         (Range) {

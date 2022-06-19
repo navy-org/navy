@@ -11,3 +11,4 @@
 
 void pic_disable(void);
 void pic_mask_interrupts(void);
+void pic_init(void);

@@ -10,6 +10,21 @@ void acpi_init(const Handover *handover)
     rsdt = (Rsdt *) (rsdp->rsdtAddress + hhdm_offset);
 }
 
+void acpi_checksum(AcpiSdt *table)
+{
+    unsigned char sum = 0;
+
+    for (size_t i = 0; i < table->length; i++)
+    {
+        sum += ((char *) table)[i];
+    }
+
+    if (sum != 0)
+    {
+        panic$("Checksum for {} FAILED !", table->signature);
+    }
+}
+
 AcpiSdtOption acpi_parse(Str tablename)
 {
     size_t length = (rsdt->header.length - sizeof(rsdt->header)) / 4;

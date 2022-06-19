@@ -12,7 +12,7 @@ typedef struct PACKED
     uint32_t rsdtAddress;
 } Rsdp;
 
-typedef struct 
+typedef struct PACKED
 {
     char signature[4];
     uint32_t length;
@@ -35,3 +35,4 @@ typedef Option(AcpiSdt *) AcpiSdtOption;
 
 void acpi_init(Handover const *handover);
 AcpiSdtOption acpi_parse(Str tablename);
+void acpi_checksum(AcpiSdt *table);
