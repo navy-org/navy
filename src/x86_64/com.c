@@ -1,6 +1,10 @@
 #include "com.h"
 #include "asm.h"
 
+#include <kernel/spinlock.h>
+
+static bool enable_lock = false;
+
 void com_putc(Writer *self, char c)
 {
     Com *com = (Com *) self;
@@ -25,4 +29,9 @@ Com com_init(ComPort port)
         .funcs = writer_init(com_putc),
         .port = port
     };
+}
+
+void com_enable_lock(void)
+{
+    enable_lock = true;
 }

@@ -15,3 +15,11 @@ Writer writer_init(void (*putc)(Writer *, char))
         .puts = writer_puts
     };
 }
+
+Writer writer_init2(void (*putc)(Writer *, char), void (*puts)(Writer *, char const *))
+{
+    return (Writer) {
+        .putc = putc,
+        .puts = puts
+    };
+}

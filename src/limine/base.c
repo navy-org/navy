@@ -1,6 +1,8 @@
 #include "base.h"
 #include "limine.h"
 
+#include <x86_64/com.h>
+
 #include <copland/base.h>
 #include <handover/handover.h>
 
@@ -27,6 +29,11 @@ static struct limine_rsdp_request rsdp_request = {
 static struct limine_memmap_request memmap_request = {
     .id = LIMINE_MEMMAP_REQUEST,
     .revision = 0,
+};
+
+static struct limine_smp_request smp_request = {
+    .id = LIMINE_SMP_REQUEST,
+    .revision = 0
 };
 
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
@@ -119,6 +126,25 @@ MAYBE_UNUSED static void parse_module(Handover *handover, struct limine_file **e
     }
 }
 
+void cpu_goto(void **cpus, uint32_t id, CpuGoto addr)
+{
+    struct limine_smp_info **cores = (struct limine_smp_info **) cpus;
+    cores[id]->goto_address = (limine_goto_address)((uintptr_t) addr);
+}
+
+static void parse_smp(Handover *handover, struct limine_smp_response *response)
+{
+    log$("Booting {} cores", response->cpu_count);
+    SmpEntry entry = {
+        .core_count = response->cpu_count,
+        .bsp_lapic_id = response->bsp_lapic_id,
+        .cpus = (void **)(response->cpus),
+        .core_goto = cpu_goto
+    };
+
+    handover->smp = entry;
+}
+
 
 ResultHandover handover_create(void)
 {
@@ -144,12 +170,18 @@ ResultHandover handover_create(void)
         return ERR(ResultHandover, str$("Couldn't find RSDP address"));
     }
 
+    if (smp_request.response == NULL)
+    {
+        return ERR(ResultHandover, str$("Couldn't get SMP info"));
+    }
+
     // if (module_request.response == NULL)
     // {
     //     return ERR(ResultHandover, str$("Couldn't get modules"));
     // }
 
 
+    parse_smp(&result, smp_request.response);
     result.hhdm_offset = hhdm_request.response->offset;
     result.kernel_vbase = addr_request.response->virtual_base;
     result.kernel_pbase = addr_request.response->physical_base;

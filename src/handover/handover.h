@@ -35,6 +35,16 @@ typedef struct
     MmapType type;
 } MmapEntry;
 
+typedef void *(CpuGoto)(void *cpu);
+
+typedef struct _SmpEntry
+{
+    uint64_t core_count;
+    uint32_t bsp_lapic_id;
+    void **cpus;
+    void (*core_goto)(void **cpus, uint32_t id, CpuGoto addr);
+} SmpEntry;
+
 typedef struct 
 {
     size_t mmap_count;
@@ -46,6 +56,7 @@ typedef struct
     uint64_t kernel_vbase;
     uint64_t rsdp_address;
 
+    SmpEntry smp;
     MmapEntry mmaps[LIMIT_ENTRIES];
     Module modules[LIMIT_ENTRIES];
 } Handover;

@@ -6,7 +6,8 @@
         "-enable-kvm",
         "-no-reboot",
         "-no-shutdown",
-        "-serial stdio"
+        "-serial stdio",
+        "-smp 4"
     ],
 
     "cc": "clang",
