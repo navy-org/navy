@@ -7,4 +7,3 @@
 #include "option.h"
 #include "debug.h"
 #include "bitmap.h"
-#include "vec.h"

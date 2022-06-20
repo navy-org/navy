@@ -6,7 +6,8 @@
         "copland",
         "x86_64",
         "fmt",
-        "limine"
+        "limine",
+        "dlmalloc"
     ],
 
     "flag_addons": {

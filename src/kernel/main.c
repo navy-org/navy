@@ -2,8 +2,9 @@
 #include <limine/base.h>
 #endif
 
-#include "pmm.h"
 #include "abstraction.h"
+#include "const.h"
+#include "pmm.h"
 
 #include <copland/base.h>
 #include <handover/handover.h>
@@ -21,6 +22,7 @@ int _start(void)
     }
 
     Handover handover = UNWRAP(resHandover);
+    set_hhdm_offset(handover.hhdm_offset);
     pmm_init(&handover);
     hardware_init(&handover);
 
