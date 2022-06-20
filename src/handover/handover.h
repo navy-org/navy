@@ -35,7 +35,7 @@ typedef struct
     MmapType type;
 } MmapEntry;
 
-typedef void *(CpuGoto)(void *cpu);
+typedef void (*CpuGoto)(void *cpu);
 
 typedef struct _SmpEntry
 {

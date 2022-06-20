@@ -132,6 +132,11 @@ void cpu_goto(void **cpus, uint32_t id, CpuGoto addr)
     cores[id]->goto_address = (limine_goto_address)((uintptr_t) addr);
 }
 
+static void smp_idle(MAYBE_UNUSED void *cpu)
+{
+    loop;
+}
+
 static void parse_smp(Handover *handover, struct limine_smp_response *response)
 {
     log$("Booting {} cores", response->cpu_count);
@@ -143,6 +148,11 @@ static void parse_smp(Handover *handover, struct limine_smp_response *response)
     };
 
     handover->smp = entry;
+
+    for (size_t i = 0; i < response->cpu_count; i++)
+    {
+        cpu_goto((void **) response->cpus, i, smp_idle);
+    }
 }
 
 
