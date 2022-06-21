@@ -15,6 +15,7 @@
         "-mno-sse",
         "-mno-sse2",
         "-fno-stack-protector",
+        "-fno-builtin",
         "-ggdb",
         "-Wall",
         "-Wextra",
