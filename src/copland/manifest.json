@@ -1,9 +1,0 @@
-{
-    "id": "copland",
-    "type": "lib",
-
-    "depends": [
-        "fmt",
-        "brutal"
-    ]
-}

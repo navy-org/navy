@@ -1,0 +1,4 @@
+[submodule "src/copland"]
+	path = src/copland
+	url = https://github.com/navy-org/copland.git
+	branch = main
