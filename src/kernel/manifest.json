@@ -4,27 +4,7 @@
     "type": "exe",
     "depends": [
         "copland",
-        "x86_64",
-        "limine",
-        "dlmalloc"
-    ],
-
-    "flag_addons": {
-        "cflags": [
-            "-ffreestanding",
-            "-target x86_64-elf-none",
-            "-mno-80387",
-            "-mno-mmx", 
-            "-mno-3dnow",
-            "-mno-sse", 
-            "-mno-sse2",
-            "-mno-red-zone",
-            "-mcmodel=kernel"
-        ],
-
-        "ldflags": [
-            "-T./src/kernel/linker.ld",
-            "-z max-page-size=0x1000"
-        ]
-    }
+        "dlmalloc",
+        "libc"
+    ]
 }

@@ -8,18 +8,6 @@
             "dst": "/EFI/BOOT/BOOTX64.EFI"
         },
         {
-            "url": "https://github.com/limine-bootloader/limine/raw/v3.5.4-binary/limine.sys",
-            "dst": "/boot/limine.sys"
-        },
-        {
-            "url": "https://github.com/limine-bootloader/limine/raw/v3.5.4-binary/limine-cd.bin",
-            "dst": "/boot/limine-cd.bin"
-        },
-        {
-            "url": "https://github.com/limine-bootloader/limine/raw/v3.5.4-binary/limine-cd-efi.bin",
-            "dst": "/boot/limine-cd-efi.bin"
-        },
-        {
             "src": "limine.cfg",
             "dst": "/boot/limine.cfg"
         }

@@ -1,0 +1,70 @@
+{
+    "id": "x86_64 limine",
+    "type": "profile",
+
+    "cc": "clang",
+    "cflags": [
+        "-ffreestanding",
+        "-target x86_64-elf-none",
+        "-mno-80387",
+        "-mno-mmx", 
+        "-mno-3dnow",
+        "-mno-red-zone",
+        "-mcmodel=kernel",
+        "-mno-sse", 
+        "-mno-sse2",
+        "-fno-stack-protector",
+        "-fno-builtin",
+        "-ggdb",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-std=gnu2x",
+        "-Wvla",
+        "-I./src",
+        "-I./src/libc",
+        "-DARCH_X86_64",
+        "-DLIMINE_BOOTLOADER"
+    ],
+
+    "as": "nasm",
+    "asflags": [
+        "-felf64",
+        "-Fdwarf",
+        "-g"
+    ],
+
+    "ld": "ld.lld",
+    "ldflags": [
+        "-T./src/kernel/linker-limine.ld",
+        "-z max-page-size=0x1000"
+    ], 
+
+    "ar": "llvm-ar",
+    "arflags": "rcs",
+
+    "run": [
+        "qemu-system-x86_64",
+        "-m", "4G",
+        "-enable-kvm",
+        "-no-reboot",
+        "-no-shutdown",
+        "-serial","stdio",
+        "-smp", "4",
+        "-bios", "./bios",
+        "-drive", "file=fat:rw:$SYSROOT,media=disk,format=raw"
+    ],
+
+    "depends": [
+        "x86_64",
+        "kernel",
+        "limine"
+    ],
+
+    "install": [
+        {
+            "url": "https://retrage.github.io/edk2-nightly/bin/DEBUGX64_OVMF.fd",
+            "dst-out": "/bios"
+        }
+    ]
+}

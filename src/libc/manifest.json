@@ -1,5 +1,4 @@
 {
     "id": "libc",
-    "donotcompile": true,
     "type": "lib"
 }

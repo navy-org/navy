@@ -1,23 +1,18 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-from .ninja import Writer
-from .manifest import *
-from .utils import *
-
+from gettext import install
 import os
-from json import load as json_load
-from typing import TextIO
+from ninja import Writer
+from json import load as json_read
+from pathlib import Path
+from requests import get as get_request
+from shutil import copyfile
+
+src_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src")
+dst_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", ".build")
 
 
-def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
-    if len(manifest["src"]) == 0:
-        return
-
-    objs = []
+def build_manifest(manifest, config, writer, deps):
     cc = "cc"
     ld = "ld"
-    asm = "as"
 
     if "flag_addons" in manifest:
         for add in manifest["flag_addons"]:
@@ -39,26 +34,26 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
 
         writer.newline()
 
-    out = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), "..", ".build", manifest["id"]
-    )
+    objs = []
+    out = os.path.join(dst_folder, manifest["id"])
+    src = os.path.join(src_folder, manifest["id"])
 
-    for file in manifest["src"]:
-        objs.append(os.path.join(out, f"{os.path.basename(file)}.o"))
+    installManifest(manifest, src)
 
+    for file in os.listdir(os.path.join(src_folder, manifest["id"])):
         if file.endswith(".c"):
-            writer.build(objs[-1], cc, file)
+            objs.append(os.path.join(out, f"{file}.o"))
+            writer.build(objs[-1], cc, os.path.join(src, file))
         elif file.endswith(".s"):
-            writer.build(objs[-1], asm, file)
-
-
-    if "depends" in manifest:
-        for deps in manifest["depends"]:
-            objs.append(os.path.join(out, "..", "sysroot", "lib", f"{deps}.a"))
+            objs.append(os.path.join(out, f"{file}.o"))
+            writer.build(objs[-1], "as", os.path.join(src, file))
 
     bin = ""
-
     if manifest["type"] == "exe":
+        for dep in deps:
+            if dep != manifest["id"]:
+                objs.append(os.path.join(out, "..", "sysroot", "lib", f"{dep}.a"))
+
         bin = os.path.join(
             os.path.join(out, "..", "sysroot", "bin", f"{manifest['id']}.elf")
         )
@@ -75,62 +70,103 @@ def build_manifest(config: json, manifest: json, writer: Writer) -> str | None:
     return bin
 
 
-def deps_track(
-    config: json, manifests: json, module: json, writer: Writer, built: list[str]
-):
-    ret = []
-
-    if "depends" in module and module["depends"]:
-        for mod in module["depends"]:
-            if mod not in built:
-                ret += deps_track(config, manifests, manifests[mod], writer, built)
-
-        module["depends"] = list(set(module["depends"] + built))
-
-    bin = build_manifest(config, module, writer)
-    ret.append(bin)
-    built.append(module["id"])
-
-    return ret
-
-
-def genNinja(fp: TextIO, config: json, manifests: dict[path, json]) -> None:
+def genNinja(fp, deps, cfg):
     all = []
     writer = Writer(fp)
-
     writer.comment("This build file is auto-generated (btw)")
     writer.newline()
 
     writer.rule(
         "cc",
-        f"{config['cc']} -c -o $out $in -MD -MF $out.d {' '.join(config['cflags'])}",
+        f"{cfg['cc']} -c -o $out $in -MD -MF $out.d {' '.join(cfg['cflags'])}",
         depfile="$out.d",
     )
 
-    writer.rule("ld", f"{config['ld']} -o $out $in {' ' .join(config['ldflags'])}")
-    writer.rule("as", f"{config['as']} -o $out $in {' '.join(config['asflags'])}")
-    writer.rule("ar", f"{config['ar']} {config['arflags']} $out $in")
+    writer.rule("ld", f"{cfg['ld']} -o $out $in {' ' .join(cfg['ldflags'])}")
+    writer.rule("as", f"{cfg['as']} -o $out $in {' '.join(cfg['asflags'])}")
+    writer.rule("ar", f"{cfg['ar']} {cfg['arflags']} $out $in")
     writer.newline()
 
-    built = []
-    while manifests:
-        all += deps_track(config, manifests, list(manifests.values())[0], writer, built)
+    for dep in deps:
+        with open(os.path.join(src_folder, dep, "manifest.json"), "r") as manifest:
+            all.append(build_manifest(json_read(manifest), cfg, writer, deps))
 
-        for mod in built:
-            if mod in manifests:
-                del manifests[mod]
-
-    all = list(filter(lambda s: s is not None, all))
     writer.build("all", "phony", all)
 
 
-def buildAll(cfg: json) -> None:
-    manifests = compileManifests(
-        os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "src")
-    )
+def find_deps(deps):
+    ret = []
 
-    ninjaFp = open(
+    def resolve(dep):
+        deps = [dep]
+
+        with open(os.path.join(src_folder, dep, "manifest.json")) as cfg:
+            json = json_read(cfg)
+            if "depends" in json:
+                deps += find_deps(json["depends"])
+        return deps
+
+    for dep in deps:
+        if dep not in ret:
+            ret += resolve(dep)
+
+    return list(dict.fromkeys(ret))
+
+
+def downloadFile(source, dest):
+    r = get_request(source, allow_redirects=True)
+
+    if r.status_code != 200:
+        assert Exception(f"Impossible to download {dest}")
+
+    if not os.path.isdir(os.path.dirname(dest)):
+        Path(os.path.dirname(dest)).mkdir(parents=True, exist_ok=True)
+
+    with open(dest, "wb") as f:
+        f.write(r.content)
+
+
+def installManifest(manifest, manifest_path):
+    path = ""
+
+    if "install" not in manifest:
+        return
+
+    for install in manifest["install"]:
+        if len(install.keys()) > 2:
+            raise Exception("What are you doing ?")
+
+        if "dst" in install:
+            path = os.path.join(dst_folder, "sysroot", install["dst"][1:])
+        elif "dst-out" in install:
+            path = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "..", install["dst-out"][1:]
+            )
+        else:
+            raise Exception("No destination for install")
+
+        if os.path.isfile(path):
+            continue
+
+        if "url" in install:
+            downloadFile(install["url"], path)
+        elif "src" in install:
+            if not os.path.isdir(os.path.dirname(path)):
+                Path(os.path.dirname(path)).mkdir(parents=True, exist_ok=True)
+
+            copyfile(
+                os.path.join(os.path.dirname(manifest_path), manifest["id"], install["src"]), path
+            )
+        else:
+            raise Exception("No source for install")
+
+
+def buildAll(profile):
+    deps = find_deps(profile["depends"])
+    installManifest(profile, src_folder)
+    ninja_fp = open(
         os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "build.ninja"),
         "w",
     )
-    genNinja(ninjaFp, cfg, manifests)
+
+    genNinja(ninja_fp, deps, profile)
