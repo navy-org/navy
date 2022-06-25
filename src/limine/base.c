@@ -1,10 +1,12 @@
 #include "base.h"
 #include "limine.h"
 
-#include <x86_64/com.h>
-
+#include <x86_64/base.h>
 #include <copland/base.h>
 #include <handover/handover.h>
+
+#include <kernel/pmm.h>
+#include <kernel/const.h>
 
 static struct limine_hhdm_request hhdm_request = {
     .id = LIMINE_HHDM_REQUEST,
@@ -200,4 +202,23 @@ ResultHandover handover_create(void)
     // parse_module(&result, module_request.response->modules, module_request.response->module_count);
 
     return OK(ResultHandover, result);
+}
+
+int _start(void)
+{
+    Com debug = com_init(COM1);
+    define_debug_out((Writer *) &debug);
+
+    ResultHandover resHandover = handover_create();
+    if (!resHandover.succ)
+    {
+        panic$("{}", resHandover.err);
+    }
+
+    Handover handover = UNWRAP(resHandover);
+    set_hhdm_offset(handover.hhdm_offset);
+    pmm_init(&handover);
+    hardware_init(&handover);
+
+    loop;
 }

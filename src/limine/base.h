@@ -4,5 +4,4 @@
 #include <copland/base.h>
 
 typedef Result(Handover, Str) ResultHandover;
-
 ResultHandover handover_create(void);

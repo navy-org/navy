@@ -1,10 +1,17 @@
 {
     "id": "skift-loader",
-    "type": "exe",
+    "type": "lib",
 
-    "extern": {
-        "git": "https://github.com/skiftOS/skift/",
-        "build": "./sdk.sh build --env=efi-x86_64 loader",
-        "post-build": "mkdir -p $SYSROOT/EFI/BOOT && find ./ -name loader -type f -exec cp {} $SYSROOT/EFI/BOOT/BOOTX64.EFI ;"
-    }
+    "externs": [
+        {
+            "name": "skift-loader",
+            "git": "https://github.com/skiftOS/skift/",
+            "build": "./sdk.sh build --env=efi-x86_64 loader",
+            "post-build": "mkdir -p $SYSROOT/EFI/BOOT && find ./ -name loader -type f -exec cp {} $SYSROOT/EFI/BOOT/BOOTX64.EFI ;"
+        },
+        {
+            "name": "skift-handover",
+            "git": "https://github.com/skiftOS/handover"
+        }
+    ]
 }

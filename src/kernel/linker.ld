@@ -36,6 +36,11 @@ SECTIONS
         KEEP(*(.stivale2hdr))
     } :rodata
 
+    .handover : ALIGN(4K)
+    {
+        KEEP(*(.handover*))
+    }
+
     .rodata : {
         *(.rodata .rodata.*)
     } :rodata

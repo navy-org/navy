@@ -4,5 +4,6 @@
 -Werror
 -I./src
 -I./src/libc
+-I.build/repos/
 -DLIMINE_BOOTLOADER
 -DARCH_X86_64
