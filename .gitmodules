@@ -2,7 +2,3 @@
 	path = src/copland
 	url = https://github.com/navy-org/copland.git
 	branch = main
-[submodule "sdk"]
-	path = sdk
-	url = https://github.com/navy-org/build.git
-	branch = main

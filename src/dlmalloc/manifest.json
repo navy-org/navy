@@ -1,25 +1,4 @@
 {
     "id": "dlmalloc",
-    "type": "lib",
-    "flag_addons": {
-        "cflags": [
-            "-DUSE_LOCKS=1",
-            "-DUSE_SPIN_LOCKS=1",
-            "-DHAVE_MORECORE=1",
-            "-DMORECORE=__sysdep_morecore",
-            "-DMORECORE_CANNOT_TRIM",
-            "-DHAVE_MMAP=0",
-            "-DHAVE_MREMAP=0",
-            "-DMMAP_CLEARS=0",
-            "-DLACKS_UNISTD_H",
-            "-DLACKS_SYS_TYPES_H",
-            "-DLACKS_SYS_PARAM_H",
-            "-DLACKS_SYS_MMAN_H",
-            "-DLACKS_STRINGS_H",
-            "-DLACKS_SCHED_H",
-            "-DLACKS_TIME_H",
-            "-DMALLOC_FAILURE_ACTION",
-            "-DKERNEL_MODE"
-        ]
-    }
+    "type": "lib"
 }

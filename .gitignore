@@ -10,4 +10,5 @@ bios
 ios
 limine-deploy
 navy.iso
+.cache
 .gdb_history

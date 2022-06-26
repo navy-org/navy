@@ -1,0 +1,87 @@
+{
+    "id": "kernel-x86_64",
+    "type": "target",
+    "props": {
+        "toolchain": "clang",
+        "arch": "x86", 
+        "sub": "64",
+        "vendor": "unknown",
+        "sys": "navy",
+        "abi": "sysv",
+        "encoding": "utf8",
+        "freestanding": true
+    },
+
+    "tools": {
+        "cc": {
+            "cmd": "clang",
+            "args": [
+                "-ffreestanding",
+                "-target x86_64-elf-none",
+                "-mno-80387",
+                "-mno-mmx", 
+                "-mno-3dnow",
+                "-mno-red-zone",
+                "-mcmodel=kernel",
+                "-mno-sse", 
+                "-mno-sse2",
+                "-fno-stack-protector",
+                "-fno-builtin",
+                "-ggdb",
+                "-Wall",
+                "-Wextra",
+                "-Werror",
+                "-std=gnu2x",
+                "-Wvla",
+                "-I./src",
+                "-I./src/libc",
+                "-I.build/repos/"
+            ]
+        },
+
+          "cxx": {
+            "cmd": "clang++",
+            "args": [
+                "-target x86_64-none-elf",
+                "-ffreestanding",
+                "-fno-stack-protector",
+                "-mno-80387",
+                "-mno-mmx",
+                "-mno-3dnow",
+                "-mno-sse",
+                "-mno-sse2",
+                "-mno-red-zone",
+                "-mcmodel=kernel"
+            ]
+        },
+
+        "as": {
+            "cmd": "nasm",
+            "args": [
+                "-felf64",
+                "-Fdwarf",
+                "-g"
+            ]
+        },
+
+        "ld": {
+            "cmd": "ld.lld",
+            "args": [
+                "-nostdlib",
+                "-static",
+                "-T./src/kernel/linker.ld",
+                "-z max-page-size=0x1000"
+            ], 
+            "files": [
+                "./src/kernel/linker.ld"
+            ]
+        },
+
+        "ar": {
+            "cmd": "llvm-ar",
+            "args": [
+                "rcs"
+            ]
+        }
+    }
+}

@@ -2,8 +2,7 @@
     "id": "kernel",
     "description": "The main component",
     "type": "exe",
-    "out": "/boot/kernel.elf",
-    "depends": [
+    "deps": [
         "copland",
         "dlmalloc",
         "libc"

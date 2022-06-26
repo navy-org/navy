@@ -8,35 +8,6 @@
 #include <kernel/pmm.h>
 #include <kernel/const.h>
 
-static struct limine_hhdm_request hhdm_request = {
-    .id = LIMINE_HHDM_REQUEST,
-    .revision = 0
-};
-
-MAYBE_UNUSED static struct limine_module_request module_request = {
-    .id = LIMINE_MODULE_REQUEST,
-    .revision = 0
-};
-
-static struct limine_kernel_address_request addr_request = {
-    .id = LIMINE_KERNEL_ADDRESS_REQUEST,
-    .revision = 0
-};
-
-static struct limine_rsdp_request rsdp_request = {
-    .id = LIMINE_RSDP_REQUEST,
-    .revision = 0
-};
-
-static struct limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST,
-    .revision = 0,
-};
-
-static struct limine_smp_request smp_request = {
-    .id = LIMINE_SMP_REQUEST,
-    .revision = 0
-};
 
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
@@ -162,6 +133,12 @@ ResultHandover handover_create(void)
 {
     Handover result;
 
+    extern struct limine_memmap_request memmap_request;
+    extern struct limine_hhdm_request hhdm_request;
+    extern struct limine_kernel_address_request addr_request;
+    extern struct limine_rsdp_request rsdp_request;
+    extern struct limine_smp_request smp_request;
+
     if (memmap_request.response == NULL || memmap_request.response->entry_count == 0)
     {
         return ERR(ResultHandover, str$("Couldn't get Memmaps"));
@@ -204,21 +181,3 @@ ResultHandover handover_create(void)
     return OK(ResultHandover, result);
 }
 
-int _start(void)
-{
-    Com debug = com_init(COM1);
-    define_debug_out((Writer *) &debug);
-
-    ResultHandover resHandover = handover_create();
-    if (!resHandover.succ)
-    {
-        panic$("{}", resHandover.err);
-    }
-
-    Handover handover = UNWRAP(resHandover);
-    set_hhdm_offset(handover.hhdm_offset);
-    pmm_init(&handover);
-    hardware_init(&handover);
-
-    loop;
-}
