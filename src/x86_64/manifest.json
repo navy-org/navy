@@ -4,8 +4,7 @@
     "type": "lib",
     "deps": [
         "copland",
-        "libc",
-        "limine"
+        "libc"
     ],
 
     "requires": {

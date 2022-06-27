@@ -9,7 +9,8 @@
         "sys": "navy",
         "abi": "sysv",
         "encoding": "utf8",
-        "freestanding": true
+        "freestanding": true,
+        "loader": "limine"
     },
 
     "tools": {
