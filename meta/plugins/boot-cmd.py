@@ -12,6 +12,7 @@ def bootCmd(opts: dict, args: list[str]):
     sysroot = utils.mkdirP(".build/sysroot")
     efi = utils.mkdirP(".build/sysroot/EFI/BOOT")
     boot = utils.mkdirP(".build/sysroot/boot")
+
     loader =  _DEFAULT_LOADER if "loader" not in opts else opts["loader"]
 
     match loader:
@@ -29,6 +30,9 @@ def bootCmd(opts: dict, args: list[str]):
     manifest = utils.loadJson("./meta/targets/kernel-x86_64.json")
     manifest["props"]["loader"] = loader
 
+    if "debug" in opts:
+        manifest["props"]["debug_mode"] = True
+
     with open("./meta/targets/current_build.json", "w") as f:
         json_dump(manifest, f)
 
@@ -39,6 +43,7 @@ def bootCmd(opts: dict, args: list[str]):
 
     qemuCmd = [
         "qemu-system-x86_64",
+        "-no-shutdown",
         "-no-reboot",
         "-d", "guest_errors",
         "-serial", "mon:stdio",
@@ -48,6 +53,10 @@ def bootCmd(opts: dict, args: list[str]):
         "-drive", f"file=fat:rw:{sysroot},media=disk,format=raw",
         "-enable-kvm"
     ]
+
+
+    if "debug" in opts:
+        qemuCmd += ["-s", "-S"]
 
     utils.runCmd(*qemuCmd)
 
