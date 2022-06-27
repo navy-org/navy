@@ -3,6 +3,12 @@
     "description": "x86/x86_64 BIOS/UEFI Bootloader.",
     "type": "lib",
 
+    "requires": {
+        "loader": [
+            "limine"    
+        ]
+    },
+
     "inject": [
         "kernel"
     ]
