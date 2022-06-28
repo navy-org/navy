@@ -3,6 +3,7 @@
     "type": "exe",
 
     "deps": [
+        "libc",
         "copland"
     ]
 }

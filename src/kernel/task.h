@@ -23,9 +23,6 @@ typedef struct
     Context ctx;
 } Task;
 
-#define __task_create_impl2(n, ...) task_create ## n(__VA_ARGS__)
-#define __task_create_impl(n, ...)  __task_create_impl2(n, __VA_ARGS__)
-#define task_create(...) __task_create_impl(GET_ARG_COUNT(__VA_ARGS__), __VA_ARGS__)
-
-Task *task_create1(Str path);
-Task *task_create2(Str path, Pml *space);
+Task *task_create_impl(Str path, Pml *space);
+#define __task_create(path, pml) task_create_impl(path, pml)
+#define task_create(...) __task_create(__VA_ARGS__, 0)
