@@ -9,6 +9,10 @@
 #include "pit.h"
 #include "acpi.h"
 #include "madt.h"
+#include "idt.h"
+#include "gdt.h"
+#include "ctx.h"
+#include "syscall.h"
 
 #include <handover/handover.h>
 

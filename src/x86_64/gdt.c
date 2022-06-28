@@ -1,6 +1,8 @@
 #include "gdt.h"
 
+#include <kernel/const.h>
 #include <copland/debug.h>
+#include <stdlib.h>
 
 static Gdt gdt;
 static Tss tss = {0};
@@ -61,4 +63,11 @@ void gdt_init(void)
     tss.iopb = sizeof(Tss);
 
     gdt_flush((uintptr_t) &gdtDescriptor);
+}
+
+void intstack_init(void)
+{
+    tss.ist[0] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
+    tss.ist[1] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
+    tss.rsp[0] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
 }

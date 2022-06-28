@@ -75,3 +75,4 @@ typedef struct PACKED
 void gdt_init(void);
 
 extern void gdt_flush(uintptr_t);
+void intstack_init(void);
