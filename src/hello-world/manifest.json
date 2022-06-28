@@ -1,0 +1,8 @@
+{
+    "id": "Hello World",
+    "type": "exe",
+
+    "deps": [
+        "copland"
+    ]
+}
