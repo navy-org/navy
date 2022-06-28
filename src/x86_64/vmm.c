@@ -120,3 +120,32 @@ void vmm_init(const Handover *handover)
 
     vmm_switch_space(kernel_pml);
 }
+
+PmlOption vmm_create_space(void)
+{
+    lock$(lock);
+
+    RangeOption phys_option = pmm_alloc(PAGE_SIZE);
+    Range phys_range;
+
+    if (phys_option.succ == false)
+    {
+        return NONE(PmlOption);
+    }
+    else  
+    {
+        phys_range = UNWRAP(phys_option);
+    }
+
+    Pml *space = (Pml *) (phys_range.base + hhdm_offset);
+    memset(space, 0, PAGE_SIZE);
+
+    for (size_t i = 255; i < 512; i++)
+    {
+        space->entries[i] = kernel_pml->entries[i];
+    }
+
+    unlock$(lock);
+
+    return SOME(PmlOption, space);
+}
