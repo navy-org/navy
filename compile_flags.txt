@@ -5,5 +5,10 @@
 -I./src
 -I./src/libc
 -I.build/repos/
--DLIMINE_BOOTLOADER
--DARCH_X86_64
+-fno-builtin
+-ffreestanding
+-nostdlib
+
+-D__osdk_arch_x86__
+-D__osdk_sub_64__
+-D__osdk_freestanding__
