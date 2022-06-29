@@ -1,7 +1,6 @@
 #include "ctx.h"
 
 #include <kernel/spinlock.h>
-#include <kernel/const.h>
 
 static uint32_t lock = 0;
 

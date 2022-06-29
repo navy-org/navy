@@ -13,6 +13,7 @@
 #include "gdt.h"
 #include "ctx.h"
 #include "syscall.h"
+#include "const.h"
 
 #include <handover/handover.h>
 

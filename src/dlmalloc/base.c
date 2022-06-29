@@ -2,7 +2,7 @@
 
 #ifdef __osdk_freestanding__
 #include <kernel/pmm.h>
-#include <kernel/const.h>
+#include <kernel/abstraction.h>
 #endif
 
 

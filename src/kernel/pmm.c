@@ -1,6 +1,4 @@
 #include "pmm.h"
-#include "const.h"
-#include "handover/handover.h"
 
 #include <kernel/spinlock.h>
 #include <copland/base.h>

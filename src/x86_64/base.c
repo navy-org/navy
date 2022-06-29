@@ -1,4 +1,5 @@
 #include "base.h"
+#include "x86_64/asm.h"
 
 #include <copland/debug.h>
 
@@ -13,7 +14,7 @@ void hardware_init(Handover const *handover)
 #endif
 
     define_dbg_func(debug_interrupt);
-
+    
     vmm_init(handover);
     intstack_init();
     acpi_init(handover);

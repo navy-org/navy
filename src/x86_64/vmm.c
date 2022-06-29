@@ -3,7 +3,6 @@
 #include <copland/base.h>
 
 #include <kernel/pmm.h>
-#include <kernel/const.h>
 #include <kernel/spinlock.h>
 
 static Pml *kernel_pml;

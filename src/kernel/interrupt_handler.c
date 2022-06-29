@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <copland/base.h>
 
-#include "base.h"
+#include "abstraction.h"
 
 static char *_exception_messages[32] = {
     "Division By Zero",

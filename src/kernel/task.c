@@ -1,7 +1,5 @@
 #include "task.h"
-#include "const.h"
 #include "pmm.h"
-#include "x86_64/vmm.h"
 
 #include <stdlib.h>
 

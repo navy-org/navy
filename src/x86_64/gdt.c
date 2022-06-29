@@ -1,6 +1,6 @@
 #include "gdt.h"
+#include "const.h"
 
-#include <kernel/const.h>
 #include <copland/debug.h>
 #include <stdlib.h>
 
