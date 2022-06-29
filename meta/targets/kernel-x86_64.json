@@ -10,7 +10,8 @@
         "abi": "sysv",
         "encoding": "utf8",
         "freestanding": true,
-        "loader": "limine"
+        "loader": "limine",
+        "sched": "round_robin"
     },
 
     "tools": {

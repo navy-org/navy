@@ -56,3 +56,4 @@ void vmm_map_range(Pml *pml, Range virt, Range phys, bool is_user);
 void vmm_init(Handover const *handover);
 
 PmlOption vmm_create_space(void);
+Pml *vmm_get_kernel_space(void);

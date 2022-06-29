@@ -14,6 +14,7 @@
 #include "ctx.h"
 #include "syscall.h"
 #include "const.h"
+#include "cpu.h"
 
 #include <handover/handover.h>
 

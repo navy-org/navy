@@ -23,3 +23,4 @@ typedef struct
 
 void com_putc(Writer *self, char c);
 Com com_init(ComPort port);
+void com_enable_lock(void);

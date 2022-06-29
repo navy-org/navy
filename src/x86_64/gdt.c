@@ -1,11 +1,14 @@
 #include "gdt.h"
 #include "const.h"
 
+#include <kernel/spinlock.h>
+
 #include <copland/debug.h>
 #include <stdlib.h>
 
 static Gdt gdt;
 static Tss tss = {0};
+static uint32_t lock;
 
 static GdtPointer gdtDescriptor = {
     .limit = sizeof(Gdt) - 1,
@@ -65,9 +68,11 @@ void gdt_init(void)
     gdt_flush((uintptr_t) &gdtDescriptor);
 }
 
-void intstack_init(void)
+void gdt_load_tss(Tss *tss)
 {
-    tss.ist[0] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
-    tss.ist[1] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
-    tss.rsp[0] = (uint64_t) malloc(STACK_SIZE) + STACK_SIZE;
+    lock$(lock);
+    gdt.tss = init_tss((uintptr_t) tss);
+
+    tss_flush();
+    unlock$(lock);
 }

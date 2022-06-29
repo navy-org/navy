@@ -23,6 +23,8 @@ typedef struct
     Context ctx;
 } Task;
 
+typedef Vec(Task *) TaskQueue;
 Task *task_create_impl(Str path, Pml *space);
-#define __task_create(path, pml) task_create_impl(path, pml)
+
+#define __task_create(path, pml, ...) task_create_impl(path, pml)
 #define task_create(...) __task_create(__VA_ARGS__, 0)

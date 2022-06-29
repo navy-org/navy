@@ -3,6 +3,9 @@
 #include <copland/base.h>
 
 #include "abstraction.h"
+#include "spinlock.h"
+
+static uint32_t lock;
 
 static char *_exception_messages[32] = {
     "Division By Zero",
@@ -82,7 +85,7 @@ static void exception_handler(Regs *regs)
     int funny_id = random() % (sizeof(comments) / sizeof(comments[0]));
 
     fmt$(debug, "\033[31m!!\033[33m-----------------------------------------------------------------------------------\033[0m\n");
-    fmt$(debug, "\n\tKERNEL PANIC\n\t\033[51m{}\033[0m\n\t", comments[funny_id]);
+    fmt$(debug, "\n\tKERNEL PANIC CORE {}\n\t\033[51m{}\033[0m\n\t", cpu_id(), comments[funny_id]);
     fmt$(debug, "{} (0x{x}) Err: {d}\n\n", _exception_messages[regs->intno], regs->intno, regs->err);
     fmt$(debug, "  RAX {a} RBX {a} RCX {a} RDX {a}\n", regs->rax,
                  regs->rbx, regs->rcx, regs->rdx);
@@ -93,7 +96,7 @@ static void exception_handler(Regs *regs)
     fmt$(debug, "  R12 {a} R13 {a} R14 {a} R15 {a}\n", regs->r12,
                  regs->r13, regs->r14, regs->r15);
     fmt$(debug, "  CR0 {a} CR2 {a} CR3 {a} CR4 {a}\n", read_cr0(), read_cr2(), read_cr3(), read_cr4());
-    fmt$(debug, "  RIP \033[7m{a}\033[0m\n", regs->rip);
+    fmt$(debug, "  RIP \033[7m{a}\033[0m", regs->rip);
     fmt$(debug, "\n\033[33m-----------------------------------------------------------------------------------\033[31m!!\033[0m\n");
 }
 
@@ -103,7 +106,9 @@ uint64_t interrupts_handler(uint64_t rsp)
 
     if (regs->intno < 32)
     {
+        lock$(lock);
         exception_handler(regs);
+        unlock$(lock);
         
         loop
         {

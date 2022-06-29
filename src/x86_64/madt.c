@@ -53,3 +53,8 @@ void lapic_eoi(void)
 {
     lapic_write(LAPIC_EOI, 0);
 }
+
+int lapic_current_cpu(void)
+{
+    return lapic_read(LAPIC_CPU_ID) >> 24;
+}

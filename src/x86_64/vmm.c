@@ -148,3 +148,8 @@ PmlOption vmm_create_space(void)
 
     return SOME(PmlOption, space);
 }
+
+Pml *vmm_get_kernel_space(void)
+{
+    return kernel_pml;
+}

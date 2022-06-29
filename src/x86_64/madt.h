@@ -2,6 +2,7 @@
 
 #include "acpi.h"
 
+#define LAPIC_CPU_ID        0x020
 #define LAPIC_EOI           0x0b0
 #define LAPIC_SPURIOUS      0x0f0
 #define LAPIC_TPR           0x080
@@ -24,3 +25,4 @@ typedef struct PACKED
 
 void apic_init(Handover const *handover);
 void lapic_eoi(void);
+int lapic_current_cpu(void);

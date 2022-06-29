@@ -3,7 +3,7 @@
 
 #include <kernel/spinlock.h>
 
-static bool enable_lock = false;
+static uint32_t lock;
 
 void com_putc(Writer *self, char c)
 {
@@ -11,6 +11,14 @@ void com_putc(Writer *self, char c)
     
     while ((asm_in8(com->port + 5) & 0x20) == 0);
     asm_out8(com->port, c);
+}
+
+void com_puts(Writer *self, char const *s)
+{
+    lock$(lock);
+    writer_puts(self, s);
+    unlock$(lock);
+    
 }
 
 Com com_init(ComPort port)
@@ -29,9 +37,4 @@ Com com_init(ComPort port)
         .funcs = writer_init(com_putc),
         .port = port
     };
-}
-
-void com_enable_lock(void)
-{
-    enable_lock = true;
 }

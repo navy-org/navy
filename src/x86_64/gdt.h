@@ -73,6 +73,7 @@ typedef struct PACKED
 } Gdt;
 
 void gdt_init(void);
+void gdt_load_tss(Tss *tss);
 
 extern void gdt_flush(uintptr_t);
-void intstack_init(void);
+extern void tss_flush(void);

@@ -1,4 +1,5 @@
 #include "base.h"
+#include "copland/debug.h"
 #include "limine.h"
 
 #include <x86_64/base.h>
@@ -6,8 +7,12 @@
 #include <handover/handover.h>
 
 #include <kernel/pmm.h>
-#include <kernel/const.h>
 
+extern struct limine_memmap_request memmap_request;
+extern struct limine_hhdm_request hhdm_request;
+extern struct limine_kernel_address_request addr_request;
+extern struct limine_rsdp_request rsdp_request;
+extern struct limine_smp_request smp_request;
 
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
@@ -99,15 +104,21 @@ MAYBE_UNUSED static void parse_module(Handover *handover, struct limine_file **e
     }
 }
 
-void cpu_goto(void **cpus, uint32_t id, CpuGoto addr)
+static void smp_idle(struct limine_smp_info *cpu)
 {
-    struct limine_smp_info **cores = (struct limine_smp_info **) cpus;
-    cores[id]->goto_address = (limine_goto_address)((uintptr_t) addr);
+    cpu->goto_address(cpu);
 }
 
-static void smp_idle(MAYBE_UNUSED void *cpu)
+void handover_goto_core(int id, CoreGoto func)
 {
-    loop;
+    struct limine_smp_response *response = smp_request.response;
+
+    if (response == NULL)
+    {
+        return;
+    }
+
+    response->cpus[id]->goto_address = (void(*)(struct limine_smp_info *)) func;
 }
 
 static void parse_smp(Handover *handover, struct limine_smp_response *response)
@@ -115,16 +126,14 @@ static void parse_smp(Handover *handover, struct limine_smp_response *response)
     log$("Booting {} cores", response->cpu_count);
     SmpEntry entry = {
         .core_count = response->cpu_count,
-        .bsp_lapic_id = response->bsp_lapic_id,
         .cpus = (void **)(response->cpus),
-        .core_goto = cpu_goto
     };
 
     handover->smp = entry;
 
     for (size_t i = 0; i < response->cpu_count; i++)
     {
-        cpu_goto((void **) response->cpus, i, smp_idle);
+        response->cpus[i]->goto_address = smp_idle;
     }
 }
 
@@ -133,11 +142,6 @@ ResultHandover handover_create(void)
 {
     Handover result;
 
-    extern struct limine_memmap_request memmap_request;
-    extern struct limine_hhdm_request hhdm_request;
-    extern struct limine_kernel_address_request addr_request;
-    extern struct limine_rsdp_request rsdp_request;
-    extern struct limine_smp_request smp_request;
 
     if (memmap_request.response == NULL || memmap_request.response->entry_count == 0)
     {
