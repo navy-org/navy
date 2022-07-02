@@ -1,7 +1,6 @@
 #pragma once
 
 #include "task.h"
-
 #include <handover/handover.h>
 
 typedef struct 
@@ -9,6 +8,7 @@ typedef struct
     int id;
     TaskQueue tasks;
     CoreGoto func;
+    CpuImpl *impl;
 } Cpu;
 
 void cpu_preinit(Handover const *handover);
@@ -19,3 +19,5 @@ CpuImpl *cpuimpl_self(void);
 
 Cpu *cpu(int id);
 Cpu *cpu_self(void);
+
+size_t cpu_count(void);

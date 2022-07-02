@@ -4,7 +4,6 @@
 
 typedef struct 
 {
-    void *base;
     Tss tss;
 } CpuImpl;
 
