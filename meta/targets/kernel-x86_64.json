@@ -30,6 +30,7 @@
                 "-fno-stack-protector",
                 "-fno-builtin",
                 "-ggdb",
+                "-O0",
                 "-Wall",
                 "-Wextra",
                 "-Werror",

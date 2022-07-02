@@ -26,3 +26,5 @@ typedef struct PACKED
 void apic_init(Handover const *handover);
 void lapic_eoi(void);
 int lapic_current_cpu(void);
+void lapic_init(void);
+void lapic_timer_init(void);

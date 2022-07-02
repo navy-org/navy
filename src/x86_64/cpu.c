@@ -27,6 +27,8 @@ void cpu_init(void)
 
     syscall_init();
     gdt_load_tss(&cpuimpl_self()->tss);
+    lapic_init();
+    lapic_timer_init();
 
     if (cpu_id() > 0) 
     {

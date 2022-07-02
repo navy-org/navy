@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <copland/base.h>
 
+#include <kernel/cpu.h>
+
 #include "abstraction.h"
 #include "spinlock.h"
 
@@ -114,6 +116,22 @@ uint64_t interrupts_handler(uint64_t rsp)
         {
             cli();
             hlt();
+        }
+    }
+    else if (regs->intno < 48)
+    {
+        uint8_t irq = regs->intno - 32;
+
+        switch (irq)
+        {
+            case 0:
+            {
+                if (cpu(0)->tasks.length > 0)
+                {
+                    sched_yield(regs);
+                }
+                break;
+            }
         }
     }
 

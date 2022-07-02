@@ -1,0 +1,15 @@
+{
+    "id": "round-robin",
+    "type": "lib",
+
+    "inject": [
+        "kernel"
+    ],
+
+    "requires": {
+        "sched": [
+            "round_robin"
+        ]
+    }
+    
+}

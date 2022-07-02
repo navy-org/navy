@@ -6,7 +6,9 @@
 typedef struct 
 {
     int id;
+    uint8_t tick;
     TaskQueue tasks;
+    size_t current;
     CoreGoto func;
     CpuImpl *impl;
 } Cpu;

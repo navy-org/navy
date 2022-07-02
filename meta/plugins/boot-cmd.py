@@ -45,7 +45,6 @@ def bootCmd(opts: dict, args: list[str]):
         "qemu-system-x86_64",
         "-no-shutdown",
         "-no-reboot",
-        "-d", "guest_errors",
         "-serial", "mon:stdio",
         "-bios", ovmf,
         "-m", "256M",
@@ -53,7 +52,6 @@ def bootCmd(opts: dict, args: list[str]):
         "-drive", f"file=fat:rw:{sysroot},media=disk,format=raw",
         "-enable-kvm"
     ]
-
 
     if "debug" in opts:
         qemuCmd += ["-s", "-S"]

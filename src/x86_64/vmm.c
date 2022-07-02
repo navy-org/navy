@@ -72,7 +72,7 @@ void vmm_map_range(Pml *pml, Range virt, Range phys, bool is_user)
     }
 }
 
-static void vmm_switch_space(Pml *space)
+void vmm_switch_space(Pml *space)
 {
     lock$(lock);
     write_cr3((uintptr_t) (space) - hhdm_offset);
@@ -152,4 +152,9 @@ PmlOption vmm_create_space(void)
 Pml *vmm_get_kernel_space(void)
 {
     return kernel_pml;
+}
+
+Pml *vmm_get_current_space(void)
+{
+    return (Pml *) (read_cr3() + hhdm_offset);
 }

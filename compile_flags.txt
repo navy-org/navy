@@ -12,3 +12,4 @@
 -D__osdk_arch_x86__
 -D__osdk_sub_64__
 -D__osdk_freestanding__
+-D__osdk_sched_round_robin__

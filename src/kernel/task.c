@@ -14,7 +14,7 @@ Task *task_create_impl(Str path, Pml *space)
 
     vmm_map_range(self->space, (Range) {
         .base = USER_STACK_BASE,
-        .length = STACK_SIZE / PAGE_SIZE
+        .length = self->stack.length, 
     }, self->stack, true);
 
     return self;

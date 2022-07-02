@@ -15,13 +15,13 @@ static void lapic_write(uint32_t reg, uint32_t value)
     *((volatile uint32_t *)(lapic_addr + reg)) = value;
 }
 
-static void lapic_init(void)
+void lapic_init(void)
 {
     asm_write_msr(MSR_APIC, (asm_read_msr(MSR_APIC) | LAPIC_ENABLE) & ~((1 << 10)));
     lapic_write(LAPIC_SPURIOUS, lapic_read(LAPIC_SPURIOUS) | 0x1ff);
 }
 
-static void lapic_timer_init(void)
+void lapic_timer_init(void)
 {
     lapic_write(LAPIC_TPR, 0);
 

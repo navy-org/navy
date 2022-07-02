@@ -4,7 +4,7 @@
     "type": "exe",
     "deps": [
         "copland",
-        "dlmalloc",
+        "liballoc",
         "libc"
     ]
 }

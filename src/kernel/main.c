@@ -23,5 +23,7 @@ int _start(void)
     pmm_init(&handover);
     hardware_init(&handover);
 
+    sched_init();
+
     loop;
 }

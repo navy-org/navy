@@ -57,3 +57,5 @@ void vmm_init(Handover const *handover);
 
 PmlOption vmm_create_space(void);
 Pml *vmm_get_kernel_space(void);
+Pml *vmm_get_current_space(void);
+void vmm_switch_space(Pml *space);
