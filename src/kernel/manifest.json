@@ -5,6 +5,7 @@
     "deps": [
         "copland",
         "liballoc",
-        "libc"
+        "libc",
+        "handover"
     ]
 }

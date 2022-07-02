@@ -13,6 +13,7 @@ extern struct limine_hhdm_request hhdm_request;
 extern struct limine_kernel_address_request addr_request;
 extern struct limine_rsdp_request rsdp_request;
 extern struct limine_smp_request smp_request;
+extern struct limine_module_request module_request;
 
 static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, size_t count)
 {
@@ -168,10 +169,10 @@ ResultHandover handover_create(void)
         return ERR(ResultHandover, str$("Couldn't get SMP info"));
     }
 
-    // if (module_request.response == NULL)
-    // {
-    //     return ERR(ResultHandover, str$("Couldn't get modules"));
-    // }
+    if (module_request.response == NULL)
+    {
+        return ERR(ResultHandover, str$("Couldn't get modules"));
+    }
 
 
     parse_smp(&result, smp_request.response);
@@ -180,7 +181,7 @@ ResultHandover handover_create(void)
     result.kernel_pbase = addr_request.response->physical_base;
     result.rsdp_address = (uintptr_t) rsdp_request.response->address;
     parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
-    // parse_module(&result, module_request.response->modules, module_request.response->module_count);
+    parse_module(&result, module_request.response->modules, module_request.response->module_count);
 
     return OK(ResultHandover, result);
 }

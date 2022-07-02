@@ -12,6 +12,7 @@ def bootCmd(opts: dict, args: list[str]):
     sysroot = utils.mkdirP(".build/sysroot")
     efi = utils.mkdirP(".build/sysroot/EFI/BOOT")
     boot = utils.mkdirP(".build/sysroot/boot")
+    bin = utils.mkdirP(".build/sysroot/bin")
 
     loader =  _DEFAULT_LOADER if "loader" not in opts else opts["loader"]
 
@@ -37,7 +38,15 @@ def bootCmd(opts: dict, args: list[str]):
         json_dump(manifest, f)
 
     navy = build.buildOne("current_build", "kernel")
+
+    modules = [
+        build.buildOne("current_build", "hello-world")
+    ]
+
     copy(navy, os.path.join(boot, "kernel.elf"))
+
+    for mod in modules:
+        copy(mod, os.path.join(bin, os.path.basename(mod)))
 
     os.remove("./meta/targets/current_build.json")
 

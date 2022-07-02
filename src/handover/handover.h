@@ -61,3 +61,4 @@ typedef struct
 } Handover;
 
 void handover_goto_core(int id, CoreGoto func);
+Module handover_find_module(Handover const *handover, Str name);

@@ -62,3 +62,16 @@ void *memcpy(void *dest, const void *src, size_t n)
 
     return (void *) cdest;
 }
+
+int strncmp(const char *s1, const char *s2, size_t n)
+{
+    while (n--)
+    {
+        if (*s1++ != *s2++)
+        {
+            return *s1 - *s2;
+        }
+    }
+
+    return 0;
+}

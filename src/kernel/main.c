@@ -1,4 +1,5 @@
 #include "abstraction.h"
+#include "elf.h"
 #include "pmm.h"
 
 #include <copland/base.h>
@@ -24,6 +25,9 @@ int _start(void)
     hardware_init(&handover);
 
     sched_init();
+
+    Module bin = handover_find_module(&handover, str$("/bin/hello-world"));
+    (void) elf_load(&bin, (TaskArgs){});
 
     loop;
 }
