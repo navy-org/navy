@@ -43,6 +43,20 @@ char *strrchr(const char *s, int c)
     return (char *) s + pos;
 }
 
+char *strchr(const char *s, int c)
+{
+    size_t length = strlen(s);
+    size_t pos = 0;
+    while (s[pos] != c && pos++ < length);
+
+    if (pos == length)
+    {
+        return NULL;
+    }
+
+    return (char *) s + pos;
+}
+
 void *memcpy(void *dest, const void *src, size_t n)
 {
     if (src == NULL)
@@ -65,13 +79,10 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-    while (n--)
-    {
-        if (*s1++ != *s2++)
-        {
-            return *s1 - *s2;
-        }
-    }
+    return __builtin_strncmp(s1, s2, n);
+}
 
-    return 0;
+int strcmp(const char *s1, const char *s2)
+{
+    return __builtin_strcmp(s1, s2);
 }
