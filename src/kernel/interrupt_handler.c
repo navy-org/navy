@@ -6,6 +6,7 @@
 
 #include "abstraction.h"
 #include "spinlock.h"
+#include "sched.h"
 
 static uint32_t lock;
 
@@ -87,7 +88,7 @@ static void exception_handler(Regs *regs)
     int funny_id = random() % (sizeof(comments) / sizeof(comments[0]));
 
     fmt$(debug, "\033[31m!!\033[33m-----------------------------------------------------------------------------------\033[0m\n");
-    fmt$(debug, "\n\tKERNEL PANIC CORE {}\n\t\033[51m{}\033[0m\n\t", cpu_id(), comments[funny_id]);
+    fmt$(debug, "\n\tKERNEL PANIC\n\t\033[51m{}\033[0m\n\t", comments[funny_id]);
     fmt$(debug, "{} (0x{x}) Err: {d}\n\n", _exception_messages[regs->intno], regs->intno, regs->err);
     fmt$(debug, "  RAX {a} RBX {a} RCX {a} RDX {a}\n", regs->rax,
                  regs->rbx, regs->rcx, regs->rdx);

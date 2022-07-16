@@ -1,5 +1,0 @@
-{
-    "id": "handover",
-    "type": "lib",
-    "description": "An abstraction layer for bootloaders"
-}

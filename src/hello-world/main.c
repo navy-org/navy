@@ -1,4 +1,3 @@
-#include "copland/debug.h"
 #include <unistd.h>
 #include <copland/base.h>
 
@@ -9,12 +8,20 @@ static void syscall_putc(MAYBE_UNUSED Writer* self, char c)
     syscall(SYS_DEBUG, (uintptr_t) s);
 }
 
-int main(void)
+void *realloc(void *ptr, size_t size)
+{
+    (void) ptr;
+    (void) size;
+    return NULL;
+}
+
+int _start(void)
 {
     Writer out = writer_init(syscall_putc);
     define_debug_out(&out);
 
     log$("Hello, World !");
 
-    return 0;
+    loop;
+    __builtin_unreachable();
 }

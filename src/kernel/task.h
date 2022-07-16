@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <copland/base.h>
+#include <unistd.h>
 #include "abstraction.h"
 
 typedef enum 
@@ -16,6 +17,7 @@ typedef struct
 {
     Str path;
     Pml *space;
+    pid_t pid;
     Range stack;
     TaskState state;
     intptr_t return_value;

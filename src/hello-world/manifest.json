@@ -1,9 +1,0 @@
-{
-    "id": "hello-world",
-    "type": "exe",
-
-    "deps": [
-        "libc",
-        "copland"
-    ]
-}

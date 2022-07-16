@@ -12,3 +12,5 @@ limine-deploy
 navy.iso
 .cache
 .gdb_history
+build/
+sysroot/

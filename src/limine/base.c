@@ -1,5 +1,4 @@
 #include "base.h"
-#include "copland/debug.h"
 #include "limine.h"
 
 #include <x86_64/base.h>
@@ -68,7 +67,7 @@ static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, s
             }
             default:
             {
-                panic$("Unknown memmap type {}", entry->type);
+                panic$("Unknown memmap type {x}", entry->type);
             }
         }
 
@@ -81,7 +80,7 @@ static void parse_memmap(Handover *self, struct limine_memmap_entry **entries, s
     }
 }
 
-MAYBE_UNUSED static void parse_module(Handover *handover, struct limine_file **entries, size_t count)
+static void parse_module(Handover *handover, struct limine_file **entries, size_t count)
 {
     handover->module_count = count;
 

@@ -20,5 +20,6 @@ typedef struct
     uint64_t arg5;
 } TaskArgs;
 
+void context_create(Context *ctx, uintptr_t ip, TaskArgs args);
 void context_save(Context *ctx, Regs *regs);
 void context_switch(Context *ctx, Regs *regs);

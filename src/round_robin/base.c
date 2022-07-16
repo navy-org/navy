@@ -3,7 +3,6 @@
 #include "x86_64/vmm.h"
 
 #include <kernel/abstraction.h>
-#include <kernel/task.h>
 #include <kernel/spinlock.h>
 #include <kernel/cpu.h>
 
@@ -24,11 +23,12 @@ void sched_yield(Regs *regs)
 {
     lock$(lock);
 
-    if (++cpu_self()->tick > SCHED_QUATUM)
+    if (cpu_self()->tick++ > SCHED_QUATUM && cpu_self()->tasks.length > 1)
     {
         cpu_self()->tick = 0;
         Task *current_task = cpu_self()->tasks.data[cpu_self()->current];
         context_save(&current_task->ctx, regs);
+        log$("Current task was {} (ip = {a})", current_task->path, current_task->ctx.regs.rip);
 
         loop 
         {
@@ -47,9 +47,32 @@ void sched_yield(Regs *regs)
             }
         }
 
+        if (cpu_self()->id == 0)
+        {
+            log$("Switching to {} (ip = {a})", current_task->path, current_task->ctx.regs.rip);            
+        }
+
         context_switch(&current_task->ctx, regs);
         vmm_switch_space(current_task->space);
     }
 
     unlock$(lock);
+}
+
+
+void sched_push_task(Task *task)
+{
+    size_t smallest = cpu(0)->tasks.length;
+    int cpu_id = 0;
+
+    for (size_t i = 1; i < cpu_count(); i++)
+    {
+        if (smallest < cpu(i)->tasks.length)
+        {
+            smallest = i;
+            cpu_id = i;
+        }
+    }
+
+    vec_push(&cpu(cpu_id)->tasks, task);
 }

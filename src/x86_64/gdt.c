@@ -53,7 +53,6 @@ static TssEntry init_tss(uintptr_t self)
 
 void gdt_init(void)
 {
-    
     init_descriptor(&gdt.entries[GDT_NULL], 0, 0, 0);
 
     init_descriptor(&gdt.entries[GDT_KERNEL_CODE], 0, 0, GDT_KERNEL | GDT_CODE);

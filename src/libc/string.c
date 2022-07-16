@@ -79,10 +79,13 @@ void *memcpy(void *dest, const void *src, size_t n)
 
 int strncmp(const char *s1, const char *s2, size_t n)
 {
-    return __builtin_strncmp(s1, s2, n);
-}
+    while (n--)
+    {
+        if (*s1++ != *s2++)
+        {
+            return *s1 - *s2;
+        }
+    }
 
-int strcmp(const char *s1, const char *s2)
-{
-    return __builtin_strcmp(s1, s2);
+    return 0;
 }
