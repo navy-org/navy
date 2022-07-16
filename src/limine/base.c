@@ -106,7 +106,8 @@ static void parse_module(Handover *handover, struct limine_file **entries, size_
 
 static void smp_idle(struct limine_smp_info *cpu)
 {
-    cpu->goto_address(cpu);
+    (void) cpu;
+    for (;;);
 }
 
 void handover_goto_core(int id, CoreGoto func)
@@ -141,7 +142,7 @@ static void parse_smp(Handover *handover, struct limine_smp_response *response)
 ResultHandover handover_create(void)
 {
     Handover result;
-
+    log$("Creating handover");
 
     if (memmap_request.response == NULL || memmap_request.response->entry_count == 0)
     {
@@ -173,14 +174,13 @@ ResultHandover handover_create(void)
         return ERR(ResultHandover, str$("Couldn't get modules"));
     }
 
-
+    parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
+    parse_module(&result, module_request.response->modules, module_request.response->module_count);
     parse_smp(&result, smp_request.response);
     result.hhdm_offset = hhdm_request.response->offset;
     result.kernel_vbase = addr_request.response->virtual_base;
     result.kernel_pbase = addr_request.response->physical_base;
     result.rsdp_address = (uintptr_t) rsdp_request.response->address;
-    parse_memmap(&result, memmap_request.response->entries, memmap_request.response->entry_count);
-    parse_module(&result, module_request.response->modules, module_request.response->module_count);
 
     return OK(ResultHandover, result);
 }

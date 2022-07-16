@@ -3,11 +3,8 @@ KERNEL_BUILD = $(BUILD)/kernel
 
 KERNEL_CFLAGS = 					\
 	$(CFLAGS)						\
-	-mno-red-zone					\
-	-fno-zero-initialized-in-bss	\
 	-mcmodel=kernel					\
-	-m64							\
-	-Isrc/							
+			
 
 KERNEL_LDFLAGS +=					\
 	$(LDFLAGS)						\

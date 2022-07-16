@@ -2,6 +2,7 @@
 #include "elf.h"
 #include "pmm.h"
 #include "sched.h"
+#include "x86_64/base.h"
 
 #include <copland/base.h>
 #include <handover/handover.h>
@@ -27,7 +28,7 @@ int _start(void)
 
     sched_init();
 
-    Module bin = handover_find_module(&handover, str$("/bin/hello-world"));
+    Module bin = handover_find_module(&handover, str$("/bin/hello-world.elf"));
     Task *task = elf_load(&bin, (TaskArgs){});
 
     sched_push_task(task);

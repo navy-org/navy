@@ -28,6 +28,7 @@ Task *elf_load(Module *m, MAYBE_UNUSED TaskArgs args)
 
         if (phdr->p_type == PT_LOAD)
         {
+            log$("Loading Phdr {a}", phdr->p_vaddr);
             Range addr = UNWRAP_OR_PANIC(pmm_alloc(align_up$(phdr->p_memsz, PAGE_SIZE)), "Out of memory");
             vmm_map_range(space, (Range) {
                 .base = align_down$(phdr->p_vaddr, PAGE_SIZE),

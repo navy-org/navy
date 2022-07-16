@@ -1,10 +1,8 @@
 #include <unistd.h>
 #include <copland/base.h>
 
-static void syscall_putc(MAYBE_UNUSED Writer* self, char c)
+static void syscall_puts(char const *s)
 {
-    char s[2] = {0};
-    s[1] = c;
     syscall(SYS_DEBUG, (uintptr_t) s);
 }
 
@@ -17,10 +15,8 @@ void *realloc(void *ptr, size_t size)
 
 int _start(void)
 {
-    Writer out = writer_init(syscall_putc);
-    define_debug_out(&out);
-
-    log$("Hello, World !");
+    syscall_puts("Hello, World !\n");
+    syscall_puts("It works !");
 
     loop;
     __builtin_unreachable();

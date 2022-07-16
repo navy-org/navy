@@ -24,6 +24,5 @@ Syscall syscall_matrix[] = {
 
 int64_t syscall_handler(Regs *regs)
 {
-    log$("SYSCALL !!!");
     return syscall_matrix[regs->rax](regs);
 }

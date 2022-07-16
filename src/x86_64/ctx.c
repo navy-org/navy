@@ -1,6 +1,8 @@
 #include "ctx.h"
+#include "kernel/abstraction.h"
 
 #include <kernel/spinlock.h>
+#include <kernel/pmm.h>
 
 static uint32_t lock = 0;
 
@@ -8,7 +10,7 @@ void context_create(Context *ctx, uintptr_t ip, TaskArgs args)
 {
     lock$(lock);
 
-    Regs regs = {};
+    Regs regs = {0};
 
     regs.cs = (GDT_USER_CODE * 8) | 3;
     regs.ss = (GDT_USER_DATA * 8) | 3;
@@ -25,7 +27,7 @@ void context_create(Context *ctx, uintptr_t ip, TaskArgs args)
 
     ctx->regs = regs;
 
-    ctx->syscall_kernel_bstack = (uintptr_t) malloc(STACK_SIZE);
+    ctx->syscall_kernel_bstack =  UNWRAP_OR_PANIC(pmm_alloc(STACK_SIZE), "PMM couldn't allocate memory").base + get_hhdm_offset();
     ctx->syscall_kernel_stack = ctx->syscall_kernel_bstack + STACK_SIZE;
 
     unlock$(lock);

@@ -7,12 +7,7 @@ void hardware_init(Handover const *handover)
 {
     log$("Initializing hardware...");
     gdt_init();
-
-#ifndef __osdk_debug_mode__
     idt_init();
-#else 
-    log$("Kernel debugging is enabled, no IDT for this build...")
-#endif
 
     define_dbg_func(debug_interrupt);
     

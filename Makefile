@@ -9,19 +9,21 @@ MKCWD=mkdir -p $(@D)
 BUILD = ./build
 
 CFLAGS =							\
-	-mno-sse						\
-	-mno-sse2						\
-	-fno-pic						\
-	-fno-pie						\
-	-nostdlib						\
-	-std=gnu2x						\
-	-fno-builtin					\
-	-Werror							\
-	-Wextra							\
-	-Wall							\
-	-ggdb3   						\
-	-fno-stack-protector			\
-	-O0								\
+	-ffreestanding					\
+    -mno-80387						\
+    -mno-mmx						\
+    -mno-3dnow						\
+    -mno-red-zone					\
+    -mno-sse						\
+    -mno-sse2						\
+    -fno-stack-protector			\
+    -fno-builtin					\
+    -ggdb							\
+    -O0								\
+    -Wall							\
+    -Wextra							\
+    -Werror							\
+    -std=gnu2x						\
 	-Isrc							\
 	-Isrc/libc						\
 	-D__$(ARCH)__					\
