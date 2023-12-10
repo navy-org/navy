@@ -2,7 +2,7 @@
 
 #include <io/stream.h>
 
-void hal_setup(void);
+Res hal_setup(void);
 
 /* --- Assembly function --------------------------------------------------- */
 

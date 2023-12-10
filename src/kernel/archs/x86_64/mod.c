@@ -1,6 +1,9 @@
+#include <hal.h>
 #include <io/stream.h>
+#include <res.h>
 
 #include "e9.h"
+#include "gdt.h"
 
 Stream hal_dbg_stream(void)
 {
@@ -9,6 +12,8 @@ Stream hal_dbg_stream(void)
     };
 }
 
-void hal_setup(void)
+Res hal_setup(void)
 {
+    gdt_init();
+    return ok$();
 }
