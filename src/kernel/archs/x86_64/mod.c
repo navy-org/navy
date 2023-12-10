@@ -4,6 +4,7 @@
 
 #include "e9.h"
 #include "gdt.h"
+#include "idt.h"
 
 Stream hal_dbg_stream(void)
 {
@@ -15,5 +16,6 @@ Stream hal_dbg_stream(void)
 Res hal_setup(void)
 {
     gdt_init();
+    idt_init();
     return ok$();
 }

@@ -4,6 +4,10 @@
 
 Res hal_setup(void);
 
+/* --- Structs ------------------------------------------------------------  */
+
+typedef struct _HalRegs HalRegs;
+
 /* --- Assembly function --------------------------------------------------- */
 
 void hal_disable_interrupts(void);

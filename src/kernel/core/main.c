@@ -5,6 +5,7 @@ _Noreturn int _start()
 {
     log$("Hello, world!");
     hal_setup();
+
     for (;;)
         ;
 }
