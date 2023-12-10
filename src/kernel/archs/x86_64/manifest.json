@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "type": "lib",
+    "id": "arch (x86_64)",
+    "enableIf": {
+        "arch": [
+            "x86_64"
+        ]
+    },
+    "provides": [
+        "arch"
+    ],
+    "requires": [
+        "dbg"
+    ]
+}

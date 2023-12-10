@@ -1,5 +1,17 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "exe",
-    "id": "core"
+    "id": "core",
+    "requires": [
+        "arch",
+        "dbg",
+        "stdc-shim"
+    ],
+    "tools": {
+        "cc": {
+            "args": [
+                "-Isrc/kernel/klibs"
+            ]
+        }
+    }
 }
