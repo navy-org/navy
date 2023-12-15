@@ -8,6 +8,7 @@
 #include "paging.h"
 #include "hpet.h"
 #include "apic.h"
+#include "simd.h"
 
 Stream hal_dbg_stream(void)
 {
@@ -24,6 +25,7 @@ Res hal_setup(void)
     acpi_init();
     try$(hpet_init());
     try$(apic_init());
+    simd_init();
 
     return ok$();
 }

@@ -2,6 +2,10 @@
 
 #include <stdint.h>
 
+void out8(uint16_t port, uint8_t value);
+
+uint8_t in8(uint16_t port);
+
 #define asm_read_cr(n, reg) asm volatile("mov %%cr" #n ", %0" \
                                          : "=r"(reg))
 
@@ -31,3 +35,15 @@ enum msr_star_reg
 void asm_write_msr(uint64_t msr, uint64_t value);
 
 uint64_t asm_read_msr(uint64_t msr);
+
+void asm_write_xcr(uint32_t xcr, uint64_t value);
+
+uint64_t asm_read_xcr(uint32_t xcr);
+
+void asm_xsave(uint8_t *region);
+
+void asm_xrstor(uint8_t *region);
+
+void asm_fxrstor(void *region);
+
+void asm_fxsave(void *region);
