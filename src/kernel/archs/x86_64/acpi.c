@@ -1,5 +1,5 @@
-#include <dbg/log.h>
 #include <hal.h>
+#include <dbg/log.h>
 #include <string.h>
 
 #include "acpi.h"
