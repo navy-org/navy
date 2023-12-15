@@ -5,6 +5,7 @@
 #include "e9.h"
 #include "gdt.h"
 #include "idt.h"
+#include "paging.h"
 
 Stream hal_dbg_stream(void)
 {
@@ -17,5 +18,7 @@ Res hal_setup(void)
 {
     gdt_init();
     idt_init();
+    paging_init();
+    acpi_init();
     return ok$();
 }

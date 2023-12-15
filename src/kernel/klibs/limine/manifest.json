@@ -1,16 +1,16 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "arch_x86_64",
+    "id": "loader-limine",
     "enableIf": {
+        "loader": [
+            "limine"
+        ],
         "arch": [
             "x86_64"
         ]
     },
     "provides": [
-        "arch"
-    ],
-    "requires": [
-        "dbg"
+        "loader"
     ]
 }

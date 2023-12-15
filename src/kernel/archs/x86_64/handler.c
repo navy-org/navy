@@ -36,7 +36,7 @@ static char *exception_messages[32] = {
     "Control Protection Exception",
     "Reserved",
     "Hypervisor Injection Exception",
-    "VMM Communication Exception",
+    "paging Communication Exception",
     "Security Exception",
     "Reserved",
     "Reserved",
