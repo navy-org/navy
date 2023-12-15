@@ -4,7 +4,7 @@ from cutekit import const, shell
 from .build import Builder
 
 class Image:
-    def __init__(self, builder: Builder, dst: Path = Path(".") / const.PROJECT_CK_DIR / "kernel"):
+    def __init__(self, builder: Builder, dst: Path = Path(".") / const.PROJECT_CK_DIR / "navy"):
         self.builder = builder
         self.path = dst
 
@@ -38,7 +38,7 @@ class Image:
         cfg = [
             "TIMEOUT=0",
             "GRAPHICS=no",
-            ":kernel",
+            ":navy",
             "PROTOCOL=limine",
             "KERNEL_PATH=boot:///boot/kernel.elf",
         ]

@@ -4,12 +4,12 @@ from . import build
 from . import image
 from . import qemu
 
-@cli.command("k", "kernel", "kernel related commands")
+@cli.command("n", "navy", "Navy related commands")
 def _(args: cli.Args):
     pass
 
 
-@cli.command("b", "kernel/boot", "Boot kernel")
+@cli.command("b", "navy/boot", "Boot Navy")
 def _(args: cli.Args):
     qemu.Qemu(
         image.Image(
@@ -18,6 +18,6 @@ def _(args: cli.Args):
     ).run()
 
 
-@cli.command("B", "kernel/build", "Build kernel")
+@cli.command("B", "navy/build", "Build Navy")
 def _(args: cli.Args):
     build.Builder(args).build_core()

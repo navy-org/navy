@@ -1,7 +1,7 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
     "type": "project",
-    "id": "kernel",
+    "id": "navy-org/navy",
     "extern": {
         "cute-engineering/libheap": {
             "git": "https://github.com/cute-engineering/libheap.git",

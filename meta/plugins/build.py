@@ -6,7 +6,7 @@ class Builder:
         self.__registry = model.Registry.use(args)
         self.__kernel_scope = builder.TargetScope(
             self.__registry,
-            self.__registry.lookup(f"kernel-{arch}", model.Target),
+            self.__registry.lookup(f"navy-{arch}", model.Target),
         )
 
     def build_core(self) -> Path:

@@ -1,12 +1,12 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.target.v1",
-    "id": "kernel-x86_64",
+    "id": "navy-x86_64",
     "type": "target",
     "props": {
         "toolchain": "clang",
         "arch": "x86_64",
         "bits": "64",
-        "sys": "kernel",
+        "sys": "navy",
         "loader": "limine",
         "abi": "sysv",
         "encoding": "utf8",
