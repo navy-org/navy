@@ -25,14 +25,20 @@ class Image:
         boot_dir = self.path / "boot"
         boot_dir.mkdir(parents=True, exist_ok=True)
 
+        bin_dir = self.path / "bin"
+        bin_dir.mkdir(parents=True, exist_ok=True)
+
         return {
             "efi_boot": efi_boot,
             "boot_dir": boot_dir,
+            "bin_dir": bin_dir,
         }
 
 
     def efi_x86_64(self):
         kernel_path = self.builder.build_core()
+        modules = self.builder.build_modules()
+
         paths = self.__efi_common()
 
         cfg = [
@@ -42,6 +48,14 @@ class Image:
             "PROTOCOL=limine",
             "KERNEL_PATH=boot:///boot/kernel.elf",
         ]
+
+        for mod in modules:
+            name = mod.name.split(".")[0]
+            cfg.append(f"MODULE_PATH=boot:///bin/{name}")
+            shell.cp(
+                str(mod),
+                str(paths["bin_dir"] / name)
+            )
 
         shell.wget(
             "https://github.com/limine-bootloader/limine/raw/v6.x-branch-binary/BOOTX64.EFI",

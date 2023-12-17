@@ -21,4 +21,20 @@ typedef enum
 #define critical$(...) _log(LOG_CRIT, loc$(), __VA_ARGS__)
 #define print$(...)    _log(LOG_NONE, (Loc){}, __VA_ARGS__)
 
+static char const *level_names[LOG_EVENT_LENGTH] = {
+    [LOG_NONE] = "",
+    [LOG_INFO] = "INFO",
+    [LOG_WARN] = "WARN",
+    [LOG_ERROR] = "ERROR",
+    [LOG_CRIT] = "CRITIC",
+};
+
+static char const *level_colors[LOG_EVENT_LENGTH] = {
+    [LOG_NONE] = "",
+    [LOG_INFO] = "\e[1;34m",
+    [LOG_WARN] = "\e[1;33m",
+    [LOG_ERROR] = "\e[1;31m",
+    [LOG_CRIT] = "\e[1;35m",
+};
+
 void _log(LogEvent event, Loc loc, char const *format, ...);

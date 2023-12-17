@@ -1,15 +1,16 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "id": "navy-x86_64",
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.target.v1",
+    "id": "kernel-x86_64",
     "type": "target",
     "props": {
         "toolchain": "clang",
         "arch": "x86_64",
         "bits": "64",
-        "sys": "navy",
+        "sys": "kernel",
+        "loader": "limine",
         "abi": "sysv",
         "encoding": "utf8",
-        "freestanding": false,
+        "freestanding": true,
         "host": false
     },
     "tools": {
@@ -22,11 +23,16 @@
                 "-target",
                 "x86_64-none-elf",
                 "-ffreestanding",
+                "-fno-stack-protector",
                 "-mno-80387",
                 "-mno-mmx",
                 "-mno-3dnow",
                 "-mno-sse",
-                "-mno-sse2"
+                "-mno-sse2",
+                "-mno-red-zone",
+                "-mcmodel=kernel",
+                "-Dauto=__auto_type",
+                "-g"
             ]
         },
         "cxx": {
@@ -38,11 +44,14 @@
                 "-target",
                 "x86_64-none-elf",
                 "-ffreestanding",
+                "-fno-stack-protector",
                 "-mno-80387",
                 "-mno-mmx",
                 "-mno-3dnow",
                 "-mno-sse",
-                "-mno-sse2"
+                "-mno-sse2",
+                "-mno-red-zone",
+                "-mcmodel=kernel"
             ]
         },
         "ld": {
@@ -56,10 +65,13 @@
                 "-T",
                 [
                     "@abspath",
-                    "navy-x86_64.ld"
+                    "kernel-x86_64.ld"
                 ],
                 "-z",
                 "max-page-size=0x1000"
+            ],
+            "files": [
+                "meta/targets/kernel-x86_64.ld"
             ]
         },
         "ar": {
@@ -72,11 +84,15 @@
             ]
         },
         "as": {
-            "cmd": "clang",
+            "cmd": [
+                "@latest",
+                "clang"
+            ],
             "args": [
                 "-target",
                 "x86_64-none-elf",
-                "-c"
+                "-c",
+                "-g"
             ]
         }
     }

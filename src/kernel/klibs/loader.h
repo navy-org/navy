@@ -1,5 +1,6 @@
 #pragma once
 
+#include <res.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -36,6 +37,17 @@ typedef struct
 } KernelMmap;
 
 Mmap loader_get_mmap(void);
+
+/* --- Modules -------------------------------------------------------------- */
+
+typedef struct
+{
+    uintptr_t base;
+    size_t len;
+    char name[64];
+} Module;
+
+Module loader_get_module(char const *path);
 
 /* --- Misc ---------------------------------------------------------------- */
 

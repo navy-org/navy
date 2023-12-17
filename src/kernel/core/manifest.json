@@ -6,7 +6,8 @@
         "arch",
         "dbg",
         "stdc-shim",
-        "loader"
+        "loader",
+        "kmalloc"
     ],
     "tools": {
         "cc": {

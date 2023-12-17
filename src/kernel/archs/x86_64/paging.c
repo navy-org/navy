@@ -68,8 +68,8 @@ static Res paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
     else if (alloc)
     {
         PmmObj obj = pmm_alloc(1);
-        memset((void *)obj.base, 0, obj.len);
         uintptr_t ptr_hddm = hal_mmap_l2h(obj.base);
+        memset((void *)ptr_hddm, 0, obj.len);
 
         pml[index] = obj.base | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
@@ -158,10 +158,10 @@ Res paging_init(void)
         return err$(RES_NOMEM);
     }
 
-    memset((void *)obj.base, 0, obj.len);
-
     log$("PML4: 0x%p", obj.base);
     pml4 = (uintptr_t *)hal_mmap_l2h((uintptr_t)obj.base);
+
+    memset((void *)pml4, 0, obj.len);
 
     if (cpuid_has_1gb_pages())
     {
@@ -220,14 +220,14 @@ Res hal_space_create(HalPage **self)
 {
 
     PmmObj obj = pmm_alloc(1);
-    memset((void *)obj.base, 0, obj.len);
+    uintptr_t *space = (uintptr_t *)hal_mmap_l2h(obj.base);
+    memset((void *)space, 0, obj.len);
 
     if (obj.base == 0)
     {
         return err$(RES_NOMEM);
     }
 
-    uintptr_t *space = (uintptr_t *)hal_mmap_l2h(obj.base);
     memset((void *)space, 0, PMM_PAGE_SIZE);
 
     for (size_t i = 255; i < 512; i++)

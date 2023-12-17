@@ -85,6 +85,7 @@ typedef struct [[gnu::packed]]
 
 void gdt_init(void);
 void gdt_load_tss(Tss *self);
+Res gdt_init_tss(void);
 uintptr_t gdt_descriptor(void);
 
 extern void gdt_flush(uintptr_t);

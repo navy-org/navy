@@ -10,7 +10,8 @@
     F(RES_INVAL)    \
     F(RES_NOMEM)    \
     F(RES_BADALIGN) \
-    F(RES_NOENT)
+    F(RES_NOENT)    \
+    F(RES_BADSYSCALL)
 
 enum res_type
 {

@@ -2,6 +2,8 @@
 #include <hal.h>
 #include <sync/spinlock.h>
 
+#include "../core/pre-sched.h"
+#include "apic.h"
 #include "asm.h"
 #include "regs.h"
 
@@ -68,6 +70,7 @@ static void dump_backtrace(uintptr_t rbp)
 static void kpanic(HalRegs const regs[static 1])
 {
     spinlock_acquire(&lock);
+
     uint64_t cr0, cr2, cr3, cr4;
 
     asm_read_cr(0, cr0);
@@ -107,6 +110,11 @@ uintptr_t interrupt_handler(uintptr_t rsp)
             hal_pause();
         }
     }
+    else if (regs->intno == IRQ0)
+    {
+        switch_to_scheduler(regs);
+    }
 
+    lapic_eoi();
     return rsp;
 }

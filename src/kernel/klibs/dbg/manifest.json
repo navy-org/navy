@@ -1,12 +1,15 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "dbg",
+    "id": "dbg-kernel",
     "enableIf": {
-        "freestanding": [
-            true
+        "sys": [
+            "kernel"
         ]
     },
+    "provides": [
+        "dbg"
+    ],
     "requires": [
         "sync",
         "fmt"
