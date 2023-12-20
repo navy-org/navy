@@ -25,7 +25,7 @@ static bool need_switch = false;
 
 Res load_scheduler(void)
 {
-    Module sched = loader_get_module("/bin/sched");
+    Module sched = loader_get_module("/bin/procman");
     if (sched.len == 0)
     {
         return err$(RES_NOENT);
