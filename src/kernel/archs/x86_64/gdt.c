@@ -1,11 +1,14 @@
 #include <dbg/log.h>
 #include <hal.h>
+#include <kmalloc/kmalloc.h>
 #include <string.h>
 #include <sync/spinlock.h>
 
+#include "ctx.h"
 #include "gdt.h"
 
 static Gdt gdt = {0};
+static Tss tss = {0};
 
 static Spinlock lock = SPINLOCK_INIT;
 
@@ -78,4 +81,18 @@ void gdt_init(void)
 
     tss_flush();
     log$("TSS loaded");
+}
+
+Res gdt_init_tss(void)
+{
+    Alloc heap = kmalloc_acquire();
+    tss.ist[1] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
+    tss.ist[0] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
+    tss.rsp[0] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
+
+    log$("TSS initialized");
+    gdt_load_tss(&tss);
+    tss_flush();
+
+    return ok$();
 }

@@ -1,9 +1,10 @@
 #include <dbg/log.h>
 #include <hal.h>
+#include <loader.h>
 #include <stddef.h>
+#include <string.h>
 
 #include "limine.h"
-#include "loader.h"
 
 static Mmap mmap = {0};
 
@@ -33,10 +34,10 @@ static volatile struct limine_rsdp_request rsdp_req = {
     .response = NULL,
 };
 
-static volatile struct limine_smp_request smp_req = {
-    .id = LIMINE_SMP_REQUEST,
+volatile struct limine_module_request module_request = {
+    .id = LIMINE_MODULE_REQUEST,
+    .response = 0,
     .revision = 0,
-    .response = NULL,
 };
 
 /* --- Loader functions ---------------------------------------------------- */
@@ -172,27 +173,27 @@ Rsdp *hal_acpi_rsdp(void)
     return (Rsdp *)rsdp_req.response->address;
 }
 
-size_t cpu_count(void)
+Module loader_get_module(char const *path)
 {
-    if (smp_req.response == NULL)
+    if (module_request.response == NULL)
     {
-        error$("Couldn't retrieve SMP info from Limine");
-        hal_panic();
+        return (Module){0};
     }
 
-    return smp_req.response->cpu_count;
-}
-
-void hal_smp_boot(void (*entry)(void))
-{
-    if (smp_req.response == NULL)
+    for (size_t i = 0; i < module_request.response->module_count; i++)
     {
-        error$("Couldn't retrieve SMP info from Limine");
-        hal_panic();
+        if (memcmp(path, module_request.response->modules[i]->path, strlen(path)) == 0)
+        {
+            Module mod = {
+                .base = (uintptr_t)module_request.response->modules[i]->address,
+                .len = module_request.response->modules[i]->size,
+            };
+
+            memcpy(mod.name, module_request.response->modules[i]->path, strlen(path));
+
+            return mod;
+        }
     }
 
-    for (size_t i = 0; i < smp_req.response->cpu_count; i++)
-    {
-        smp_req.response->cpus[i]->goto_address = (limine_goto_address)entry;
-    }
+    return (Module){0};
 }

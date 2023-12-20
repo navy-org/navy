@@ -5,8 +5,8 @@ from cutekit import shell
 from .image import Image
 
 class Qemu:
-    def __init__(self, img: Image, no_reboot: bool = True, nographics: bool = False,
-                 no_shutdown: bool = True, efi: bool = True, memory: str = "4G", debug: bool = False):
+    def __init__(self, img: Image, no_reboot: bool = True, no_display: bool = False,
+                 no_shutdown: bool = True, efi: bool = True, memory: str = "4G", debug: bool = False, soft_dbg: bool = False):
         self.__img = img 
         self.__binary = None
         self.__efi = efi
@@ -26,11 +26,14 @@ class Qemu:
         if no_shutdown:
             self.__args.append("-no-shutdown")
 
-        if nographics:
-            self.__args.append("-nographic")
+        if no_display:
+            self.__args += ["-display", "none"]
 
         if self.iskvmAvailable():
             self.__args += ["-enable-kvm", "-cpu", "host"]
+
+        if soft_dbg:
+            self.__args += ["-d", "int"]
 
         try:
             getattr(self, f"arch_{img.builder.arch}")()

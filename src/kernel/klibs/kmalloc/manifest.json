@@ -1,16 +1,13 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "stdc-shim-kernel",
-    "props": {
-        "cpp-root-include": true
-    },
+    "id": "kmalloc",
+    "requires": [
+        "libheap"
+    ],
     "enableIf": {
         "sys": [
             "kernel"
         ]
-    },
-    "provides": [
-        "stdc-shim"
-    ]
+    }
 }

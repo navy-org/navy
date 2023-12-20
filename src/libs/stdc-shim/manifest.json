@@ -1,13 +1,13 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "stdc-shim-kernel",
+    "id": "stdc-shim-user",
     "props": {
         "cpp-root-include": true
     },
     "enableIf": {
         "sys": [
-            "kernel"
+            "navy"
         ]
     },
     "provides": [

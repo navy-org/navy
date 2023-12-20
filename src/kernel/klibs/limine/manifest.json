@@ -8,9 +8,16 @@
         ],
         "arch": [
             "x86_64"
+        ],
+        "sys": [
+            "kernel"
         ]
     },
     "provides": [
         "loader"
+    ],
+    "requires": [
+        "stdc-shim",
+        "dbg"
     ]
 }

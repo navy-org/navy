@@ -111,3 +111,30 @@ __interrupts_vector:
 idt_flush:
     lidt (%rdi)
     ret
+
+.extern syscall_handler
+.globl syscall_handle
+
+syscall_handle:
+    swapgs
+    mov %rsp, %gs:0x8
+    mov %gs:0x0, %rsp
+
+    pushq $0x1b
+    pushq %gs:0x8
+    push %r11
+    pushq $0x23
+    push %rcx
+
+    cld
+    __pusha
+
+    mov %rsp, %rdi
+    movl $0, %ebp
+    call syscall_handler
+
+    __popa
+
+    mov %gs:0x8, %rsp
+    swapgs
+    sysretq
