@@ -1,5 +1,6 @@
 #include <dbg/log.h>
 #include <hal.h>
+#include <tinyvmem/tinyvmem.h>
 
 #include "pmm.h"
 #include "pre-sched.h"
