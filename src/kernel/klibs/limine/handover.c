@@ -1,14 +1,20 @@
 #include <dbg/log.h>
 #include <hal.h>
-#include <loader.h>
+#include <handover.h>
 #include <stddef.h>
 #include <string.h>
 
+#include "handover/builder.h"
+#include "handover/handover.h"
 #include "limine.h"
 
-static Mmap mmap = {0};
+/* --- Handover ------------------------------------------------------------- */
 
-/* --- Limine requests ----------------------------------------------------- */
+static uint8_t handover_buffer[kib$(16)] = {0};
+static HandoverBuilder builder;
+static bool is_handover_init = false;
+
+/* --- Limine requests ------------------------------------------------------ */
 
 static volatile struct limine_memmap_request memmap_req = {
     .id = LIMINE_MEMMAP_REQUEST,
@@ -42,37 +48,37 @@ volatile struct limine_module_request module_request = {
 
 /* --- Loader functions ---------------------------------------------------- */
 
-Mmap loader_get_mmap(void)
+void handover_parse_mmap(HandoverBuilder *self)
 {
-    if (mmap.len > 0)
-    {
-        return mmap;
-    }
-
     if (memmap_req.response == NULL)
     {
         error$("Couldn't retrieve memory map from Limine");
         hal_panic();
     }
+    
+    if (kernel_addr_req.response == NULL)
+    {
+        error$("Couldn't retrieve kernel address from Limine");
+        hal_panic();
+    }
 
     log$("Retrieved memory map from Limine");
 
-    log$("=====================================================");
-    log$("    TYPE    |       BASE         |       LIMIT       ");
-    log$("=====================================================");
+    log$("======================================================");
+    log$("    TYPE     |       BASE         |       LIMIT       ");
+    log$("======================================================");
 
-    size_t i;
-    for (i = 0; i < memmap_req.response->entry_count; i++)
+    for (size_t i = 0; i < memmap_req.response->entry_count; i++)
     {
         struct limine_memmap_entry *entry = memmap_req.response->entries[i];
-        MmapEntry *mmap_entry = &mmap.entries[i];
+        HandoverRecord record = {0};
 
         switch (entry->type)
         {
             case LIMINE_MEMMAP_USABLE:
             {
-                log$("FREE        | %p | %p", entry->base, entry->base + entry->length);
-                mmap_entry->type = LOADER_FREE;
+                log$("FREE         | %p | %p", entry->base, entry->base + entry->length);
+                record.tag = HANDOVER_FREE;
                 break;
             }
 
@@ -80,30 +86,30 @@ Mmap loader_get_mmap(void)
             case LIMINE_MEMMAP_RESERVED:
             case LIMINE_MEMMAP_BAD_MEMORY:
             {
-                log$("RESERVED    | %p | %p", entry->base, entry->base + entry->length);
-                mmap_entry->type = LOADER_RESERVED;
+                log$("RESERVED     | %p | %p", entry->base, entry->base + entry->length);
+                record.tag = HANDOVER_RESERVED;
                 break;
             }
 
             case LIMINE_MEMMAP_ACPI_RECLAIMABLE:
             case LIMINE_MEMMAP_BOOTLOADER_RECLAIMABLE:
             {
-                log$("RECLAIMABLE | %p | %p", entry->base, entry->base + entry->length);
-                mmap_entry->type = LOADER_RECLAIMABLE;
+                log$("RECLAIMABLE  | %p | %p", entry->base, entry->base + entry->length);
+                record.tag = HANDOVER_LOADER;
                 break;
             }
 
             case LIMINE_MEMMAP_KERNEL_AND_MODULES:
             {
                 log$("MODULE      | %p | %p", entry->base, entry->base + entry->length);
-                mmap_entry->type = LOADER_KERNEL;
+                record.tag = HANDOVER_KERNEL;
                 break;
             }
 
             case LIMINE_MEMMAP_FRAMEBUFFER:
             {
-                log$("FRAMEBUFFER| %p | %p", entry->base, entry->base + entry->length);
-                mmap_entry->type = LOADER_FB;
+                log$("FRAMEBUFFER | %p | %p", entry->base, entry->base + entry->length);
+                record.tag = HANDOVER_FB;
                 break;
             }
 
@@ -114,14 +120,13 @@ Mmap loader_get_mmap(void)
             }
         }
 
-        mmap_entry->base = entry->base;
-        mmap_entry->len = entry->length;
+        record.start = entry->base;
+        record.size = entry->length;
+
+        handover_builder_append(self, record);
     }
 
     log$("=====================================================");
-
-    mmap.len = i;
-    return mmap;
 }
 
 uintptr_t hal_mmap_l2h(uintptr_t addr)
@@ -173,27 +178,45 @@ Rsdp *hal_acpi_rsdp(void)
     return (Rsdp *)rsdp_req.response->address;
 }
 
-Module loader_get_module(char const *path)
+void handover_parse_module(HandoverBuilder *self)
 {
     if (module_request.response == NULL)
     {
-        return (Module){0};
+        error$("Couldn't retrieve list of modules from Limine");
+        hal_panic();
     }
+
+    HandoverRecord rec = {0};
 
     for (size_t i = 0; i < module_request.response->module_count; i++)
     {
-        if (memcmp(path, module_request.response->modules[i]->path, strlen(path)) == 0)
-        {
-            Module mod = {
-                .base = (uintptr_t)module_request.response->modules[i]->address,
-                .len = module_request.response->modules[i]->size,
-            };
+        size_t str_offset = handover_builder_append_str(self, module_request.response->modules[i]->path);
+        rec = (HandoverRecord){
+            .tag = HANDOVER_FILE,
+            .flags = 0,
+            .start = (uintptr_t)module_request.response->modules[i]->address,
+            .size = module_request.response->modules[i]->size,
+            .file = {
+                .name = str_offset,
+                .meta = 0,
+            },
+        };
 
-            memcpy(mod.name, module_request.response->modules[i]->path, strlen(path));
+        handover_builder_append(self, rec);
+    }
+}
 
-            return mod;
-        }
+HandoverPayload *handover(void)
+{
+    if (!is_handover_init)
+    {
+        handover_builder_init(&builder, handover_buffer, kib$(16));
+        handover_parse_module(&builder);
+        handover_parse_mmap(&builder);
+
+        is_handover_init = true;
+
     }
 
-    return (Module){0};
+    return builder.payload;
 }

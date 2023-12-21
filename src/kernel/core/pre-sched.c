@@ -1,5 +1,5 @@
 #include <dbg/log.h>
-#include <loader.h>
+#include <handover.h>
 #include <specs/elf.h>
 #include <string.h>
 
@@ -25,15 +25,15 @@ static bool need_switch = false;
 
 Res load_scheduler(void)
 {
-    Module sched = loader_get_module("/bin/procman");
-    if (sched.len == 0)
+    HandoverRecord sched = handover_file_find(handover(), "/bin/procman");
+    if (sched.size == 0)
     {
         return err$(RES_NOENT);
     }
 
     try$(hal_space_create(&sched_vspace));
 
-    Elf_Ehdr *hdr = (Elf_Ehdr *)sched.base;
+    Elf_Ehdr *hdr = (Elf_Ehdr *)sched.start;
     if (memcmp(hdr->e_ident, ELFMAG, SELFMAG) != 0)
     {
         return err$(RES_INVAL);
@@ -46,7 +46,7 @@ Res load_scheduler(void)
 
     for (size_t i = 0; i < hdr->e_phnum; i++)
     {
-        Elf_Phdr *phdr = (Elf_Phdr *)(sched.base + hdr->e_phoff + i * hdr->e_phentsize);
+        Elf_Phdr *phdr = (Elf_Phdr *)(sched.start + hdr->e_phoff + i * hdr->e_phentsize);
 
         if (phdr->p_type == PT_LOAD)
         {
@@ -62,7 +62,7 @@ Res load_scheduler(void)
             log$("Scheduler segment mapped to 0x%x", paddr.base);
             try$(hal_space_map(sched_vspace, phdr->p_vaddr, paddr.base, align_up$(phdr->p_memsz, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER | HAL_MEM_EXEC));
 
-            memcpy((void *)hal_mmap_l2h(paddr.base), (void *)sched.base + phdr->p_offset, phdr->p_filesz);
+            memcpy((void *)hal_mmap_l2h(paddr.base), (void *)sched.start + phdr->p_offset, phdr->p_filesz);
             memset((void *)hal_mmap_l2h(paddr.base + phdr->p_filesz), 0, phdr->p_memsz - phdr->p_filesz);
         }
     }
@@ -77,6 +77,7 @@ Res load_scheduler(void)
     }
 
     hal_space_map(sched_vspace, USER_STACK_BASE, sched_stack_obj.base, STACK_SIZE, HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER);
+
     hal_context_start(sched_ctx, hdr->e_entry, USER_STACK_BASE, (SysArgs){0, 0, 0, 0, 0, 0});
     need_switch = true;
 

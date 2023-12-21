@@ -1,9 +1,11 @@
 #include <dbg/log.h>
 #include <hal.h>
-#include <loader.h>
+#include <handover.h>
 #include <string.h>
 #include <sync/spinlock.h>
 
+#include "handover/handover.h"
+#include "handover/utils.h"
 #include "pmm.h"
 
 static PmmBitmap bitmap = {0};
@@ -44,21 +46,22 @@ static void pmm_mark_used(uintptr_t base, size_t len)
 
 Res pmm_init(void)
 {
-    Mmap mmaps = loader_get_mmap();
-    MmapEntry last_entry = mmaps.entries[mmaps.len - 1];
+    HandoverPayload *hand = handover();
+    HandoverRecord last_entry = hand->records[hand->count - 1];
+    HandoverRecord record;
 
-    bitmap.len = align_up$((last_entry.base + last_entry.len) / (PMM_PAGE_SIZE * 8), PMM_PAGE_SIZE);
+    bitmap.len = align_up$((last_entry.start + last_entry.size) / (PMM_PAGE_SIZE * 8), PMM_PAGE_SIZE);
     bitmap.last_high = bitmap.len - 1;
     log$("Bitmap size: %d bytes", bitmap.len);
 
-    for (size_t i = 0; i < mmaps.len; i++)
+    handover_foreach_record(hand, record)
     {
-        if (mmaps.entries[i].type == LOADER_FREE && mmaps.entries[i].len >= bitmap.len)
+        if (record.tag == HANDOVER_FREE && record.size >= bitmap.len)
         {
-            log$("Bitmap base: %p", mmaps.entries[i].base);
-            bitmap.bitmap = (uint8_t *)hal_mmap_l2h(mmaps.entries[i].base);
-            mmaps.entries[i].base += bitmap.len;
-            mmaps.entries[i].len -= bitmap.len;
+            log$("Bitmap base: %p", record.start);
+            bitmap.bitmap = (uint8_t *)hal_mmap_l2h(record.start);
+            record.start += bitmap.len;
+            record.size -= bitmap.len;
             break;
         }
     }
@@ -70,11 +73,11 @@ Res pmm_init(void)
 
     memset(bitmap.bitmap, 0xFF, bitmap.len);
 
-    for (size_t i = 0; i < mmaps.len; i++)
+    handover_foreach_record(hand, record)
     {
-        if (mmaps.entries[i].type == LOADER_FREE)
+        if (record.tag == HANDOVER_FREE)
         {
-            pmm_mark_free(mmaps.entries[i].base, mmaps.entries[i].len);
+            pmm_mark_free(record.start, record.size);
         }
     }
 

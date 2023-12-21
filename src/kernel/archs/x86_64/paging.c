@@ -10,7 +10,8 @@
 #include "asm.h"
 #include "cpuid.h"
 #include "dbg/log.h"
-#include "loader.h"
+#include "handover.h"
+#include "handover/utils.h"
 #include "paging.h"
 
 static size_t page_size = mib$(2);
@@ -188,18 +189,17 @@ Res paging_init(void)
         try$(kmmap_page(pml4, hal_mmap_l2h(i), i, flags));
     }
 
-    Mmap mmaps = loader_get_mmap();
+    HandoverPayload *hand = handover();
+    HandoverRecord rec;
 
-    for (size_t i = 0; i < mmaps.len; i++)
+    handover_foreach_record(hand, rec)
     {
-        MmapEntry entry = mmaps.entries[i];
-
-        if (mmaps.entries[i].type != LOADER_FB)
+        if (rec.tag != HANDOVER_FB)
         {
             try$(hal_space_map((HalPage *)pml4,
-                               hal_mmap_l2h(entry.base),
-                               entry.base,
-                               entry.len,
+                               align_down$(hal_mmap_l2h(rec.start), PMM_PAGE_SIZE),
+                               align_down$(rec.start, PMM_PAGE_SIZE),
+                               align_up$(rec.size, PMM_PAGE_SIZE),
                                HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_HUGE));
         }
     }
