@@ -55,7 +55,7 @@ void handover_parse_mmap(HandoverBuilder *self)
         error$("Couldn't retrieve memory map from Limine");
         hal_panic();
     }
-    
+
     if (kernel_addr_req.response == NULL)
     {
         error$("Couldn't retrieve kernel address from Limine");
@@ -215,7 +215,6 @@ HandoverPayload *handover(void)
         handover_parse_mmap(&builder);
 
         is_handover_init = true;
-
     }
 
     return builder.payload;

@@ -26,7 +26,8 @@
                 "-mno-mmx",
                 "-mno-3dnow",
                 "-mno-sse",
-                "-mno-sse2"
+                "-mno-sse2",
+                "-g"
             ]
         },
         "cxx": {

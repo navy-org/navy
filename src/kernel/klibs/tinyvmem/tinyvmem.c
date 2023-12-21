@@ -7,6 +7,7 @@
  */
 
 #include <string.h>
+#include <sync/spinlock.h>
 #include <sys/queue.h>
 
 #include "tinyvmem.h"
@@ -21,6 +22,7 @@
 #else
 #    include <dbg/log.h>
 #    include <hal.h>
+
 #    include "../../core/pmm.h"
 #    define vmem_printf(...) ((void)0)
 #    define ASSERT(x)        (x ? (void)0 : _ASSERT(__FILE__, __LINE__, #x))
@@ -74,8 +76,17 @@ static int nfreesegs = 0;
 
 #ifdef __ck_sys_kernel__
 
-void vmem_lock(void);
-void vmem_unlock(void);
+static Spinlock lock = SPINLOCK_INIT;
+
+void vmem_lock(void)
+{
+    spinlock_acquire(&lock);
+}
+
+void vmem_unlock(void)
+{
+    spinlock_release(&lock);
+}
 
 #else
 #    define vmem_lock()

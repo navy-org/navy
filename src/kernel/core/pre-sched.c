@@ -1,7 +1,11 @@
 #include <dbg/log.h>
+#include <hal.h>
 #include <handover.h>
+#include <kmalloc/kmalloc.h>
+#include <math.h>
 #include <specs/elf.h>
 #include <string.h>
+#include <tinyvmem/tinyvmem.h>
 
 #include "hal.h"
 #include "pmm.h"
@@ -19,6 +23,7 @@
 
 static HalPage *sched_vspace;
 static HalContext *sched_ctx;
+static Vmem sched_vmem;
 
 static HalContext *kernel_ctx;
 static bool need_switch = false;
@@ -32,6 +37,8 @@ Res load_scheduler(void)
     }
 
     try$(hal_space_create(&sched_vspace));
+
+    vmem_init(&sched_vmem, "procman", (void *)USER_HEAP_BASE, USER_HEAP_SIZE, PMM_PAGE_SIZE, 0, 0, 0, 0, 0);
 
     Elf_Ehdr *hdr = (Elf_Ehdr *)sched.start;
     if (memcmp(hdr->e_ident, ELFMAG, SELFMAG) != 0)
@@ -76,9 +83,24 @@ Res load_scheduler(void)
         return err$(RES_NOMEM);
     }
 
-    hal_space_map(sched_vspace, USER_STACK_BASE, sched_stack_obj.base, STACK_SIZE, HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER);
+    HandoverBuilder builder;
+    PmmObj handover_obj = pmm_alloc(align_up$(kib$(16), PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+    if (handover_obj.len == 0)
+    {
+        return err$(RES_NOMEM);
+    }
 
-    hal_context_start(sched_ctx, hdr->e_entry, USER_STACK_BASE, (SysArgs){0, 0, 0, 0, 0, 0});
+    handover_builder_init(&builder, (void *)hal_mmap_l2h(handover_obj.base), kib$(16));
+    handover_parse_module(&builder);
+
+    builder.payload->magic = HANDOVER_MAGIC;
+
+    uintptr_t handover_addr = (uintptr_t)vmem_alloc(&sched_vmem, kib$(16), VM_INSTANTFIT);
+
+    try$(hal_space_map(sched_vspace, align_down$(handover_addr, PMM_PAGE_SIZE), align_down$((uintptr_t)handover_obj.base, PMM_PAGE_SIZE), 
+        align_up$(builder.size, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_USER));
+    try$(hal_space_map(sched_vspace, USER_STACK_BASE, sched_stack_obj.base, STACK_SIZE, HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER));
+    hal_context_start(sched_ctx, hdr->e_entry, USER_STACK_BASE, (SysArgs){handover_addr, 0, 0, 0, 0, 0});
     need_switch = true;
 
     return ok$();

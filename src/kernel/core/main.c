@@ -15,6 +15,8 @@ _Noreturn int _start()
         hal_panic();
     }
 
+    vmem_bootstrap();
+
     Res hal = hal_setup();
     if (hal.type != RES_OK)
     {
