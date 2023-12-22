@@ -2,10 +2,12 @@
 #include <hal.h>
 #include <handover.h>
 #include <kmalloc/kmalloc.h>
-#include <math.h>
+#include <mem/stack.h>
 #include <specs/elf.h>
 #include <string.h>
 #include <tinyvmem/tinyvmem.h>
+
+#include "x86_64/ctx.h"
 
 #include "hal.h"
 #include "pmm.h"
@@ -24,6 +26,7 @@
 static HalPage *sched_vspace;
 static HalContext *sched_ctx;
 static Vmem sched_vmem;
+static Stack sched_stack;
 
 static HalContext *kernel_ctx;
 static bool need_switch = false;
@@ -77,7 +80,7 @@ Res load_scheduler(void)
     sched_ctx = (HalContext *)try$(hal_context_create());
     kernel_ctx = (HalContext *)try$(hal_context_create());
 
-    PmmObj sched_stack_obj = pmm_alloc(align_up$(STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+    PmmObj sched_stack_obj = pmm_alloc(align_up$(USER_STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
     if (sched_stack_obj.len == 0)
     {
         return err$(RES_NOMEM);
@@ -97,10 +100,27 @@ Res load_scheduler(void)
 
     uintptr_t handover_addr = (uintptr_t)vmem_alloc(&sched_vmem, kib$(16), VM_INSTANTFIT);
 
-    try$(hal_space_map(sched_vspace, align_down$(handover_addr, PMM_PAGE_SIZE), align_down$((uintptr_t)handover_obj.base, PMM_PAGE_SIZE), 
-        align_up$(builder.size, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_USER));
-    try$(hal_space_map(sched_vspace, USER_STACK_BASE, sched_stack_obj.base, STACK_SIZE, HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER));
-    hal_context_start(sched_ctx, hdr->e_entry, USER_STACK_BASE, (SysArgs){handover_addr, 0, 0, 0, 0, 0});
+    Alloc kmalloc = kmalloc_acquire();
+    sched_stack = stack_init(hal_mmap_l2h(sched_stack_obj.base), USER_STACK_SIZE);
+    uintptr_t *argc = (uintptr_t *)try$(kmalloc.calloc(1, sizeof(uintptr_t)));
+    *argc = 2;
+
+    uintptr_t *argv = (uintptr_t *)try$(kmalloc.calloc(2, sizeof(uintptr_t)));
+    argv[0] = USER_STACK_TOP - stack_push(&sched_stack, "boot:///bin/procman\0", 20);
+    argv[1] = handover_addr;
+
+    stack_push(&sched_stack, argv, 2 * sizeof(uintptr_t));
+    stack_push(&sched_stack, (void *)argc, sizeof(uintptr_t));
+
+    kmalloc.free(argc);
+    kmalloc.free(argv);
+
+    try$(hal_space_map(sched_vspace, align_down$(handover_addr, PMM_PAGE_SIZE), align_down$((uintptr_t)handover_obj.base, PMM_PAGE_SIZE),
+                       align_up$(builder.size, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_USER));
+
+    try$(hal_space_map(sched_vspace, USER_STACK_BASE, sched_stack_obj.base, USER_STACK_SIZE, HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER));
+
+    hal_context_start(sched_ctx, hdr->e_entry, USER_STACK_TOP - sched_stack.off, (SysArgs){0, 0, 0, 0, 0, 0});
     need_switch = true;
 
     return ok$();

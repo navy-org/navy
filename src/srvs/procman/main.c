@@ -1,18 +1,23 @@
 #include <dbg/log.h>
 #include <handover/handover.h>
-#include <stdint.h>
 
-_Noreturn int _start(uintptr_t handover_addr)
+Res main(int argc, char const *argv[])
 {
-    HandoverPayload *handover = (HandoverPayload *)handover_addr;
+    if (argc == 1)
+    {
+        error$("no handover payload was provided");
+        return err$(RES_INVAL);
+    }
+
+    HandoverPayload *handover = (HandoverPayload *)argv[1];
 
     if (handover->magic != HANDOVER_MAGIC)
     {
         error$("Invalid handover magic");
-        for (;;);
+        return err$(RES_INVAL);
     }
 
-    log$("Hello, world!");
-    for (;;)
-        ;
+    log$("Hello from procman!");
+
+    return ok$();
 }

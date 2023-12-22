@@ -39,8 +39,8 @@ Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp, SysArgs args
 
     self->regs.cs = (GDT_USER_CODE * 8) | 3;
     self->regs.ss = (GDT_USER_DATA * 8) | 3;
-    self->regs.rsp = sp + STACK_SIZE;
-    self->regs.rbp = sp;
+    self->regs.rsp = sp;
+    self->regs.rbp = 0;
 
     PmmObj kStackObj = pmm_alloc(align_up$(STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
     if (kStackObj.base == 0)

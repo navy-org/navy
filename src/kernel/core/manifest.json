@@ -8,7 +8,8 @@
         "stdc-shim",
         "loader",
         "kmalloc",
-        "tinyvmem"
+        "tinyvmem",
+        "mem"
     ],
     "tools": {
         "cc": {

@@ -3,6 +3,7 @@
     "type": "exe",
     "id": "procman",
     "requires": [
+        "entry",
         "dbg"
     ],
     "enableIf": {
