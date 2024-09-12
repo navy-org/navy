@@ -14,7 +14,7 @@
         "arch"
     ],
     "requires": [
-        "io",
+        "traits",
         "stdc-shim",
         "dbg"
     ]

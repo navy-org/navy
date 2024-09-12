@@ -8,7 +8,6 @@
 
 #define make_str$(str) #str,
 
-
 #define kib$(x) ((uintptr_t)(x)*1024)
 
 #define mib$(x) (kib$(x) * 1024)

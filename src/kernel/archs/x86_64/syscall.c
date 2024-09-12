@@ -1,5 +1,5 @@
-#include <dbg/log.h>
-#include <hal.h>
+#include <hal>
+#include <logging>
 
 #include "asm.h"
 #include "gdt.h"

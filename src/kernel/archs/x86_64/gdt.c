@@ -1,8 +1,8 @@
-#include <dbg/log.h>
-#include <hal.h>
-#include <kmalloc/kmalloc.h>
+#include <hal>
+#include <kmalloc>
+#include <logging>
 #include <string.h>
-#include <sync/spinlock.h>
+#include <sync>
 
 #include "ctx.h"
 #include "gdt.h"

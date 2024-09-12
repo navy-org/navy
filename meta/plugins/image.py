@@ -1,71 +1,53 @@
+from hashlib import blake2b
+from cutekit import model, builder, const, shell
 from pathlib import Path
-from cutekit import const, shell
 
-from .build import Builder
 
 class Image:
-    def __init__(self, builder: Builder, dst: Path = Path(".") / const.PROJECT_CK_DIR / "navy"):
-        self.builder = builder
-        self.path = dst
+    def __init__(self, registry: model.Registry, name: str):
+        self.__registry: model.Registry = registry
+        self.__name = name
 
-        efi = getattr(self, f"efi_{builder.arch}", None)
+    @property
+    def path(self) -> Path:
+        return Path(const.PROJECT_CK_DIR) / "images" / self.__name
 
-        if efi:
-            getattr(self, f"efi_{builder.arch}")()
-        else:
-            getattr(self, f"boot_{builder.arch}")()
+    def build(self, component_spec: str, target_spec: str) -> Path:
+        comp = self.__registry.lookup(component_spec, model.Component)
+        target = self.__registry.lookup(target_spec, model.Target)
 
-    def __str__(self):
-        return str(self.path)
+        assert comp is not None
+        assert target is not None
 
-    def __efi_common(self) -> dict[str, Path]:
-        efi_boot = self.path / "EFI" / "BOOT"
-        efi_boot.mkdir(parents=True, exist_ok=True)
+        scope = builder.TargetScope(self.__registry, target)
+        return Path(builder.build(scope, comp)[0].path)
 
-        boot_dir = self.path / "boot"
-        boot_dir.mkdir(parents=True, exist_ok=True)
+    def cp(self, src: Path, dst: Path):
+        shell.cp(str(src), str(self.path / str(dst).removeprefix("/")))
 
-        bin_dir = self.path / "bin"
-        bin_dir.mkdir(parents=True, exist_ok=True)
+    def mkdir(self, name: str):
+        (self.path / str(name).removeprefix("/")).mkdir(parents=True, exist_ok=True)
 
-        return {
-            "efi_boot": efi_boot,
-            "boot_dir": boot_dir,
-            "bin_dir": bin_dir,
-        }
+    def wget(self, link: str, dst: str):
+        shell.wget(link, str(self.path / str(dst).removeprefix("/")))
 
+    def get_hash(self, target: Path) -> str:
+        with (self.path / str(target).removeprefix("/")).open("rb") as f:
+            return blake2b(f.read()).hexdigest()
 
-    def efi_x86_64(self):
-        kernel_path = self.builder.build_core()
-        modules = self.builder.build_modules()
-
-        paths = self.__efi_common()
-
-        cfg = [
-            "TIMEOUT=0",
-            "GRAPHICS=no",
-            ":navy",
-            "PROTOCOL=limine",
-            "KERNEL_PATH=boot:///boot/kernel.elf",
-        ]
-
-        for mod in modules:
-            name = mod.name.split(".")[0]
-            cfg.append(f"MODULE_PATH=boot:///bin/{name}")
-            shell.cp(
-                str(mod),
-                str(paths["bin_dir"] / name)
+    def export_limine(self, target: Path, kernel: Path, modules: list[Path]):
+        rel_path = Path(self.path / str(target).removeprefix("/"))
+        with (rel_path / "limine.cfg").open("w") as f:
+            f.writelines(
+                [
+                    "RANDOMIZE_MEMORY=yes\n",
+                    "TIMEOUT=0\n",
+                    f":{self.__name}\n",
+                    "PROTOCOL=limine\n",
+                    f"KERNEL_PATH=boot://{kernel}#{self.get_hash(kernel)}\n",
+                ]
+                + [
+                    f"MODULE=boot://{module}#{self.get_hash(module)}\n"
+                    for module in modules
+                ]
             )
-
-        shell.wget(
-            "https://github.com/limine-bootloader/limine/raw/v6.x-branch-binary/BOOTX64.EFI",
-            str(paths["efi_boot"] / "BOOTX64.EFI"),
-        )
-
-        shell.cp(
-            str(kernel_path),
-            str(paths["boot_dir"] / "kernel.elf"),
-        )
-
-        with (paths["boot_dir"] / "limine.cfg").open("w") as f:
-            f.write('\n'.join(cfg))

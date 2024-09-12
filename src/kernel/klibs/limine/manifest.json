@@ -18,6 +18,6 @@
     ],
     "requires": [
         "stdc-shim",
-        "dbg"
+        "handover"
     ]
 }

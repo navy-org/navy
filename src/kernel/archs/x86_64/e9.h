@@ -1,6 +1,6 @@
 #pragma once
 
-#include <res.h>
+#include <result>
 
 Res e9_putc(char c);
 

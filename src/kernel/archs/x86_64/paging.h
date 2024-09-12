@@ -1,6 +1,6 @@
 #pragma once
 
-#include <res.h>
+#include <result>
 #include <stdint.h>
 
 #define PAGE_GET_PHYS(x)            (x & 0x000ffffffffff000)

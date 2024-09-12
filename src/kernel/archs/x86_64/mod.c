@@ -1,6 +1,6 @@
-#include <hal.h>
-#include <io/stream.h>
-#include <res.h>
+#include <hal>
+#include <result>
+#include <traits>
 
 #include "apic.h"
 #include "e9.h"

@@ -1,8 +1,7 @@
-#include <dbg/log.h>
-#include <navy/api.h>
-#include <res.h>
-
-#include "hal.h"
+#include <hal>
+#include <logging>
+#include <navy>
+#include <result>
 
 typedef Res Handler(SysArg arg1, SysArg arg2, SysArg arg3, SysArg arg4, SysArg arg5, SysArg arg6);
 

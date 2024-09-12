@@ -1,7 +1,7 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "exe",
-    "id": "core",
+    "id": "kernel",
     "requires": [
         "arch",
         "dbg",
@@ -9,7 +9,8 @@
         "loader",
         "kmalloc",
         "tinyvmem",
-        "mem"
+        "mem",
+        "pmm"
     ],
     "tools": {
         "cc": {

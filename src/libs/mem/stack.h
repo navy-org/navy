@@ -1,9 +1,9 @@
 #pragma once
 
-#include <hal.h>
+#include <hal>
 #include <stddef.h>
 #include <stdint.h>
-#include <tinyvmem/tinyvmem.h>
+#include <tinyvmem>
 
 typedef struct
 {

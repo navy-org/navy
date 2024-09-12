@@ -14,10 +14,7 @@
     },
     "tools": {
         "cc": {
-            "cmd": [
-                "@latest",
-                "clang"
-            ],
+            "cmd": "{shell.latest('clang')}",
             "args": [
                 "-target",
                 "x86_64-none-elf",
@@ -31,10 +28,7 @@
             ]
         },
         "cxx": {
-            "cmd": [
-                "@latest",
-                "clang++"
-            ],
+            "cmd": "{shell.latest('clang++')}",
             "args": [
                 "-target",
                 "x86_64-none-elf",
@@ -47,33 +41,24 @@
             ]
         },
         "ld": {
-            "cmd": [
-                "@latest",
-                "ld.lld"
-            ],
+            "cmd": "{shell.latest('ld.lld')}",
             "args": [
                 "-m",
                 "elf_x86_64",
                 "-T",
-                [
-                    "@abspath",
-                    "navy-x86_64.ld"
-                ],
+                "meta/targets/navy-x86_64.ld",
                 "-z",
                 "max-page-size=0x1000"
             ]
         },
         "ar": {
-            "cmd": [
-                "@latest",
-                "llvm-ar"
-            ],
+            "cmd": "{shell.latest('llvm-ar')}",
             "args": [
                 "rcs"
             ]
         },
         "as": {
-            "cmd": "clang",
+            "cmd": "{shell.latest('clang')}",
             "args": [
                 "-target",
                 "x86_64-none-elf",

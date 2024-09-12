@@ -1,12 +1,12 @@
-#include <dbg/log.h>
-#include <hal.h>
-#include <kmalloc/kmalloc.h>
-#include <navy/api.h>
+#include <hal>
+#include <kmalloc>
+#include <logging>
+#include <navy>
+#include <pmm>
+#include <string.h>
 
-#include "x86_64/ctx.h"
-
-#include "../../core/pmm.h"
 #include "cpu.h"
+#include "ctx.h"
 #include "gdt.h"
 #include "simd.h"
 #include "syscall.h"

@@ -1,0 +1,18 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "type": "lib",
+    "id": "logging",
+    "enableIf": {
+        "sys": [
+            "navy"
+        ]
+    },
+    "provides": [
+        "dbg"
+    ],
+    "requires": [
+        "fmt",
+        "stdc-shim",
+        "traits"
+    ]
+}

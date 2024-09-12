@@ -1,8 +1,7 @@
-#include <dbg/log.h>
-#include <hal.h>
-#include <sync/spinlock.h>
+#include <hal>
+#include <logging>
+#include <sync>
 
-#include "../core/pre-sched.h"
 #include "apic.h"
 #include "asm.h"
 #include "regs.h"
@@ -112,7 +111,7 @@ uintptr_t interrupt_handler(uintptr_t rsp)
     }
     else if (regs->intno == IRQ0)
     {
-        switch_to_scheduler(regs);
+        // switch_to_scheduler(regs);
     }
 
     lapic_eoi();

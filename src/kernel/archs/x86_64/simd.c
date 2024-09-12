@@ -1,4 +1,5 @@
-#include <dbg/log.h>
+#include <logging>
+#include <pmm>
 #include <stdint.h>
 #include <string.h>
 
@@ -6,8 +7,6 @@
 #include "cpu.h"
 #include "cpuid.h"
 #include "simd.h"
-
-#include "../../core/pmm.h"
 
 static _Alignas(PMM_PAGE_SIZE) uint8_t simd_initial_context[PMM_PAGE_SIZE] = {};
 

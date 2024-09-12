@@ -1,18 +1,17 @@
-#include <dbg/log.h>
-#include <hal.h>
-#include <handover.h>
+#define HANDOVER_INCLUDE_UTILITES
+
+#include <hal>
+#include <handover>
+#include <logging>
 #include <stddef.h>
 #include <string.h>
 
-#include "handover/builder.h"
-#include "handover/handover.h"
 #include "limine.h"
 
 /* --- Handover ------------------------------------------------------------- */
 
 static uint8_t handover_buffer[kib$(16)] = {0};
-static HandoverBuilder builder;
-static bool is_handover_init = false;
+static HandoverPayload *payload = NULL;
 
 /* --- Limine requests ------------------------------------------------------ */
 
@@ -48,7 +47,7 @@ volatile struct limine_module_request module_request = {
 
 /* --- Loader functions ---------------------------------------------------- */
 
-void handover_parse_mmap(HandoverBuilder *self)
+void handover_parse_mmap(void)
 {
     if (memmap_req.response == NULL)
     {
@@ -123,7 +122,7 @@ void handover_parse_mmap(HandoverBuilder *self)
         record.start = entry->base;
         record.size = entry->length;
 
-        handover_builder_append(self, record);
+        handover_append(payload, record);
     }
 
     log$("=====================================================");
@@ -178,44 +177,38 @@ Rsdp *hal_acpi_rsdp(void)
     return (Rsdp *)rsdp_req.response->address;
 }
 
-void handover_parse_module(HandoverBuilder *self)
+void handover_parse_module(void)
 {
     if (module_request.response == NULL)
     {
-        error$("Couldn't retrieve list of modules from Limine");
-        hal_panic();
+        warn$("Couldn't retrieve list of modules from Limine");
+        return;
     }
-
-    HandoverRecord rec = {0};
 
     for (size_t i = 0; i < module_request.response->module_count; i++)
     {
-        size_t str_offset = handover_builder_append_str(self, module_request.response->modules[i]->path);
-        rec = (HandoverRecord){
-            .tag = HANDOVER_FILE,
-            .flags = 0,
-            .start = (uintptr_t)module_request.response->modules[i]->address,
-            .size = module_request.response->modules[i]->size,
-            .file = {
-                .name = str_offset,
-                .meta = 0,
-            },
-        };
-
-        handover_builder_append(self, rec);
+        size_t str_offset = handover_add_string(payload, module_request.response->modules[i]->path);
+        handover_append(payload, (HandoverRecord){
+                                     .tag = HANDOVER_FILE,
+                                     .flags = 0,
+                                     .start = (uintptr_t)module_request.response->modules[i]->address,
+                                     .size = module_request.response->modules[i]->size,
+                                     .file = {
+                                         .name = str_offset,
+                                         .meta = 0,
+                                     },
+                                 });
     }
 }
 
 HandoverPayload *handover(void)
 {
-    if (!is_handover_init)
+    if (payload == NULL)
     {
-        handover_builder_init(&builder, handover_buffer, kib$(16));
-        handover_parse_module(&builder);
-        handover_parse_mmap(&builder);
-
-        is_handover_init = true;
+        payload = (HandoverPayload *)handover_buffer;
+        handover_parse_module();
+        handover_parse_mmap();
     }
 
-    return builder.payload;
+    return payload;
 }

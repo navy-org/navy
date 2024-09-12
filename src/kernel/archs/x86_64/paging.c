@@ -1,17 +1,15 @@
-#include <dbg/log.h>
-#include <hal.h>
-#include <res.h>
+#include <hal>
+#include <handover>
+#include <logging>
+#include <pmm>
+#include <result>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 #include <utils.h>
 
-#include "../../kernel/core/pmm.h"
 #include "asm.h"
 #include "cpuid.h"
-#include "dbg/log.h"
-#include "handover.h"
-#include "handover/utils.h"
 #include "paging.h"
 
 static size_t page_size = mib$(2);

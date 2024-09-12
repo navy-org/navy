@@ -1,5 +1,5 @@
-#include <hal.h>
-#include <dbg/log.h>
+#include <hal>
+#include <logging>
 
 #include "apic.h"
 #include "asm.h"

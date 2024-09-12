@@ -1,5 +1,5 @@
-#include <dbg/log.h>
-#include <res.h>
+#include <logging>
+#include <result>
 #include <stddef.h>
 #include <stdint.h>
 

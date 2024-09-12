@@ -1,4 +1,4 @@
-#include <dbg/log.h>
+#include <logging>
 
 #include "gdt.h"
 #include "idt.h"

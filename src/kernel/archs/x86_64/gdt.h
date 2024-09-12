@@ -1,6 +1,6 @@
 #pragma once
 
-#include <res.h>
+#include <result>
 #include <stdint.h>
 
 enum gdtaccess : uint8_t
