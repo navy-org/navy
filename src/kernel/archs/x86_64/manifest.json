@@ -16,6 +16,6 @@
     "requires": [
         "traits",
         "stdc-shim",
-        "dbg"
+        "logger"
     ]
 }

@@ -5,13 +5,14 @@
 #include "loc.h"
 #include "utils.h"
 
-#define RES_TYPE(F) \
-    F(RES_OK)       \
-    F(RES_INVAL)    \
-    F(RES_NOMEM)    \
-    F(RES_BADALIGN) \
-    F(RES_NOENT)    \
-    F(RES_BADSYSCALL)
+#define RES_TYPE(F)   \
+    F(RES_OK)         \
+    F(RES_INVAL)      \
+    F(RES_NOMEM)      \
+    F(RES_BADALIGN)   \
+    F(RES_NOENT)      \
+    F(RES_BADSYSCALL) \
+    F(RES_UNIMPLEMENTED)
 
 enum res_type
 {
@@ -35,10 +36,10 @@ typedef struct
     (Res) { .type = RES_OK, .uvalue = 0, .loc = loc$() }
 
 #define uok$(u) \
-    (Res) { .type = RES_OK, .uvalue = (u), .loc = loc$() }
+    (Res) { .type = RES_OK, .uvalue = (size_t)(u), .loc = loc$() }
 
 #define iok$(i) \
-    (Res) { .type = RES_OK, .ivalue = (i), .loc = loc$() }
+    (Res) { .type = RES_OK, .ivalue = (ptrdiff_t)(i), .loc = loc$() }
 
 #define err$(t) \
     (Res) { .type = (t), .uvalue = 0, .loc = loc$() }

@@ -38,3 +38,4 @@ static char const *level_colors[LOG_EVENT_LENGTH] = {
 };
 
 void _log(LogEvent event, Loc loc, char const *format, ...);
+void logging_set_name(char const *name);

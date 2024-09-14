@@ -18,7 +18,11 @@ typedef struct _HalRegs HalRegs;
 
 /* --- Assembly function --------------------------------------------------- */
 
+void _hal_disable_interrupts(void);
+
 void hal_disable_interrupts(void);
+
+void _hal_enable_interrupts(void);
 
 void hal_enable_interrupts(void);
 
@@ -50,9 +54,15 @@ uintptr_t hal_mmap_h2l(uintptr_t addr);
 
 Res hal_space_map(HalPage *space, uintptr_t virt, uintptr_t phys, size_t len, uint8_t flags);
 
+Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len);
+
 void hal_space_apply(HalPage *space);
 
 Res hal_space_create(HalPage **self);
+
+HalPage *hal_space_kernel(void);
+
+Res hal_virt2phys(HalPage *space, uintptr_t virt);
 
 /* --- Arch Specific ------------------------------------------------------- */
 
@@ -64,7 +74,7 @@ typedef struct _HalContext HalContext;
 
 Res hal_context_create(void);
 
-Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp, SysArgs args);
+Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp);
 
 void hal_context_destroy(HalContext *self);
 

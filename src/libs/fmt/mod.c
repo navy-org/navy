@@ -92,7 +92,7 @@ Res fmt(Stream stream, char const fmt[static 1], ...)
 
 Res vfmt(Stream stream, char const fmt[static 1], va_list args)
 {
-    const char *s = fmt;
+    char *s = (char *)fmt;
 
     while (*s)
     {
@@ -171,6 +171,12 @@ Res vfmt(Stream stream, char const fmt[static 1], va_list args)
                 {
                     s++;
                     stream.write(1, "%");
+                    break;
+                }
+
+                case 'z':
+                {
+                    *s = '%';
                     break;
                 }
 

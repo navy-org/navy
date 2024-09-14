@@ -22,8 +22,9 @@ class Image:
         scope = builder.TargetScope(self.__registry, target)
         return Path(builder.build(scope, comp)[0].path)
 
-    def cp(self, src: Path, dst: Path):
+    def cp(self, src: Path, dst: Path) -> list[Path]:
         shell.cp(str(src), str(self.path / str(dst).removeprefix("/")))
+        return [dst]
 
     def mkdir(self, name: str):
         (self.path / str(name).removeprefix("/")).mkdir(parents=True, exist_ok=True)
@@ -37,17 +38,17 @@ class Image:
 
     def export_limine(self, target: Path, kernel: Path, modules: list[Path]):
         rel_path = Path(self.path / str(target).removeprefix("/"))
-        with (rel_path / "limine.cfg").open("w") as f:
+        with (rel_path / "limine.conf").open("w") as f:
             f.writelines(
                 [
-                    "RANDOMIZE_MEMORY=yes\n",
-                    "TIMEOUT=0\n",
-                    f":{self.__name}\n",
-                    "PROTOCOL=limine\n",
-                    f"KERNEL_PATH=boot://{kernel}#{self.get_hash(kernel)}\n",
+                    "randomize_memory: yes\n",
+                    "timeout: 0\n\n",
+                    f"/{self.__name}\n",
+                    "    protocol: limine\n",
+                    f"    kernel_path: boot():{kernel}#{self.get_hash(kernel)}\n",
                 ]
                 + [
-                    f"MODULE=boot://{module}#{self.get_hash(module)}\n"
+                    f"    module_path: boot():{module}#{self.get_hash(module)}\n"
                     for module in modules
                 ]
             )

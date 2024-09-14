@@ -17,7 +17,7 @@ Res hal_context_create(void)
 
     HalContext *self = (HalContext *)try$(alloc.calloc(1, sizeof(HalContext) + simd_context_size()));
     simd_context_init(self);
-    return uok$((uintptr_t)self);
+    return uok$(self);
 }
 
 void hal_context_destroy(HalContext *self)
@@ -26,16 +26,10 @@ void hal_context_destroy(HalContext *self)
     alloc.free(self);
 }
 
-Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp, SysArgs args)
+Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
 {
     self->regs.rip = ip;
     self->regs.rflags = RFLAGS_INTERRUPT_ENABLE | RFLAGS_RESERVED1;
-
-    self->regs.rdi = args.arg1;
-    self->regs.rsi = args.arg2;
-    self->regs.rdx = args.arg3;
-    self->regs.rcx = args.arg4;
-    self->regs.r8 = args.arg5;
 
     self->regs.cs = (GDT_USER_CODE * 8) | 3;
     self->regs.ss = (GDT_USER_DATA * 8) | 3;

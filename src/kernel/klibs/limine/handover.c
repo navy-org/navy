@@ -1,4 +1,3 @@
-#define HANDOVER_INCLUDE_UTILITES
 
 #include <hal>
 #include <handover>
@@ -206,6 +205,8 @@ HandoverPayload *handover(void)
     if (payload == NULL)
     {
         payload = (HandoverPayload *)handover_buffer;
+        payload->size = kib$(16);
+
         handover_parse_module();
         handover_parse_mmap();
     }

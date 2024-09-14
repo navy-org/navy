@@ -185,7 +185,7 @@ static uint64_t murmur64(uint64_t h)
     return h;
 }
 
-static VmemSegList *hashtable_for_addr(Vmem *vmem, uintptr_t addr)
+VmemSegList *hashtable_for_addr(Vmem *vmem, uintptr_t addr)
 {
     /* Hash the address and get the remainder */
     uintptr_t idx = murmur64(addr) % ARR_SIZE(vmem->hashtable);

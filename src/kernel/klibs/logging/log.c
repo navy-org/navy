@@ -4,17 +4,15 @@
 #include <stdarg.h>
 #include <sync>
 
-static Spinlock _lock = SPINLOCK_INIT;
-
 void _log(LogEvent event, Loc loc, char const *format, ...)
 {
-    spinlock_acquire(&_lock);
+    hal_disable_interrupts();
     va_list args;
     va_start(args, format);
 
     if (event != LOG_NONE)
     {
-        fmt(hal_dbg_stream(), "%s%s\e[0m %s:%d ", level_colors[event], level_names[event], loc.file, loc.line);
+        fmt(hal_dbg_stream(), "kernel | %s%s\e[0m %s:%d ", level_colors[event], level_names[event], loc.file, loc.line);
     }
 
     vfmt(hal_dbg_stream(), format, args);
@@ -25,5 +23,5 @@ void _log(LogEvent event, Loc loc, char const *format, ...)
     }
 
     va_end(args);
-    spinlock_release(&_lock);
+    hal_enable_interrupts();
 }

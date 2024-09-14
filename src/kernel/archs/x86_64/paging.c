@@ -149,6 +149,32 @@ Res hal_space_map(HalPage *self, uintptr_t virt, uintptr_t phys, size_t len, uin
     return ok$();
 }
 
+Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
+{
+    if (virt % PMM_PAGE_SIZE != 0 || len % PMM_PAGE_SIZE != 0)
+    {
+        return err$(RES_BADALIGN);
+    }
+
+    // TODO: Huge pages ?
+
+    for (size_t i = 0; i < len; i += PMM_PAGE_SIZE)
+    {
+        size_t pml1_entry = PMLX_GET_INDEX(virt + i, 0);
+        size_t pml2_entry = PMLX_GET_INDEX(virt + i, 1);
+        size_t pml3_entry = PMLX_GET_INDEX(virt + i, 2);
+        size_t pml4_entry = PMLX_GET_INDEX(virt + i, 3);
+
+        uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false));
+        uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, false));
+        uintptr_t *pml1 = (uintptr_t *)try$(paging_get_pml_alloc(pml2, pml2_entry, false));
+
+        pml1[pml1_entry] = 0;
+    }
+
+    return ok$();
+}
+
 Res paging_init(void)
 {
     PmmObj obj = pmm_alloc(1);
@@ -157,7 +183,7 @@ Res paging_init(void)
         return err$(RES_NOMEM);
     }
 
-    log$("PML4: 0x%p", obj.base);
+    log$("PML4: %p", obj.base);
     pml4 = (uintptr_t *)hal_mmap_l2h((uintptr_t)obj.base);
 
     memset((void *)pml4, 0, obj.len);
@@ -240,4 +266,23 @@ Res hal_space_create(HalPage **self)
 HalPage *hal_space_kernel(void)
 {
     return (HalPage *)pml4;
+}
+
+Res hal_virt2phys(HalPage *space, uintptr_t virt)
+{
+    size_t pml1_entry = PMLX_GET_INDEX(virt, 0);
+    size_t pml2_entry = PMLX_GET_INDEX(virt, 1);
+    size_t pml3_entry = PMLX_GET_INDEX(virt, 2);
+    size_t pml4_entry = PMLX_GET_INDEX(virt, 3);
+
+    uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false));
+    uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, false));
+    uintptr_t *pml1 = (uintptr_t *)try$(paging_get_pml_alloc(pml2, pml2_entry, false));
+
+    if (!(pml1[pml1_entry] & PAGE_PRESENT))
+    {
+        return err$(RES_NOENT);
+    }
+
+    return uok$(PAGE_GET_PHYS(pml1[pml1_entry]));
 }

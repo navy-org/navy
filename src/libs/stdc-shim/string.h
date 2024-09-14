@@ -2,12 +2,18 @@
 
 #include <stddef.h>
 
-/**
- * @brief The strlen function computes the length of the string pointed to by s.
- * @cite ISO/IEC 9899:2023 - 7.26.6.4 The strlen function
- *
- * @arg s - pointer to the string to be examined
- * @return - the number of characters that precede the terminating null character
- **/
-
 size_t strlen(const char *s);
+
+void *memcpy(void *s1, void const *s2, size_t n);
+
+void *memset(void *s, int c, size_t n);
+
+int memcmp(const void *s1, const void *s2, size_t n);
+
+int strcmp(char const *s1, char const *s2);
+
+void *memmove(void *dest, void const *src, size_t n);
+
+char *strrchr(const char *s, int c);
+
+char *strdup(char const *s);

@@ -3,7 +3,7 @@
     "type": "lib",
     "id": "tinyvmem",
     "requires": [
-        "dbg",
+        "logger",
         "stdc-shim"
     ]
 }

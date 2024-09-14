@@ -18,26 +18,14 @@
             "args": [
                 "-target",
                 "x86_64-none-elf",
-                "-ffreestanding",
-                "-mno-80387",
-                "-mno-mmx",
-                "-mno-3dnow",
-                "-mno-sse",
-                "-mno-sse2",
-                "-g"
+                "-Wno-main-return-type"
             ]
         },
         "cxx": {
             "cmd": "{shell.latest('clang++')}",
             "args": [
                 "-target",
-                "x86_64-none-elf",
-                "-ffreestanding",
-                "-mno-80387",
-                "-mno-mmx",
-                "-mno-3dnow",
-                "-mno-sse",
-                "-mno-sse2"
+                "x86_64-none-elf"
             ]
         },
         "ld": {

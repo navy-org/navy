@@ -3,7 +3,6 @@
 #include <hal>
 #include <stddef.h>
 #include <stdint.h>
-#include <tinyvmem>
 
 typedef struct
 {
@@ -11,12 +10,6 @@ typedef struct
     size_t len;
     size_t off;
 } Stack;
-
-struct stack_push_param
-{
-    HalPage *vspace;
-    Vmem *vmem;
-};
 
 Stack stack_init(uintptr_t base, size_t len);
 

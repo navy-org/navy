@@ -19,7 +19,8 @@ void syscall_set_gs(uintptr_t addr)
     asm_write_msr(MSR_KERN_GS_BASE, addr);
 }
 
-int64_t syscall_handler(HalRegs *regs)
+void syscall_handler(HalRegs *regs)
 {
-    return _syscall_handler(regs->rax, (SysArgs){regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9, regs->r10}).type;
+    regs->rax = _syscall_handler(regs->rax, (SysArgs){regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9, regs->r10}).type;
+    return;
 }

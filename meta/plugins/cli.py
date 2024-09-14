@@ -1,17 +1,24 @@
-from cutekit import cli, model, shell
-from .image import Image
 from pathlib import Path
+
+from cutekit import cli, model, shell
+
+from .image import Image
 
 
 def generateImg(img: Image, target: str) -> Path:
-    img.mkdir("/EFI/BOOT")
+    modules = []
+    img.mkdir("/efi/boot")
+    img.mkdir("/bin")
     img.cp(img.build("kernel", f"kernel-{target}"), Path("/kernel.elf"))
+    modules += img.cp(img.build("hello", f"navy-{target}"), Path("/bin/hello"))
+    modules += img.cp(img.build("bootstrap", f"navy-{target}"), Path("/bin/bootstrap"))
+    # img.cp(img.build("hello.client", f"navy-{target}"), Path("/bin/client.elf"))
     if target == "x86_64":
         img.wget(
-            "https://github.com/limine-bootloader/limine/raw/v7.9.1-binary/BOOTX64.EFI",
-            "EFI/BOOT/BOOTX64.EFI",
+            "https://github.com/limine-bootloader/limine/raw/v8.x-binary/BOOTX64.EFI",
+            "efi/boot/bootx64.efi",
         )
-        img.export_limine(Path("/EFI/BOOT"), Path("/kernel.elf"), [])
+        img.export_limine(Path("/efi/boot"), Path("/kernel.elf"), modules)
     return img.path
 
 
@@ -29,9 +36,7 @@ def _(args: StartArgs):
     if args.arch not in ["x86_64"]:
         raise RuntimeError(f"Unsupported architecture: {args.arch}")
 
-    p = generateImg(
-        Image(model.Registry.use(args), f"continuum-{args.arch}"), args.arch
-    )
+    p = generateImg(Image(model.Registry.use(args), f"navy-{args.arch}"), args.arch)
     shell.exec(
         *[
             "qemu-system-x86_64",
@@ -56,16 +61,15 @@ def _(args: StartArgs):
     if args.arch not in ["x86_64"]:
         raise RuntimeError(f"Unsupported architecture: {args.arch}")
 
-    p = generateImg(
-        Image(model.Registry.use(args), f"continuum-{args.arch}"), args.arch
-    )
+    p = generateImg(Image(model.Registry.use(args), f"navy-{args.arch}"), args.arch)
     shell.exec(
         *[
             "qemu-system-x86_64",
+            # "-enable-kvm",
             "-no-reboot",
             "-no-shutdown",
-            # "-display",
-            # "none",
+            "-display",
+            "none",
             "-smp",
             "4",
             "-debugcon",

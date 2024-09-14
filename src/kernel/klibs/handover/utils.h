@@ -35,7 +35,7 @@ static inline HandoverRecord handover_file_find(HandoverPayload *handover, char 
         }
     }
 
-    return (HandoverRecord){};
+    return (HandoverRecord){0};
 }
 
 #    define handover_foreach_record(h, r)                        \

@@ -4,13 +4,16 @@
     "id": "kernel",
     "requires": [
         "arch",
-        "dbg",
+        "logger",
         "stdc-shim",
         "loader",
         "kmalloc",
         "tinyvmem",
-        "mem",
-        "pmm"
+        "pmm",
+        "sched",
+        "elfloader",
+        "portRPC",
+        "hal"
     ],
     "tools": {
         "cc": {

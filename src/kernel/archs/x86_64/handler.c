@@ -1,5 +1,6 @@
 #include <hal>
 #include <logging>
+#include <sched>
 #include <sync>
 
 #include "apic.h"
@@ -71,6 +72,7 @@ static void kpanic(HalRegs const regs[static 1])
     spinlock_acquire(&lock);
 
     uint64_t cr0, cr2, cr3, cr4;
+    Res task = sched_current();
 
     asm_read_cr(0, cr0);
     asm_read_cr(2, cr2);
@@ -80,7 +82,16 @@ static void kpanic(HalRegs const regs[static 1])
     print$("\n!!! ---------------------------------------------------------------------------------------------------\n\n");
     print$("    KERNEL PANIC\n");
     print$("    %s was raised\n\n", exception_messages[regs->intno]);
-    print$("    Registers:\n");
+
+    if (task.type == RES_OK)
+    {
+        print$("    task: %s\n", ((Task *)task.uvalue)->name);
+    }
+    else
+    {
+        print$("    task: kernel\n");
+    }
+
     print$("    interrupt: %x, err: %x \n", regs->intno, regs->err);
     print$("    RAX %p RBX %p RCX %p RDX %p\n", regs->rax, regs->rbx, regs->rcx, regs->rdx);
     print$("    RSI %p RDI %p RBP %p RSP %p\n", regs->rsi, regs->rdi, regs->rbp, regs->rsp);
@@ -111,7 +122,7 @@ uintptr_t interrupt_handler(uintptr_t rsp)
     }
     else if (regs->intno == IRQ0)
     {
-        // switch_to_scheduler(regs);
+        sched_yield(regs);
     }
 
     lapic_eoi();

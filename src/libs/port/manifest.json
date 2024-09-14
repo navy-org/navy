@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "type": "lib",
+    "id": "port",
+    "enableIf": {
+        "sys": [
+            "navy"
+        ]
+    },
+    "provides": [
+        "portRPC"
+    ],
+    "requires": [
+        "stdc-shim"
+    ]
+}

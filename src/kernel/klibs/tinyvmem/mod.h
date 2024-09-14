@@ -27,7 +27,7 @@ useful for things like process IDs, where we want
 to cycle through all the IDs before reusing them. (cited from paper) */
 #define VM_NEXTFIT (1 << 2)
 
-#define VM_SLEEP (1 << 3)
+#define VM_SLEEP   (1 << 3)
 #define VM_NOSLEEP (1 << 4)
 
 /* Used to eliminate cyclic dependencies when refilling the segment freelist:
@@ -51,7 +51,7 @@ typedef void VmemFree(struct vmem *vmem, void *addr, size_t size);
    we allocate a boundary tag to manage it. */
 
 /* sizeof(void *) * CHAR_BIT (8) freelists provides us with a freelist for every power-of-2 length that can fit within the host's virtual address space (64 bit) */
-#define FREELISTS_N sizeof(void *) * CHAR_BIT
+#define FREELISTS_N  sizeof(void *) * CHAR_BIT
 #define HASHTABLES_N 16
 
 typedef struct vmem_segment
@@ -153,5 +153,7 @@ void vmem_dump(Vmem *vmp);
 void vmem_bootstrap(void);
 
 void vmem_set_page_alloc(void *(*func)(size_t));
+
+VmemSegList *hashtable_for_addr(Vmem *vmem, uintptr_t addr);
 
 #endif

@@ -45,8 +45,17 @@ static void pmm_mark_used(uintptr_t base, size_t len)
 Res pmm_init(void)
 {
     HandoverPayload *hand = handover();
-    HandoverRecord last_entry = hand->records[hand->count - 1];
+    HandoverRecord last_entry;
     HandoverRecord record;
+
+    for (size_t i = hand->count; i; i--)
+    {
+        if (hand->records[i - 1].tag != HANDOVER_FILE)
+        {
+            last_entry = hand->records[i - 1];
+            break;
+        }
+    }
 
     bitmap.len = align_up$((last_entry.start + last_entry.size) / (PMM_PAGE_SIZE * 8), PMM_PAGE_SIZE);
     bitmap.last_high = bitmap.len - 1;

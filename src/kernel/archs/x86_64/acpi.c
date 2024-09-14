@@ -63,7 +63,7 @@ Res acpi_parse_sdt(char tablename[static 1])
 
         if (memcmp(tmp->signature, tablename, 4) == 0 && acpi_checksum(tmp))
         {
-            return uok$((uintptr_t)tmp);
+            return uok$(tmp);
         }
     }
 

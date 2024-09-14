@@ -16,12 +16,12 @@ uint8_t in8(uint16_t port)
     return value;
 }
 
-void hal_disable_interrupts(void)
+void _hal_disable_interrupts(void)
 {
     asm volatile("cli");
 }
 
-void hal_enable_interrupts(void)
+void _hal_enable_interrupts(void)
 {
     asm volatile("sti");
 }

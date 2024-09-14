@@ -10,6 +10,9 @@
             "navy"
         ]
     },
+    "requires": [
+        "navy"
+    ],
     "provides": [
         "stdc-shim"
     ]

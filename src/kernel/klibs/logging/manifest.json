@@ -1,14 +1,14 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "logging-kernel",
+    "id": "logging.kernel",
     "enableIf": {
         "sys": [
             "kernel"
         ]
     },
     "provides": [
-        "dbg"
+        "logger"
     ],
     "requires": [
         "sync",

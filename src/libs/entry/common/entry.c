@@ -23,6 +23,9 @@ int _entry(char *stack)
     char **argv = NULL;
 
     parse_stack((uintptr_t *)stack, &argc, &argv);
+
+    logging_set_name(argv[0]);
+
     main(argc, argv);
 
     for (;;)

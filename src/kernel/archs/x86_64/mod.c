@@ -1,4 +1,5 @@
 #include <hal>
+#include <pmm>
 #include <result>
 #include <traits>
 
@@ -22,6 +23,7 @@ Res hal_setup(void)
 {
     gdt_init();
     idt_init();
+    try$(pmm_init());
     try$(paging_init());
     try$(gdt_init_tss());
     syscall_init();

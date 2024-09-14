@@ -3,7 +3,7 @@
 
 gdt_flush:
     lgdt (%rdi)
-    
+
     mov $0x10, %ax
     mov %ax, %ss
     mov %ax, %ds
@@ -16,7 +16,7 @@ gdt_flush:
     lretq
 
 tss_flush:
-    mov $0x28, %ax 
+    mov $0x28, %ax
     ltr %ax
     ret
 
@@ -96,7 +96,7 @@ __interrupt_common:
         INTERRUPT_NOERR %i
     .else
         INTERRUPT_ERR %i
-    .endif 
+    .endif
     .set i,i+1
 .endr
 
