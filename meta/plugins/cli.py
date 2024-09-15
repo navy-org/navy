@@ -10,9 +10,13 @@ def generateImg(img: Image, target: str) -> Path:
     img.mkdir("/efi/boot")
     img.mkdir("/bin")
     img.cp(img.build("kernel", f"kernel-{target}"), Path("/kernel.elf"))
+
     modules += img.cp(img.build("hello", f"navy-{target}"), Path("/bin/hello"))
     modules += img.cp(img.build("bootstrap", f"navy-{target}"), Path("/bin/bootstrap"))
-    # img.cp(img.build("hello.client", f"navy-{target}"), Path("/bin/client.elf"))
+    modules += img.cp(
+        img.build("hello.client", f"navy-{target}"), Path("/bin/hello.client")
+    )
+
     if target == "x86_64":
         img.wget(
             "https://github.com/limine-bootloader/limine/raw/v8.x-binary/BOOTX64.EFI",

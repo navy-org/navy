@@ -57,7 +57,7 @@ Res port_allocate(pid_t task_id, pid_t peer, uint64_t rights)
     *node = (IpcPortNode *)try$(kmalloc_acquire().calloc(1, sizeof(IpcPortNode)));
     (*node)->id = port_id;
     (*node)->port = (IpcPort){
-        .dataptr = {0},
+        .objs = {0},
         .rights = rights,
         .peer = peer,
         .owner = task_id,
@@ -95,7 +95,7 @@ Res port_find(pid_t task_id, uintptr_t port_id)
     return err$(RES_BADPORT);
 }
 
-Res port_find_peer_port(IpcPort *port)
+Res port_find_peer(IpcPort *port)
 {
     Task *task = (Task *)try$(sched_get(port->peer));
     IpcPortList *lst = &task->ports;

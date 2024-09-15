@@ -17,22 +17,34 @@ Res main([[gnu::unused]] int argc, [[gnu::unused]] char **argv)
         try$(sys_port_wild(&recv));
         msg = recv$(recv, BootstrapMsg);
 
-        if (msg->type == BOOTSTRAP_REGISTER)
+        switch (msg->type)
         {
-            log$("%s wants to register", msg->name);
+            case BOOTSTRAP_REGISTER:
+            {
+                log$("%s wants to register", msg->name);
 
-            reply = (BootstrapMsg){
-                .type = BOOTSTRAP_ACK,
-            };
+                reply = (BootstrapMsg){
+                    .type = BOOTSTRAP_ACK,
+                };
 
-            send$(recv, reply);
+                send$(recv, reply);
+                break;
+            }
+
+            case BOOTSTRAP_LOOKUP:
+            {
+                log$("Someprocess wants to lookup %s", msg->name);
+
+                reply = (BootstrapMsg){
+                    .type = BOOTSTRAP_ACK,
+                };
+
+                send$(recv, reply);
+                break;
+            }
+            default:
+                error$("Unknown message type");
         }
-        else
-        {
-            error$("Unknown message type");
-        }
-
-        break;
     }
 
     return ok$();

@@ -17,9 +17,21 @@ typedef enum
 
 #    include <pmm>
 
+typedef struct _PhysNode
+{
+    PhysObj obj;
+    struct _PhysNode *next;
+} PhysNode;
+
 typedef struct
 {
-    PhysObj dataptr[64];
+    PhysNode *head;
+    PhysNode *tail;
+} PhysList;
+
+typedef struct
+{
+    PhysList objs;
     pid_t owner;
     pid_t peer;
     IPCPortRights rights;
@@ -43,7 +55,7 @@ typedef struct
 Res port_allocate(pid_t task_id, pid_t peer, uint64_t rights);
 Res port_allocate_both(pid_t client_id, pid_t server_id, uint64_t rights);
 Res port_find(pid_t task_id, uintptr_t port_id);
-Res port_find_peer_port(IpcPort *port);
+Res port_find_peer(IpcPort *port);
 
 #else
 
@@ -58,8 +70,12 @@ typedef uintptr_t IpcPort;
     sys_port_send(PORT, buffer, sizeof(STRUCT));       \
 })
 
-#define recv$(PORT, STRUCT) ({                \
-    STRUCT *msg;                              \
-    try$(sys_port_recv(PORT, (void **)&msg)); \
-    msg;                                      \
+#define recv$(PORT, STRUCT) ({                               \
+    __attribute__((__cleanup__(free_##STRUCT))) STRUCT *msg; \
+    try$(sys_port_recv(PORT, (void **)&msg));                \
+    msg;                                                     \
 })
+
+#define proto$(NAME) \
+    NAME;            \
+    static inline void free_##NAME(NAME **msg) { sys_dealloc(msg, sizeof(NAME)); }

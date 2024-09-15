@@ -33,7 +33,9 @@ static Res do_alloc(void **ptr, size_t size)
 
 static Res do_dealloc(void *ptr, size_t len)
 {
-    pmm_free((PhysObj){.base = (uintptr_t)ptr, .len = len});
+    Task *task = (Task *)try$(sched_current());
+    hal_space_unmap(task->space, (uintptr_t)ptr, align_up$(len, PMM_PAGE_SIZE));
+    pmm_free((PhysObj){.base = (uintptr_t)ptr, .len = align_up$(len, PMM_PAGE_SIZE)});
     return ok$();
 }
 
@@ -63,7 +65,7 @@ static Res do_port_send(uintptr_t port, void *data, size_t size)
 {
     Task *task = (Task *)try$(sched_current());
     IpcPort *src = (IpcPort *)try$(port_find(task->pid, port));
-    IpcPort *dst = (IpcPort *)try$(port_find_peer_port(src));
+    IpcPort *dst = (IpcPort *)try$(port_find_peer(src));
 
     if (src->rights & IPC_PORT_SEND_ONCE)
     {
@@ -74,16 +76,14 @@ static Res do_port_send(uintptr_t port, void *data, size_t size)
         return err$(RES_DENIED);
     }
 
+    hal_space_unmap(task->space, (uintptr_t)data, align_up$(size, PMM_PAGE_SIZE));
+
     uintptr_t phys = try$(hal_virt2phys(task->space, (uintptr_t)data));
-    PhysObj *dataptr = &dst->dataptr[0];
+    PhysNode **node = dst->objs.head == NULL ? &dst->objs.head : &dst->objs.tail->next;
 
-    while (dataptr->len > 0)
-    {
-        dataptr++;
-    }
-
-    dataptr->base = phys;
-    dataptr->len = size;
+    *node = (PhysNode *)try$(kmalloc_acquire().calloc(1, sizeof(PhysNode)));
+    (*node)->obj = (PhysObj){.base = phys, .len = size};
+    dst->objs.tail = *node;
 
     return ok$();
 }
@@ -100,7 +100,7 @@ static Res do_port_wild(uintptr_t *port)
 
         while (node != NULL)
         {
-            if (node->port.dataptr[0].len != 0)
+            if (node->port.objs.head != NULL)
             {
                 *port = node->id;
                 found = true;
@@ -124,16 +124,21 @@ static Res do_port_recv(uintptr_t port, void **data)
     }
     else if ((self->rights & IPC_PORT_RECV) == 0)
     {
+        critical$("IPC security violation: %s tried to receive from %s", task->name, ((Task *)try$(sched_get(self->peer)))->name);
         return err$(RES_DENIED);
     }
 
-    PhysObj *dataptr = &self->dataptr[0];
-
-    while (dataptr->len == 0)
+    while (self->objs.head == NULL)
         ;
+
+    PhysObj *dataptr = &self->objs.head->obj;
 
     *data = vmem_alloc(&task->vmem, align_up$(dataptr->len, PMM_PAGE_SIZE), VM_INSTANTFIT);
     try$(hal_space_map(task->space, (uintptr_t)(*data), dataptr->base, align_up$(dataptr->len, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER));
+
+    PhysNode *tmp = self->objs.head;
+    self->objs.head = self->objs.head->next;
+    kmalloc_acquire().free(tmp);
 
     return ok$();
 }

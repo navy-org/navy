@@ -158,12 +158,12 @@ Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
 
     // TODO: Huge pages ?
 
-    for (size_t i = 0; i < len; i += PMM_PAGE_SIZE)
+    for (size_t i = virt; i < len; i += PMM_PAGE_SIZE)
     {
-        size_t pml1_entry = PMLX_GET_INDEX(virt + i, 0);
-        size_t pml2_entry = PMLX_GET_INDEX(virt + i, 1);
-        size_t pml3_entry = PMLX_GET_INDEX(virt + i, 2);
-        size_t pml4_entry = PMLX_GET_INDEX(virt + i, 3);
+        size_t pml1_entry = PMLX_GET_INDEX(i, 0);
+        size_t pml2_entry = PMLX_GET_INDEX(i, 1);
+        size_t pml3_entry = PMLX_GET_INDEX(i, 2);
+        size_t pml4_entry = PMLX_GET_INDEX(i, 3);
 
         uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false));
         uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, false));
