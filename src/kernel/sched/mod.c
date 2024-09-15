@@ -61,6 +61,7 @@ void sched_yield(HalRegs *regs)
         hal_context_restore(sched.current->task->ctx, regs);
         hal_space_apply(sched.current->task->space);
     }
+
     hal_enable_interrupts();
 }
 

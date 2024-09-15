@@ -131,6 +131,7 @@ syscall_handle:
 
     mov %rsp, %rdi
     movl $0, %ebp
+    sti
     call syscall_handler
 
     __popa

@@ -66,7 +66,7 @@ static Res paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
     }
     else if (alloc)
     {
-        PmmObj obj = pmm_alloc(1);
+        PhysObj obj = pmm_alloc(1);
         uintptr_t ptr_hddm = hal_mmap_l2h(obj.base);
         memset((void *)ptr_hddm, 0, obj.len);
 
@@ -177,7 +177,7 @@ Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
 
 Res paging_init(void)
 {
-    PmmObj obj = pmm_alloc(1);
+    PhysObj obj = pmm_alloc(1);
     if (obj.base == 0)
     {
         return err$(RES_NOMEM);
@@ -243,7 +243,7 @@ void hal_space_apply(HalPage *space)
 Res hal_space_create(HalPage **self)
 {
 
-    PmmObj obj = pmm_alloc(1);
+    PhysObj obj = pmm_alloc(1);
     uintptr_t *space = (uintptr_t *)hal_mmap_l2h(obj.base);
     memset((void *)space, 0, obj.len);
 

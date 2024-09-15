@@ -7,7 +7,7 @@
 
 static void *alloc_block([[gnu::unused]] void *ctx, size_t size)
 {
-    PmmObj page = pmm_alloc(align_up$(size, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+    PhysObj page = pmm_alloc(align_up$(size, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
 
     if (page.base == 0)
     {
@@ -19,7 +19,7 @@ static void *alloc_block([[gnu::unused]] void *ctx, size_t size)
 
 static void free_block([[gnu::unused]] void *ctx, void *block, size_t size)
 {
-    PmmObj page = {
+    PhysObj page = {
         .base = hal_mmap_h2l((uintptr_t)block),
         .len = align_up$(size, PMM_PAGE_SIZE),
     };

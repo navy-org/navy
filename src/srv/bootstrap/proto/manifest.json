@@ -1,11 +1,8 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "exe",
-    "id": "hello",
+    "type": "lib",
+    "id": "bootstrap.proto",
     "requires": [
-        "logger",
-        "entry",
-        "port",
-        "bootstrap.proto"
+        "navy"
     ]
 }

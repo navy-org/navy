@@ -36,7 +36,7 @@ Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
     self->regs.rsp = sp;
     self->regs.rbp = 0;
 
-    PmmObj kStackObj = pmm_alloc(align_up$(STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+    PhysObj kStackObj = pmm_alloc(align_up$(STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
     if (kStackObj.base == 0)
     {
         return err$(RES_NOMEM);

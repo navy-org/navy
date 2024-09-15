@@ -91,7 +91,7 @@ Res pmm_init(void)
     return ok$();
 }
 
-PmmObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)
+PhysObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)
 {
     spinlock_acquire(&lock);
 
@@ -111,7 +111,7 @@ PmmObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)
                 try_again = false;
 
                 spinlock_release(&lock);
-                return (PmmObj){.base = base * PMM_PAGE_SIZE, .len = pages * PMM_PAGE_SIZE};
+                return (PhysObj){.base = base * PMM_PAGE_SIZE, .len = pages * PMM_PAGE_SIZE};
             }
         }
         else
@@ -126,7 +126,7 @@ PmmObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)
     {
         warn$("End of the bitmap reached, trying again");
         try_again = true;
-        PmmObj obj = _pmm_alloc(pages, param);
+        PhysObj obj = _pmm_alloc(pages, param);
         return obj;
     }
     else
@@ -138,7 +138,7 @@ PmmObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)
     __builtin_unreachable();
 }
 
-void pmm_free(PmmObj obj)
+void pmm_free(PhysObj obj)
 {
     spinlock_acquire(&lock);
     pmm_mark_free(obj.base, obj.len);

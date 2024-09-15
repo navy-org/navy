@@ -34,7 +34,7 @@ Res task_new(char const *name, Res address_space, Res ip)
 
     if (task->pid > 0)
     {
-        PmmObj stack = pmm_alloc(USER_STACK_SIZE / PMM_PAGE_SIZE);
+        PhysObj stack = pmm_alloc(USER_STACK_SIZE / PMM_PAGE_SIZE);
         if (stack.len == 0)
         {
             return err$(RES_NOMEM);
@@ -60,15 +60,16 @@ Res task_new(char const *name, Res address_space, Res ip)
         }
 
         vmem_init(&task->vmem, (char *)name, (void *)USER_HEAP_BASE + PMM_PAGE_SIZE, USER_HEAP_SIZE, PMM_PAGE_SIZE, NULL, NULL, NULL, 0, 0);
+        try$(sched_add(task));
+
+        if (task->pid > 1)
+        {
+            try$(port_allocate_both(task->pid, 1, IPC_PORT_RECV_ONCE | IPC_PORT_SEND_ONCE));
+        }
     }
     else
     {
         hal_context_start(task->ctx, ip.uvalue, 0);
-    }
-
-    if (task->pid > 1)
-    {
-        port_allocate_both(pid, 1, IPC_PORT_RECV_ONCE | IPC_PORT_SEND_ONCE);
     }
 
     return uok$(task);

@@ -34,7 +34,7 @@ static void _ASSERT(char file[static 1], size_t lineno, char expr[static 1])
 
 static void *vmem_alloc_pages(size_t x)
 {
-    PmmObj obj = pmm_alloc(x);
+    PhysObj obj = pmm_alloc(x);
     if (obj.base == 0)
     {
         return NULL;

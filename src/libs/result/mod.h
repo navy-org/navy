@@ -5,14 +5,18 @@
 #include "loc.h"
 #include "utils.h"
 
-#define RES_TYPE(F)   \
-    F(RES_OK)         \
-    F(RES_INVAL)      \
-    F(RES_NOMEM)      \
-    F(RES_BADALIGN)   \
-    F(RES_NOENT)      \
-    F(RES_BADSYSCALL) \
-    F(RES_UNIMPLEMENTED)
+#define DECL_TYPE(T)
+
+#define RES_TYPE(F)      \
+    F(RES_OK)            \
+    F(RES_INVAL)         \
+    F(RES_NOMEM)         \
+    F(RES_BADALIGN)      \
+    F(RES_NOENT)         \
+    F(RES_BADSYSCALL)    \
+    F(RES_UNIMPLEMENTED) \
+    F(RES_DENIED)        \
+    F(RES_BADPORT)
 
 enum res_type
 {

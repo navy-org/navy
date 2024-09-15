@@ -17,8 +17,10 @@ typedef enum : size_t
     SYS_LOG,
     SYS_ALLOC,
     SYS_DEALLOC,
-    SYS_PORT_ALLOC,
     SYS_PORT_DEINIT,
+    SYS_PORT_SEND,
+    SYS_PORT_WILD,
+    SYS_PORT_RECV,
 
     __SYSCALL_LENGTH
 } Syscalls;
@@ -85,12 +87,22 @@ static inline Res sys_dealloc(void *ptr, size_t len)
     return syscall(SYS_DEALLOC, (SysArg)ptr, len);
 }
 
-static inline Res sys_port_alloc(uintptr_t *port, uint64_t rights)
-{
-    return syscall(SYS_PORT_ALLOC, (SysArg)port, (SysArg)rights);
-}
-
 static inline Res sys_port_deinit(uintptr_t *port)
 {
     return syscall(SYS_PORT_DEINIT, (SysArg)port);
+}
+
+static inline Res sys_port_send(uintptr_t port, void *data, size_t size)
+{
+    return syscall(SYS_PORT_SEND, (SysArg)port, (SysArg)data, (SysArg)size);
+}
+
+static inline Res sys_port_wild(uintptr_t *port)
+{
+    return syscall(SYS_PORT_WILD, (SysArg)port);
+}
+
+static inline Res sys_port_recv(uintptr_t port, void **data)
+{
+    return syscall(SYS_PORT_RECV, (SysArg)port, (SysArg)data);
 }

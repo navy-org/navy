@@ -39,7 +39,7 @@ Res elfloader_instantiate(char const *filename)
             log$("Mapping %s segment 0x%x -> 0x%x (len: %x)",
                  filename, phdr->p_vaddr, phdr->p_vaddr + phdr->p_memsz, phdr->p_memsz);
 
-            PmmObj paddr = pmm_alloc(align_up$(phdr->p_memsz, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+            PhysObj paddr = pmm_alloc(align_up$(phdr->p_memsz, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
             if (paddr.len == 0)
             {
                 return err$(RES_NOMEM);
@@ -53,7 +53,7 @@ Res elfloader_instantiate(char const *filename)
         }
     }
 
-    try$(sched_add((Task *)try$(task_new(filename, uok$(vspace), uok$(hdr->e_entry)))));
+    try$(task_new(filename, uok$(vspace), uok$(hdr->e_entry)));
 
     hal_enable_interrupts();
 
