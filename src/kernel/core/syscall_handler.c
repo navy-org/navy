@@ -39,7 +39,7 @@ static Res do_dealloc(void *ptr, size_t len)
 static Res do_port_alloc(uintptr_t *port, uint64_t rights)
 {
     Task *task = (Task *)try$(sched_current());
-    port_allocate_client(task->pid, rights);
+    try$(port_allocate(task->pid, rights));
     *port = task->ports.tail->id;
     return ok$();
 }

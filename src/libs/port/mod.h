@@ -37,7 +37,7 @@ typedef struct
 
 #    include <sched>
 
-Res port_allocate_client(pid_t task_id, uint64_t rights);
+Res port_allocate(pid_t task_id, uint64_t rights);
 Res port_allocate_both(pid_t client_id, pid_t server_id, uint64_t rights);
 
 #else

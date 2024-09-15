@@ -5,7 +5,7 @@
 
 Res main(int argc, char const **argv)
 {
-    // [[gnu::unused]] IpcPort *port = (IpcPort *)try$(port_alloc(IPC_PORT_RECV));
+    [[gnu::unused]] IpcPort *port = (IpcPort *)try$(port_alloc(IPC_PORT_RECV));
 
     log$("Argc = %d", argc);
     log$("Hello, World from %s !", argv[0]);

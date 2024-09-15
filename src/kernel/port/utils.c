@@ -31,7 +31,7 @@ static uint64_t invert_rights(uint64_t rights)
     return inv;
 }
 
-Res port_allocate_client(pid_t task_id, uint64_t rights)
+Res port_allocate(pid_t task_id, uint64_t rights)
 {
     Task *task = (Task *)try$(sched_get(task_id));
     IpcPortList *lst = &task->ports;
@@ -69,7 +69,7 @@ Res port_allocate_client(pid_t task_id, uint64_t rights)
 
 Res port_allocate_both(pid_t client_id, pid_t server_id, uint64_t rights)
 {
-    try$(port_allocate_client(client_id, rights));
-    try$(port_allocate_client(server_id, invert_rights(rights)));
+    try$(port_allocate(client_id, rights));
+    try$(port_allocate(server_id, invert_rights(rights)));
     return ok$();
 }

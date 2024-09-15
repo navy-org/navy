@@ -51,7 +51,6 @@ static inline Res __syscall_impl(Syscalls s, SysArg arg1, SysArg arg2, SysArg ar
     return (Res){
         .type = res,
         .uvalue = 0,
-        .loc = loc$(),
     };
 }
 
@@ -61,7 +60,11 @@ static inline Res __syscall_impl(Syscalls s, SysArg arg1, SysArg arg2, SysArg ar
 
 #define __syscall(id, a1, a2, a3, a4, a5, a6, ...) __syscall_impl(id, a1, a2, a3, a4, a5, a6)
 
-#define syscall(...) __syscall(__VA_ARGS__, 0, 0, 0, 0, 0, 0)
+#define syscall(...) ({                                 \
+    Res ret = __syscall(__VA_ARGS__, 0, 0, 0, 0, 0, 0); \
+    ret.loc = loc$();                                   \
+    ret;                                                \
+})
 
 Res _syscall_handler(Syscalls no, SysArgs args);
 

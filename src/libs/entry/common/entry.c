@@ -26,7 +26,11 @@ int _entry(char *stack)
 
     logging_set_name(argv[0]);
 
-    main(argc, argv);
+    Res res = main(argc, argv);
+    if (res.type != RES_OK)
+    {
+        error$("main returned error: %s from %s:%d", res_to_str(res), res.loc.full, res.loc.line);
+    }
 
     for (;;)
         ;

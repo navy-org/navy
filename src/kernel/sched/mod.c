@@ -28,7 +28,7 @@ Res sched_add(Task *task)
 {
     SchedNode *node = (SchedNode *)try$(kmalloc.calloc(1, sizeof(SchedNode)));
     node->task = task;
-    node->next = sched.head;
+    node->next = NULL;
 
     sched.tail->next = node;
     sched.tail = node;
@@ -52,6 +52,12 @@ void sched_yield(HalRegs *regs)
         ticks = 0;
         hal_context_save(sched.current->task->ctx, regs);
         sched.current = sched.current->next;
+
+        if (sched.current == NULL)
+        {
+            sched.current = sched.head;
+        }
+
         hal_context_restore(sched.current->task->ctx, regs);
         hal_space_apply(sched.current->task->space);
     }
@@ -72,7 +78,7 @@ Res sched_get(pid_t pid)
 {
     SchedNode *node = sched.head;
 
-    while (node != sched.tail)
+    while (node != NULL)
     {
         if (node->task->pid == pid)
         {
