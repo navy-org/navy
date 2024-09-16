@@ -64,7 +64,7 @@ Res task_new(char const *name, Res address_space, Res ip)
 
         if (task->pid > 1)
         {
-            try$(port_allocate_both(task->pid, 1, IPC_PORT_RECV_ONCE | IPC_PORT_SEND_ONCE));
+            try$(port_allocate_both(task->pid, 1, IPC_PORT_RECV | IPC_PORT_SEND));
         }
     }
     else

@@ -9,7 +9,8 @@ typedef enum
 {
     BOOTSTRAP_REGISTER,
     BOOTSTRAP_LOOKUP,
-    BOOTSTRAP_ACK
+    BOOTSTRAP_ACK,
+    BOOTSTRAP_NOENT,
 } BootstrapMsgType;
 
 typedef struct [[gnu::packed]]
@@ -18,5 +19,6 @@ typedef struct [[gnu::packed]]
     union
     {
         char name[64];
+        IpcPort port;
     };
 } proto$(BootstrapMsg)

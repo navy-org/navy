@@ -6,6 +6,10 @@
         "cute-engineering/libheap": {
             "git": "https://github.com/cute-engineering/libheap.git",
             "tag": "v1.1.0"
+        },
+        "cute-engineering/ce-libm": {
+            "git": "https://github.com/cute-engineering/ce-libm",
+            "tag": "main"
         }
     }
 }

@@ -73,6 +73,7 @@ static Res do_port_send(uintptr_t port, void *data, size_t size)
     }
     else if ((src->rights & IPC_PORT_SEND) == 0)
     {
+        critical$("IPC security violation: %s tried to send to %s", task->name, ((Task *)try$(sched_get(dst->owner)))->name);
         return err$(RES_DENIED);
     }
 
@@ -143,6 +144,26 @@ static Res do_port_recv(uintptr_t port, void **data)
     return ok$();
 }
 
+static Res do_port_join(uintptr_t clientPort, uintptr_t serverPort, uintptr_t *newPort, uint64_t rights)
+{
+    Task *task = (Task *)try$(sched_current());
+    if (task->pid != 1)
+    {
+        critical$("Security violation: %s tried to join ports", task->name);
+        return err$(RES_DENIED);
+    }
+
+    IpcPort *client = (IpcPort *)try$(port_find(task->pid, clientPort));
+    IpcPort *server = (IpcPort *)try$(port_find(task->pid, serverPort));
+
+    try$(port_allocate_both(client->peer, server->peer, rights));
+
+    Task *clientTask = (Task *)try$(sched_get(client->peer));
+    *newPort = clientTask->ports.tail->id;
+
+    return ok$();
+}
+
 static Handler *handlers[__SYSCALL_LENGTH] = {
     [SYS_LOG] = (Handler *)do_log,
     [SYS_ALLOC] = (Handler *)do_alloc,
@@ -151,6 +172,7 @@ static Handler *handlers[__SYSCALL_LENGTH] = {
     [SYS_PORT_SEND] = (Handler *)do_port_send,
     [SYS_PORT_WILD] = (Handler *)do_port_wild,
     [SYS_PORT_RECV] = (Handler *)do_port_recv,
+    [SYS_PORT_JOIN] = (Handler *)do_port_join,
 };
 
 Res _syscall_handler(Syscalls no, SysArgs args)

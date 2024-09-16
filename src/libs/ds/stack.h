@@ -1,6 +1,5 @@
 #pragma once
 
-#include <hal>
 #include <stddef.h>
 #include <stdint.h>
 

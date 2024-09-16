@@ -4,6 +4,7 @@
     "id": "bootstrap",
     "requires": [
         "logger",
-        "entry"
+        "entry",
+        "ds"
     ]
 }

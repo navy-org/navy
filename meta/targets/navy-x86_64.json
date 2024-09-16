@@ -12,6 +12,9 @@
         "freestanding": false,
         "host": false
     },
+    "routing": {
+        "stdc-math": "ce-libm"
+    },
     "tools": {
         "cc": {
             "cmd": "{shell.latest('clang')}",

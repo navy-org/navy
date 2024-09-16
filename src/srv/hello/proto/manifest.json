@@ -1,8 +1,8 @@
 {
     "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
     "type": "lib",
-    "id": "ds",
+    "id": "hello.proto",
     "requires": [
-        "stdc-math"
+        "navy"
     ]
 }

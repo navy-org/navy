@@ -21,6 +21,7 @@ typedef enum : size_t
     SYS_PORT_SEND,
     SYS_PORT_WILD,
     SYS_PORT_RECV,
+    SYS_PORT_JOIN,
 
     __SYSCALL_LENGTH
 } Syscalls;
@@ -85,6 +86,11 @@ static inline Res sys_alloc(void **ptr, size_t size)
 static inline Res sys_dealloc(void *ptr, size_t len)
 {
     return syscall(SYS_DEALLOC, (SysArg)ptr, len);
+}
+
+static inline Res sys_port_join(uintptr_t clientPort, uintptr_t serverPort, uintptr_t *new_port, uint64_t rights)
+{
+    return syscall(SYS_PORT_JOIN, (SysArg)clientPort, (SysArg)serverPort, (SysArg)new_port, rights);
 }
 
 static inline Res sys_port_deinit(uintptr_t *port)
