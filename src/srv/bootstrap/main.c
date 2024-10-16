@@ -5,6 +5,8 @@
 #include <port>
 #include <result>
 
+#include "proto/mod.h"
+
 HashMap(IpcPort, char *, IpcPort);
 
 Res main([[gnu::unused]] int argc, [[gnu::unused]] char **argv)
@@ -27,11 +29,21 @@ Res main([[gnu::unused]] int argc, [[gnu::unused]] char **argv)
             case BOOTSTRAP_REGISTER:
             {
                 log$("%s wants to register", msg->name);
-                try$(hashmap_insert(&services, msg->name, recv));
 
-                reply = (BootstrapMsg){
-                    .type = BOOTSTRAP_ACK,
-                };
+                if (hashmap_lookup(&services, msg->name).type == RES_NOENT)
+                {
+                    try$(hashmap_insert(&services, msg->name, recv));
+
+                    reply = (BootstrapMsg){
+                        .type = BOOTSTRAP_ACK,
+                    };
+                }
+                else
+                {
+                    reply = (BootstrapMsg){
+                        .type = BOOTSTRAP_ALREAY_REGISTERED,
+                    };
+                }
 
                 send$(recv, reply);
                 break;

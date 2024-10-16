@@ -16,7 +16,9 @@
     F(RES_BADSYSCALL)    \
     F(RES_UNIMPLEMENTED) \
     F(RES_DENIED)        \
-    F(RES_BADPORT)
+    F(RES_BADPORT)       \
+    F(RES_NOSRV)         \
+    F(RES_RESERVED)
 
 enum res_type
 {

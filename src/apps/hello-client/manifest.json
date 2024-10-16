@@ -4,6 +4,7 @@
     "id": "hello.client",
     "requires": [
         "logger",
-        "entry"
+        "entry",
+        "bootstrap.proto"
     ]
 }

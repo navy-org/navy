@@ -20,12 +20,7 @@ static uint64_t invert_rights(uint64_t rights)
 
     if (rights & IPC_PORT_SEND_ONCE)
     {
-        inv |= IPC_PORT_RECV_ONCE;
-    }
-
-    if (rights & IPC_PORT_RECV_ONCE)
-    {
-        inv |= IPC_PORT_SEND_ONCE;
+        inv |= IPC_PORT_RECV;
     }
 
     return inv;

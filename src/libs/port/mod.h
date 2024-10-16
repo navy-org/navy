@@ -10,7 +10,6 @@ typedef enum
     IPC_PORT_SEND = 1 << 0,
     IPC_PORT_RECV = 1 << 1,
     IPC_PORT_SEND_ONCE = 1 << 2,
-    IPC_PORT_RECV_ONCE = 1 << 3,
 } IPCPortRights;
 
 #ifdef __ck_sys_kernel__

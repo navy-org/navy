@@ -119,11 +119,7 @@ static Res do_port_recv(uintptr_t port, void **data)
     Task *task = (Task *)try$(sched_current());
     IpcPort *self = (IpcPort *)try$(port_find(task->pid, port));
 
-    if (self->rights & IPC_PORT_RECV_ONCE)
-    {
-        self->rights &= ~IPC_PORT_RECV_ONCE;
-    }
-    else if ((self->rights & IPC_PORT_RECV) == 0)
+    if ((self->rights & IPC_PORT_RECV) == 0)
     {
         critical$("IPC security violation: %s tried to receive from %s", task->name, ((Task *)try$(sched_get(self->peer)))->name);
         return err$(RES_DENIED);
