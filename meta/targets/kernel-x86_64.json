@@ -20,6 +20,7 @@
         "cc": {
             "cmd": "{shell.latest('clang')}",
             "args": [
+                "-Wno-cast-function-type-mismatch",
                 "-target",
                 "x86_64-none-elf",
                 "-ffreestanding",
