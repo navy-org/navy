@@ -1,15 +1,19 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
-    "type": "project",
-    "id": "navy-org/navy",
-    "extern": {
-        "cute-engineering/libheap": {
-            "git": "https://github.com/cute-engineering/libheap.git",
-            "tag": "v1.1.0"
-        },
-        "cute-engineering/ce-libm": {
-            "git": "https://github.com/cute-engineering/ce-libm",
-            "tag": "main"
-        }
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.project.v1",
+  "type": "project",
+  "id": "navy-org/navy",
+  "extern": {
+    "cute-engineering/libheap": {
+      "git": "https://github.com/cute-engineering/libheap.git",
+      "tag": "v1.1.0"
+    },
+    "cute-engineering/ce-libm": {
+      "git": "https://github.com/cute-engineering/ce-libm",
+      "tag": "main"
+    },
+    "cmocka": {
+      "description": "Unit testing framework for C",
+      "names": ["cmocka"]
     }
+  }
 }

@@ -1,6 +1,6 @@
 #include <elfloader>
 #include <hal>
-#include <logging>
+#include <logger>
 #include <pmm>
 #include <sched>
 #include <tinyvmem>

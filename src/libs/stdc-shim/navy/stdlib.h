@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <traits>
 
 void *malloc(size_t size);
 

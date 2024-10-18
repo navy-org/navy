@@ -13,7 +13,7 @@
 #include "mod.h"
 
 #ifndef __ck_sys_kernel__
-#    include <assert.h>
+#    include <assert>
 #    include <stdio.h>
 #    include <stdlib.h>
 #    define vmem_printf         printf
@@ -21,7 +21,7 @@
 #    define vmem_alloc_pages(x) malloc(x * 4096)
 #else
 #    include <hal>
-#    include <logging>
+#    include <logger>
 #    include <pmm>
 #    define vmem_printf(...) ((void)0)
 #    define ASSERT(x)        (x ? (void)0 : _ASSERT(__FILE__, __LINE__, #x))

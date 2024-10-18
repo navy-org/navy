@@ -1,6 +1,6 @@
 #include <fmt>
 #include <hal>
-#include <logging>
+#include <logger>
 #include <stdarg.h>
 #include <sync>
 

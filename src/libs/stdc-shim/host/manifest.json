@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "stdc-shim-host",
+  "props": {
+    "cpp-root-include": true
+  },
+  "enableIf": {
+    "host": [true]
+  },
+  "provides": ["stdc-shim"]
+}

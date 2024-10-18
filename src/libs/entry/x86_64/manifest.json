@@ -1,13 +1,10 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "entry-x86_64",
-    "enableIf": {
-        "arch": [
-            "x86_64"
-        ]
-    },
-    "provides": [
-        "entry-arch"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "entry-x86_64",
+  "enableIf": {
+    "arch": ["x86_64"],
+    "sys": ["navy"]
+  },
+  "provides": ["entry-arch"]
 }

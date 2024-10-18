@@ -1,5 +1,5 @@
 #include <hal>
-#include <logging>
+#include <logger>
 
 #include "asm.h"
 #include "gdt.h"

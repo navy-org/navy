@@ -1,9 +1,9 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "entry",
-    "requires": [
-        "entry-arch",
-        "stdc-shim"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "entry",
+  "enableIf": {
+    "host": [false]
+  },
+  "requires": ["entry-arch", "stdc-shim"]
 }

@@ -1,6 +1,6 @@
 #include <bootstrap.proto>
 #include <hello.proto>
-#include <logging>
+#include <logger>
 #include <port>
 #include <result>
 

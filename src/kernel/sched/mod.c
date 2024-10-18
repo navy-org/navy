@@ -1,5 +1,5 @@
 #include <kmalloc>
-#include <logging>
+#include <logger>
 #include <sync>
 
 #include "mod.h"

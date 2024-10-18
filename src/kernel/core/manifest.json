@@ -1,25 +1,23 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "exe",
-    "id": "kernel",
-    "requires": [
-        "arch",
-        "logger",
-        "stdc-shim",
-        "loader",
-        "kmalloc",
-        "tinyvmem",
-        "pmm",
-        "sched",
-        "elfloader",
-        "portRPC",
-        "hal"
-    ],
-    "tools": {
-        "cc": {
-            "args": [
-                "-Isrc/kernel/klibs"
-            ]
-        }
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "exe",
+  "id": "kernel",
+  "requires": [
+    "arch",
+    "logger",
+    "stdc-shim",
+    "loader",
+    "kmalloc",
+    "tinyvmem",
+    "pmm",
+    "sched",
+    "elfloader",
+    "portRPC",
+    "hal"
+  ],
+  "tools": {
+    "cc": {
+      "args": ["-Isrc/kernel/klibs"]
     }
+  }
 }

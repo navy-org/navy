@@ -1,7 +1,7 @@
 #include <ds>
 #include <hal>
 #include <kmalloc>
-#include <logging>
+#include <logger>
 #include <pmm>
 #include <sched>
 #include <string.h>

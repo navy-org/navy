@@ -1,6 +1,6 @@
 #include <hal>
 #include <kmalloc>
-#include <logging>
+#include <logger>
 #include <navy>
 #include <pmm>
 #include <string.h>

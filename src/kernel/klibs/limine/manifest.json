@@ -1,23 +1,12 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "loader-limine",
-    "enableIf": {
-        "loader": [
-            "limine"
-        ],
-        "arch": [
-            "x86_64"
-        ],
-        "sys": [
-            "kernel"
-        ]
-    },
-    "provides": [
-        "loader"
-    ],
-    "requires": [
-        "stdc-shim",
-        "handover"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "loader-limine",
+  "enableIf": {
+    "loader": ["limine"],
+    "arch": ["x86_64"],
+    "sys": ["kernel"]
+  },
+  "provides": ["loader"],
+  "requires": ["stdc-shim", "handover"]
 }

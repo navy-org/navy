@@ -1,6 +1,6 @@
 #include <hal>
 #include <handover>
-#include <logging>
+#include <logger>
 #include <pmm>
 #include <sched>
 #include <specs/elf.h>

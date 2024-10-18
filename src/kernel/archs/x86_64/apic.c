@@ -1,5 +1,5 @@
 #include <hal>
-#include <logging>
+#include <logger>
 
 #include "apic.h"
 #include "asm.h"

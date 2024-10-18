@@ -1,9 +1,6 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "tinyvmem",
-    "requires": [
-        "logger",
-        "stdc-shim"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "tinyvmem",
+  "requires": ["logger", "stdc-shim"]
 }

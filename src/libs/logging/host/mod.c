@@ -1,16 +1,15 @@
 #include <fmt>
-#include <navy>
+#include <logger>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
-#include "mod.h"
-
-/* --- Define sys_log as a stream ------------------------------------------- */
+/* --- Define write as a stream ------------------------------------------- */
 
 static Res stream_write(size_t n, char const buf[static n])
 {
-    try$(sys_log(buf, n));
-    return uok$(n);
+    return uok$(write(STDOUT_FILENO, buf, n));
 }
 
 static Stream _stream = {

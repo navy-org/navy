@@ -75,6 +75,10 @@ typedef uintptr_t IpcPort;
     msg;                                                     \
 })
 
-#define proto$(NAME) \
-    NAME;            \
-    static inline void free_##NAME(NAME **msg) { sys_dealloc(msg, sizeof(NAME)); }
+#define proto$(NAME)                           \
+    NAME;                                      \
+    static inline void free_##NAME(NAME **msg) \
+    {                                          \
+        sys_dealloc(msg, sizeof(NAME));        \
+        *msg = NULL;                           \
+    }

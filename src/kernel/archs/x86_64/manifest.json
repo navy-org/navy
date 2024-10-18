@@ -1,21 +1,11 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "arch_x86_64",
-    "enableIf": {
-        "arch": [
-            "x86_64"
-        ],
-        "sys": [
-            "kernel"
-        ]
-    },
-    "provides": [
-        "arch"
-    ],
-    "requires": [
-        "traits",
-        "stdc-shim",
-        "logger"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "arch_x86_64",
+  "enableIf": {
+    "arch": ["x86_64"],
+    "sys": ["kernel"]
+  },
+  "provides": ["arch"],
+  "requires": ["traits", "stdc-shim", "logger"]
 }

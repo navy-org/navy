@@ -1,7 +1,7 @@
 #include "alloc.h"
 #include <fmt>
 #include <libheap/libheap.h>
-#include <logging>
+#include <logger>
 #include <navy>
 
 static void *alloc_block([[gnu::unused]] void *ctx, size_t size)

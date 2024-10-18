@@ -1,8 +1,10 @@
 {
-    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
-    "type": "lib",
-    "id": "navy",
-    "requires": [
-        "libheap"
-    ]
+  "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+  "type": "lib",
+  "id": "navy",
+  "enableIf": {
+    "sys": ["navy"]
+  },
+  "requires": ["libheap"],
+  "provides": ["libnavy"]
 }
