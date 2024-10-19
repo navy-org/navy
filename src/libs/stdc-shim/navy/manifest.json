@@ -6,8 +6,15 @@
     "cpp-root-include": true
   },
   "enableIf": {
-    "sys": ["navy"]
+    "sys": [
+      "navy"
+    ]
   },
-  "requires": ["navy"],
-  "provides": ["stdc-shim"]
+  "requires": [
+    "navy",
+    "block-runtime"
+  ],
+  "provides": [
+    "stdc-shim"
+  ]
 }

@@ -42,10 +42,10 @@ _Noreturn int _start()
     }
 
     Res client = elfloader_instantiate("/bin/hello.client");
-    if (hello.type != RES_OK)
+    if (client.type != RES_OK)
     {
         error$("%s at %s (%s:%d) - Couldn't instantiate /bin/hello.client",
-               res_to_str(client), client.loc.func, client.loc.file, hello.loc.line);
+               res_to_str(client), client.loc.func, client.loc.file, client.loc.line);
         hal_panic();
     }
 

@@ -5,9 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// REMOVE ME !
-#include <stdio.h>
-
 #include "re.h"
 
 ReExpr _re_single(int n, char *buff, ...)
@@ -320,7 +317,6 @@ ReExpr re_word(char const *word)
       size_t len = strlen(word);
       if (sz < len)
       {
-          printf("Overflow\n");
           return (size_t)0;
       }
 
@@ -329,7 +325,6 @@ ReExpr re_word(char const *word)
           char c = scanner_peek(self);
           if (c != word[i])
           {
-              printf("%c != %c\n", c, word[i]);
               return (size_t)0;
           }
 

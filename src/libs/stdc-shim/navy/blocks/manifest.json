@@ -1,0 +1,19 @@
+{
+    "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
+    "type": "lib",
+    "id": "stdc-shim-block",
+    "props": {
+        "cpp-root-include": true
+    },
+    "enableIf": {
+        "sys": [
+            "navy"
+        ]
+    },
+    "requires": [
+        "navy"
+    ],
+    "provides": [
+        "block-runtime"
+    ]
+}

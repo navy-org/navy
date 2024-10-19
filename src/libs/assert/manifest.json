@@ -3,6 +3,6 @@
     "type": "lib",
     "id": "assert",
     "requires": [
-        "stdc-ansi"
+        "stdc-shim"
     ]
 }

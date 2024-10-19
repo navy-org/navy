@@ -1,5 +1,8 @@
 {
   "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
   "type": "lib",
-  "id": "scanner"
+  "id": "scanner",
+  "requires": [
+    "assert"
+  ]
 }

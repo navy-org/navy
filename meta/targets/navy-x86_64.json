@@ -19,6 +19,7 @@
         "cc": {
             "cmd": "{shell.latest('clang')}",
             "args": [
+                "-fblocks",
                 "-target",
                 "x86_64-none-elf",
                 "-Wno-main-return-type"
