@@ -1,10 +1,16 @@
 {
   "$schema": "https://schemas.cute.engineering/stable/cutekit.manifest.component.v1",
   "type": "lib",
-  "id": "port.kernel",
+  "id": "port",
   "enableIf": {
-    "sys": ["kernel"]
+    "sys": [
+      "kernel"
+    ]
   },
-  "provides": ["portRPC"],
-  "requires": ["stdc-shim"]
+  "provides": [
+    "portRPC"
+  ],
+  "requires": [
+    "stdc-shim"
+  ]
 }

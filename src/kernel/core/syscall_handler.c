@@ -1,10 +1,10 @@
 #include <hal>
 #include <kmalloc>
 #include <logger>
-#include <navy>
 #include <pmm>
 #include <result>
 #include <sched>
+#include <specs/navy.h>
 #include <tinyvmem>
 
 typedef Res Handler(SysArg arg1, SysArg arg2, SysArg arg3, SysArg arg4, SysArg arg5, SysArg arg6);

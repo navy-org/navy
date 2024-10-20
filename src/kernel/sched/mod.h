@@ -25,4 +25,4 @@ void sched_yield(HalRegs *regs);
 
 Res sched_current(void);
 
-Res sched_get(pid_t pid);
+Res sched_get(size_t pid);

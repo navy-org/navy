@@ -1,6 +1,6 @@
 #pragma once
 
-#include <navy>
+#include <specs/navy.h>
 #include <stdint.h>
 #include <traits>
 
@@ -83,3 +83,19 @@ void hal_context_save(HalContext *self, HalRegs *regs);
 void hal_context_restore(HalContext *self, HalRegs *regs);
 
 void hal_regs_dump(HalRegs const *regs);
+
+/* --- Syscalls ------------------------------------------------------------ */
+
+typedef uintptr_t SysArg;
+
+typedef struct
+{
+    SysArg arg1;
+    SysArg arg2;
+    SysArg arg3;
+    SysArg arg4;
+    SysArg arg5;
+    SysArg arg6;
+} SysArgs;
+
+Res _syscall_handler(Syscalls no, SysArgs args);

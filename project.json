@@ -10,10 +10,6 @@
     "cute-engineering/ce-libm": {
       "git": "https://github.com/cute-engineering/ce-libm",
       "tag": "main"
-    },
-    "cmocka": {
-      "description": "Unit testing framework for C",
-      "names": ["cmocka"]
     }
   }
 }

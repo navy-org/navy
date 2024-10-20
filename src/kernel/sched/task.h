@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hal>
-#include <navy>
 #include <port>
 #include <result>
 #include <tinyvmem>
@@ -9,7 +8,7 @@
 typedef struct
 {
     const char *name;
-    pid_t pid;
+    size_t pid;
     Vmem vmem;
     HalPage *space;
     HalContext *ctx;

@@ -1,5 +1,4 @@
 #include <kmalloc>
-#include <navy>
 #include <port>
 #include <result>
 #include <sched>
@@ -26,7 +25,7 @@ static uint64_t invert_rights(uint64_t rights)
     return inv;
 }
 
-Res port_allocate(pid_t task_id, pid_t peer, uint64_t rights)
+Res port_allocate(size_t task_id, size_t peer, uint64_t rights)
 {
     Task *task = (Task *)try$(sched_get(task_id));
     IpcPortList *lst = &task->ports;
@@ -63,14 +62,14 @@ Res port_allocate(pid_t task_id, pid_t peer, uint64_t rights)
     return ok$();
 }
 
-Res port_allocate_both(pid_t client_id, pid_t server_id, uint64_t rights)
+Res port_allocate_both(size_t client_id, size_t server_id, uint64_t rights)
 {
     try$(port_allocate(client_id, server_id, rights));
     try$(port_allocate(server_id, client_id, invert_rights(rights)));
     return ok$();
 }
 
-Res port_find(pid_t task_id, uintptr_t port_id)
+Res port_find(size_t task_id, uintptr_t port_id)
 {
     Task *task = (Task *)try$(sched_get(task_id));
 

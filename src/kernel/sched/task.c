@@ -11,7 +11,7 @@
 
 Res task_new(char const *name, Res address_space, Res ip)
 {
-    static pid_t pid = 0;
+    static size_t pid = 0;
 
     Alloc kmalloc = kmalloc_acquire();
     Task *task = (Task *)try$(kmalloc.calloc(1, sizeof(Task)));
