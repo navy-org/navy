@@ -16,7 +16,8 @@ Res main([[gnu::unused]] int argc, [[gnu::unused]] char **argv)
     BootstrapMsg reply;
     HashMapIpcPort services;
 
-    log$("Hello from bootstrap");
+    log$("Hello from the demo bootstrap");
+    log$("I can register, lookup services and create client-server connections");
     hashmap_init(&services, hash_cstring_default);
 
     for (;;)
