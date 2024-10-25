@@ -46,6 +46,32 @@ const Cr = struct {
 
         return ret;
     }
+
+    pub fn write(self: Self, value: u64) void {
+        switch (self.number) {
+            0 => asm volatile ("mov %[value], %%cr0"
+                :
+                : [value] "r" (value),
+                : "memory"
+            ),
+            2 => asm volatile ("mov %[value], %%cr2"
+                :
+                : [value] "r" (value),
+                : "memory"
+            ),
+            3 => asm volatile ("mov %[value], %%cr3"
+                :
+                : [value] "r" (value),
+                : "memory"
+            ),
+            4 => asm volatile ("mov %[value], %%cr4"
+                :
+                : [value] "r" (value),
+                : "memory"
+            ),
+            else => unreachable,
+        }
+    }
 };
 
 pub const cr0 = Cr{ .number = 0 };

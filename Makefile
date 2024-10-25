@@ -16,7 +16,7 @@ $(LOADER):
 
 $(KERNEL): $(SRC)
 	@$(MKCWD)
-	@zig build -Doptimize=ReleaseFast
+	@zig build
 	@cp ./zig-out/bin/kernel.elf $@
 
 $(FIRMWARE):
