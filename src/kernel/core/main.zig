@@ -1,11 +1,18 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const arch = @import("arch");
 const logger = @import("logger");
+const log = std.log.scoped(.main);
+
+pub const std_options = std.Options{
+    .log_level = if (builtin.mode == .Debug) .debug else .info,
+    .logFn = logger.log,
+};
 
 fn main() !void {
     var serial = try arch.serial.Kwriter.init();
     try logger.setGlobalWriter(serial.writer());
-    logger.info("Hello, World!", .{});
+    log.info("Hello, World!", .{});
     try arch.setup();
 }
 
@@ -31,7 +38,7 @@ pub fn panic(msg: []const u8, stacktrace: ?*std.builtin.StackTrace, ret_addr: ?u
 
 export fn _start() callconv(.C) noreturn {
     main() catch |err| {
-        logger.err("Kernel fatal error: {}", .{err});
+        log.err("Kernel fatal error: {}", .{err});
     };
 
     while (true) {

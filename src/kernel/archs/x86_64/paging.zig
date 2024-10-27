@@ -9,6 +9,7 @@ const utils = @import("utils");
 
 var kernelPage: Space = undefined;
 var pSize: usize = utils.mib(2);
+const log = std.log.scoped(.paging);
 
 const PagingError = error{ AddressNotAligned, LengthNotAligned, PageNotFound, CantReadKernelAddr };
 
@@ -172,11 +173,11 @@ fn mapSection(start: u64, end: u64, flags: u8) !void {
 
 pub fn setup() !void {
     kernelPage = try Space.blank();
-    logger.debug("Kernel page allocated at {x:0>16}", .{@intFromPtr(kernelPage.root)});
+    log.debug("Kernel page allocated at {x:0>16}", .{@intFromPtr(kernelPage.root)});
 
     if (try cpuid.has1GBPages()) {
         pSize = utils.gib(1);
-        logger.debug("1GB pages supported", .{});
+        log.debug("1GB pages supported", .{});
     }
 
     try mapSection(
@@ -197,7 +198,7 @@ pub fn setup() !void {
         @intFromEnum(MapFlag.Read) | @intFromEnum(MapFlag.Write),
     );
 
-    logger.debug("Kernel sections mapped", .{});
+    log.debug("Kernel sections mapped", .{});
 
     try kernelPage.map(
         pmm.lower2upper(pSize),
@@ -222,7 +223,7 @@ pub fn setup() !void {
         @panic("Mmmmh, how the pmm could use it, but now the paging can't? Anyway, serious error here");
     }
 
-    logger.debug("Kernel pages mapped", .{});
+    log.debug("Kernel pages mapped", .{});
     kernelPage.load();
-    logger.debug("Paging loaded", .{});
+    log.debug("Paging loaded", .{});
 }

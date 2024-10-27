@@ -1,17 +1,20 @@
 const logger = @import("logger");
-const GdtType = @import("./gdt.zig").GdtType;
 const std = @import("std");
+
+const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
 const Registers = @import("./regs.zig").Registers;
 const StackFrame = @import("./regs.zig").StackFrame;
 
 extern fn idt_flush(addr: u64) void;
+extern const __interrupts_vector: [IDT_ENTRY_COUNT]u64;
 
+const log = std.log.scoped(.idt);
 const IDT_ENTRY_COUNT: usize = 256;
 const IDT_INTERRUPT_PRESENT: usize = (1 << 7);
 const IDT_INTERRUPT_GATE: usize = 0xe;
 
-extern const __interrupts_vector: [IDT_ENTRY_COUNT]u64;
+var idt: Idt = std.mem.zeroes(Idt);
 
 const IdtEntry = packed struct {
     const Self = @This();
@@ -59,8 +62,6 @@ const IdtDescriptor = packed struct {
     }
 };
 
-var idt: Idt = std.mem.zeroes(Idt);
-
 pub fn setup() void {
     var i: usize = 0;
     for (__interrupts_vector) |base| {
@@ -69,7 +70,7 @@ pub fn setup() void {
     }
 
     IdtDescriptor.load(&idt).apply();
-    logger.debug("IDT loaded", .{});
+    log.debug("IDT loaded", .{});
 }
 
 // === Interrupt handlers =====================================================

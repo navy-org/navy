@@ -1,5 +1,5 @@
 const std = @import("std");
-const logger = @import("logger");
+const log = std.log.scoped(.gdt);
 
 extern fn gdt_flush(addr: u64) void;
 extern fn tss_flush() void;
@@ -139,5 +139,5 @@ pub fn setup() void {
     GdtDescriptor.load(&gdt).apply();
 
     tss_flush();
-    logger.debug("Gdt loaded", .{});
+    log.debug("Gdt loaded", .{});
 }

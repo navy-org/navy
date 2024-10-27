@@ -1,12 +1,12 @@
 const Bitmap = @import("ds").Bitmap;
 const limine = @import("./limine.zig");
-const logger = @import("logger");
 const std = @import("std");
 const Lock = @import("sync").Spinlock;
 
 const PmmError = error{ LimineResponseNull, BitmapNull };
 var bitmap: ?Bitmap = null;
 var free_pages: usize = 0;
+const log = std.log.scoped(.pmm);
 
 pub fn lower2upper(lower: u64) u64 {
     if (limine.hhdm.response) |hhdm| {
@@ -42,12 +42,12 @@ pub fn setup() !void {
             std.mem.page_size,
         );
 
-        logger.debug("Bitmap size: {}", .{bitmap_size});
+        log.debug("Bitmap size: {}", .{bitmap_size});
 
         for (0..mmap.entry_count) |i| {
             const entry: *limine.impl.MemoryMapEntry = mmap.entries()[i];
             if (entry.kind == limine.impl.MemoryMapEntryType.usable and entry.length >= bitmap_size) {
-                logger.debug("Bitmap base address: 0x{x:0>16}", .{entry.base});
+                log.debug("Bitmap base address: 0x{x:0>16}", .{entry.base});
                 bitmap = Bitmap.from_mem(@ptrFromInt(lower2upper(entry.base)), bitmap_size);
                 entry.length -= bitmap_size;
                 entry.base += bitmap_size;
@@ -81,8 +81,8 @@ pub fn setup() !void {
             }
         }
 
-        logger.debug("Free pages: {}", .{free_pages});
-        logger.debug("Pmm initialized", .{});
+        log.debug("Free pages: {}", .{free_pages});
+        log.debug("Pmm initialized", .{});
     } else {
         return PmmError.LimineResponseNull;
     }
@@ -119,7 +119,7 @@ pub fn alloc(ctx: *anyopaque, len: usize, ptr_align: u8, ret_addr: usize) ?[*]u8
         lock.unlock();
         return @as([*]align(std.mem.page_size) u8, @ptrFromInt(lower2upper(base * std.mem.page_size)))[0..len].ptr;
     } else if (!try_again) {
-        logger.debug("Couldn't allocate {} pages, trying again ...", .{npage});
+        log.debug("Couldn't allocate {} pages, trying again ...", .{npage});
         try_again = true;
         last_page = 0;
         lock.unlock();
