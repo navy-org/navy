@@ -16,19 +16,21 @@ fn main() !void {
     try arch.setup();
 }
 
-pub fn panic(msg: []const u8, stacktrace: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
-    logger.print("\nZig panic!", .{});
-    logger.print("{s}\n", .{msg});
+pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
+    logger.print("\nZig panic!\n", .{});
+    logger.print("{s}\n\n", .{msg});
 
     if (ret_addr) |addr| {
-        logger.print("Return address: {x}\n", .{addr});
+        logger.print("Return address: {x}\n\n", .{addr});
     }
 
-    if (stacktrace) |trace| {
-        logger.print("Stack trace:\n", .{});
-        for (trace.instruction_addresses) |addr| {
-            logger.print("  {}\n", .{addr});
-        }
+    logger.print("Stack trace:\n\n", .{});
+
+    var iter = std.debug.StackIterator.init(ret_addr orelse @returnAddress(), null);
+    defer iter.deinit();
+
+    while (iter.next()) |address| {
+        logger.print("    * 0x{x:0>16}\n", .{address});
     }
 
     while (true) {

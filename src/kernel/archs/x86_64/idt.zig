@@ -1,10 +1,13 @@
 const logger = @import("logger");
 const std = @import("std");
+const elf = @import("elf");
+const utils = @import("utils");
 
 const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
 const Registers = @import("./regs.zig").Registers;
-const StackFrame = @import("./regs.zig").StackFrame;
+const limine = @import("./limine.zig");
+const PageAllocator = @import("./pmm.zig").PageAllocator;
 
 extern fn idt_flush(addr: u64) void;
 extern const __interrupts_vector: [IDT_ENTRY_COUNT]u64;
@@ -111,20 +114,68 @@ const exception_message: [32][]const u8 = .{
 };
 
 fn kernel_panic(regs: *Registers) void {
-    logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n", .{});
-    logger.print("    KERNEL PANIC\n", .{});
-    logger.print("    {s} was raised", .{exception_message[regs.*.intno]});
-    logger.print("    interrupt: {x}, err: {x}\n", .{ regs.*.intno, regs.*.err });
-    logger.print("    RAX {x:0>16} RBX {x:0>16} RCX {x:0>16} RDX {x:0>16}", .{ regs.*.rax, regs.*.rbx, regs.*.rcx, regs.*.rdx });
-    logger.print("    RSI {x:0>16} RDI {x:0>16} RBP {x:0>16} RSP {x:0>16}", .{ regs.*.rsi, regs.*.rdi, regs.*.rbp, regs.*.rsp });
-    logger.print("    R8  {x:0>16} R9  {x:0>16} R10 {x:0>16} R11 {x:0>16}", .{ regs.*.r8, regs.*.r9, regs.*.r10, regs.*.r11 });
-    logger.print("    R12 {x:0>16} R13 {x:0>16} R14 {x:0>16} R15 {x:0>16}", .{ regs.*.r12, regs.*.r13, regs.*.r14, regs.*.r15 });
-    logger.print("    CR0 {x:0>16} CR2 {x:0>16} CR3 {x:0>16} CR4 {x:0>16}", .{ as.cr0.read(), as.cr2.read(), as.cr3.read(), as.cr4.read() });
-    logger.print("    CS  {x:0>16} SS  {x:0>16} FLG {x:0>16}", .{ regs.*.cs, regs.*.ss, regs.*.rflags });
-    logger.print("    RIP \x1B[7m{x:0>16}\x1B[0m\n", .{regs.*.rip});
-    logger.print("    Backtrace:\n", .{});
-    StackFrame.from_rsp(regs.*.rsp).display();
-    logger.print("\n--------------------------------------------------------------------------------------------------- !!!\n", .{});
+    var backtrace = std.debug.StackIterator.init(@returnAddress(), null);
+    defer backtrace.deinit();
+
+    var sym: ?elf.Symbols = null;
+
+    if (limine.kernel.response) |k| {
+        var pallocator = PageAllocator.new();
+        const alloc = pallocator.allocator();
+
+        const bin = elf.Elf.fromSlice(k.kernel_file.address);
+        sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+    }
+
+    logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n\n", .{});
+    logger.print("    KERNEL PANIC\n\n", .{});
+    logger.print("    {s} was raised\n", .{exception_message[regs.*.intno]});
+    logger.print("    interrupt: {x}, err: {x}\n\n", .{ regs.*.intno, regs.*.err });
+    logger.print("    RAX {x:0>16} RBX {x:0>16} RCX {x:0>16} RDX {x:0>16}\n", .{ regs.*.rax, regs.*.rbx, regs.*.rcx, regs.*.rdx });
+    logger.print("    RSI {x:0>16} RDI {x:0>16} RBP {x:0>16} RSP {x:0>16}\n", .{ regs.*.rsi, regs.*.rdi, regs.*.rbp, regs.*.rsp });
+    logger.print("    R8  {x:0>16} R9  {x:0>16} R10 {x:0>16} R11 {x:0>16}\n", .{ regs.*.r8, regs.*.r9, regs.*.r10, regs.*.r11 });
+    logger.print("    R12 {x:0>16} R13 {x:0>16} R14 {x:0>16} R15 {x:0>16}\n", .{ regs.*.r12, regs.*.r13, regs.*.r14, regs.*.r15 });
+    logger.print("    CR0 {x:0>16} CR2 {x:0>16} CR3 {x:0>16} CR4 {x:0>16}\n", .{ as.cr0.read(), as.cr2.read(), as.cr3.read(), as.cr4.read() });
+    logger.print("    CS  {x:0>16} SS  {x:0>16} FLG {x:0>16}\n", .{ regs.*.cs, regs.*.ss, regs.*.rflags });
+    logger.print("    RIP \x1B[7m{x:0>16}\x1B[0m ", .{regs.*.rip});
+
+    if (sym) |*s| {
+        const info = s.infoForAddr(regs.rip) catch |err| {
+            log.err("Error: {any}\n", .{err});
+            return;
+        };
+
+        logger.print("\n\n    Exception occurred at\n    {s}:{d} ({s})\n", .{ info.lineInfo.file_name, info.lineInfo.line, info.symbol });
+    }
+
+    logger.print("\n    Backtrace:\n\n", .{});
+
+    while (backtrace.next()) |address| {
+        if (address == 0) {
+            break;
+        }
+
+        if (sym) |*s| {
+            const info = s.infoForAddr(address) catch |err| {
+                log.err("Error: {any}\n", .{err});
+                return;
+            };
+
+            logger.print("    * {s: <65}: {d: <3} ({s})\n", .{ info.lineInfo.file_name, info.lineInfo.line, info.symbol });
+        } else {
+            logger.print("    * 0x{x:0>16}\n", .{address});
+        }
+    }
+
+    logger.print("\n--------------------------------------------------------------------------------------------------- !!!\n\n", .{});
+
+    if (sym) |*s| {
+        s.deinit();
+    }
+
+    while (true) {
+        asm volatile ("hlt");
+    }
 }
 
 pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {

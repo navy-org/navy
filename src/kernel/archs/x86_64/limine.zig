@@ -5,6 +5,8 @@ pub export var base_revision: impl.BaseRevision = .{ .revision = 3 };
 pub export var hhdm: impl.HhdmRequest = .{};
 pub export var mmap: impl.MemoryMapRequest = .{};
 pub export var kaddr: impl.KernelAddressRequest = .{};
+pub export var rsdp: impl.RsdpRequest = .{};
+pub export var kernel: impl.KernelFileRequest = .{};
 
 const log = std.log.scoped(.limine);
 

@@ -1,6 +1,3 @@
-const logger = @import("logger");
-const std = @import("std");
-
 pub const Registers = packed struct {
     const Self = @This();
 
@@ -29,27 +26,5 @@ pub const Registers = packed struct {
 
     pub fn from_rsp(rsp: u64) *Self {
         return @ptrFromInt(rsp);
-    }
-};
-
-pub const StackFrame = packed struct {
-    const Self = @This();
-
-    next: ?*Self,
-    ip: u64,
-
-    pub fn from_rsp(rsp: u64) *Self {
-        return @ptrFromInt(rsp);
-    }
-
-    pub fn display(self: *Self) void {
-        if (self.ip == 0) {
-            return;
-        }
-
-        logger.print("    {x}", .{self.*.ip});
-        if (self.*.next) |next| {
-            next.display();
-        }
     }
 };
