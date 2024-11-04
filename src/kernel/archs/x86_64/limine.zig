@@ -10,7 +10,7 @@ pub export var kernel: impl.KernelFileRequest = .{};
 
 const log = std.log.scoped(.limine);
 
-pub fn dump_mmap() void {
+pub fn dumpMmap() void {
     if (mmap.response) |m| {
         log.debug("+-------------------------------------------------------------------+", .{});
         log.debug("|{s: ^24} | {s: ^18} | {s: ^18} |", .{ "Type", "Base", "Limit" });

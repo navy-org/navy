@@ -29,7 +29,11 @@ build: $(KERNEL)
 .PHONY: qemu
 qemu: $(LOADER) $(KERNEL) $(FIRMWARE)
 	@bash $(LIMINE_GEN) $(SYSROOT)
-	qemu-system-x86_64 --no-reboot --no-shutdown -smp 4 -serial mon:stdio \
+	qemu-system-x86_64 \
+		--no-reboot \
+		--no-shutdown \
+		-smp 4 \
+		-serial mon:stdio \
 		-display none \
 		-drive format=raw,file=fat:rw:$(SYSROOT) \
 		-bios $(FIRMWARE)

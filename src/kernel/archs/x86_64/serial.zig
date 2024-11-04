@@ -1,12 +1,12 @@
-const io = @import("std").io;
+const std = @import("std");
 const as = @import("./asm.zig");
 
-pub const Kwriter = struct {
+pub const Serial = struct {
     const Self = @This();
     const port: u16 = 0x3f8;
     pub const Error = error{FaultySerialPort};
 
-    pub fn init() Error!Kwriter {
+    pub fn init() !Serial {
         as.out8(port + 1, 0x00);
         as.out8(port + 3, 0x80);
         as.out8(port + 0, 0x03);
@@ -26,7 +26,7 @@ pub const Kwriter = struct {
         return .{};
     }
 
-    pub fn writer(self: *Self) io.AnyWriter {
+    pub fn writer(self: *Self) std.io.AnyWriter {
         return .{ .context = self, .writeFn = writeOpaque };
     }
 
@@ -44,5 +44,21 @@ pub const Kwriter = struct {
         }
 
         return bytes.len;
+    }
+
+    fn hasCharacter(self: Self) u8 {
+        _ = self;
+        return as.in8(port + 5) & 1;
+    }
+
+    pub fn read(self: Self, alloc: std.mem.Allocator, len: usize) ![]u8 {
+        var buffer = try alloc.alloc(u8, len);
+
+        for (0..len) |i| {
+            while (self.hasCharacter() == 0) {}
+            buffer[i] = as.in8(port);
+        }
+
+        return buffer;
     }
 };

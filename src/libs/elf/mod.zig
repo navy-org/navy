@@ -3,7 +3,7 @@ const std = @import("std");
 pub const Symbols = struct {
     const Self = @This();
 
-    dwarf: std.dwarf.DwarfInfo,
+    dwarf: std.debug.Dwarf,
     alloc: std.mem.Allocator,
 
     pub fn from_elf(elf: Elf, endian: std.builtin.Endian, alloc: std.mem.Allocator) !Self {
@@ -18,14 +18,14 @@ pub const Symbols = struct {
     }
 
     const Info = struct {
-        lineInfo: std.debug.LineInfo,
+        lineInfo: std.debug.SourceLocation,
         symbol: []const u8,
     };
 
     pub fn infoForAddr(self: *Self, addr: usize) !Info {
         const compile_unit = try self.dwarf.findCompileUnit(addr);
         return .{
-            .lineInfo = try self.dwarf.getLineNumberInfo(self.alloc, compile_unit.*, addr),
+            .lineInfo = try self.dwarf.getLineNumberInfo(self.alloc, compile_unit, addr),
             .symbol = self.dwarf.getSymbolName(addr) orelse "unknown",
         };
     }
@@ -73,8 +73,8 @@ pub const Elf = struct {
         return self.getSectionData(section.?);
     }
 
-    pub fn getDwarf(self: Self, endian: std.builtin.Endian, alloc: std.mem.Allocator) !std.dwarf.DwarfInfo {
-        var dwarf = std.dwarf.DwarfInfo{
+    pub fn getDwarf(self: Self, endian: std.builtin.Endian, alloc: std.mem.Allocator) !std.debug.Dwarf {
+        var dwarf = std.debug.Dwarf{
             .endian = endian,
             .sections = .{
                 .{ .data = self.getSectionDataByName(".debug_info") orelse &[1]u8{0}, .owned = true },
@@ -95,7 +95,7 @@ pub const Elf = struct {
             .is_macho = false,
         };
 
-        try std.dwarf.openDwarfDebugInfo(&dwarf, alloc);
+        try dwarf.open(alloc);
 
         return dwarf;
     }

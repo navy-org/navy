@@ -24,7 +24,7 @@ pub const Registers = packed struct {
     rsp: u64,
     ss: u64,
 
-    pub fn from_rsp(rsp: u64) *Self {
+    pub fn fromRsp(rsp: u64) *Self {
         return @ptrFromInt(rsp);
     }
 };

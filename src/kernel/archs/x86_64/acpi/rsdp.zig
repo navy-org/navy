@@ -1,8 +1,15 @@
 const std = @import("std");
-const logger = @import("logger");
+const sdt = @import("./sdt.zig");
+const lower2upper = @import("../pmm.zig").lower2upper;
+const Either = @import("ds").Either;
+
+const log = std.log.scoped(.rsdp);
+var rsdp: ?*align(1) Rsdp = null;
 
 const RsdpError = error{
     InvalidRsdpSignature,
+    InvalidRsdpChecksum,
+    XsdtUnavailable,
 };
 
 pub const Rsdp = extern struct {
@@ -21,8 +28,11 @@ pub const Rsdp = extern struct {
     extended_checksum: u8,
     reserved: [3]u8,
 
-    fn is_valid(self: *align(1) Self) bool {
-        const ret = std.mem.eql(u8, &self.signature, "RSD PTR ");
+    fn validate(self: *align(1) Self) !void {
+        if (!std.mem.eql(u8, &self.signature, "RSD PTR ")) {
+            return RsdpError.InvalidRsdpSignature;
+        }
+
         const length = if (self.revision > 0) self.length else Self.v1Length;
 
         var sum: u8 = 0;
@@ -32,16 +42,36 @@ pub const Rsdp = extern struct {
             sum +%= slice[i];
         }
 
-        const as_u8: u8 = @truncate(sum);
-        return ret and as_u8 == 0;
+        if (sum != 0) {
+            return RsdpError.InvalidRsdpChecksum;
+        }
     }
 
-    pub fn from_address(address: *anyopaque) !*align(1) Self {
-        const self: *align(1) Self = @alignCast(@ptrCast(address));
-        if (!self.is_valid()) {
-            return RsdpError.InvalidRsdpSignature;
+    pub fn fromMem(address: *anyopaque) !*align(1) Self {
+        log.debug("RSDP address: {x:0>16}", .{@intFromPtr(address)});
+        const self: *align(1) Self = @ptrFromInt(lower2upper(@intFromPtr(address)));
+        try self.validate();
+        rsdp = self;
+        return self;
+    }
+
+    pub fn findSdt(self: *align(1) Self) !sdt.Sdt {
+        var value: sdt.Sdt = undefined;
+        if (self.revision == 0) {
+            log.debug("RSDT address: {x:0>16}", .{lower2upper(self.rsdt_address)});
+            value = .{
+                .left = try sdt.Rsdt.fromAddress(lower2upper(self.rsdt_address)),
+                .right = null,
+            };
+        } else {
+            log.debug("XSDT address: {x:0>16}", .{lower2upper(self.xsdt_address)});
+            value = .{
+                .right = try sdt.Xsdt.fromAddress(lower2upper(self.xsdt_address)),
+                .left = null,
+            };
         }
 
-        return self;
+        sdt.sdt = value;
+        return value;
     }
 };

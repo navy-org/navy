@@ -1,3 +1,5 @@
+const std = @import("std");
+
 pub fn in8(port: u16) u8 {
     return asm volatile ("inb %[port],%[ret]"
         : [ret] "={al}" (-> u8),
@@ -78,3 +80,54 @@ pub const cr0 = Cr{ .number = 0 };
 pub const cr2 = Cr{ .number = 2 };
 pub const cr3 = Cr{ .number = 3 };
 pub const cr4 = Cr{ .number = 4 };
+
+pub fn writeMsr(msr: u64, value: u64) void {
+    const low: u32 = @truncate(value);
+    const high: u32 = @truncate(value >> 32);
+
+    asm volatile ("wrmsr"
+        :
+        : [_] "{rcx}" (msr),
+          [_] "{eax}" (low),
+          [_] "{edx}" (high),
+    );
+}
+
+pub fn readMsr(msr: u64) u64 {
+    var low: u32 = 0;
+    var high: u32 = 0;
+
+    asm volatile ("rdmsr"
+        : [low] "={eax}" (low),
+          [high] "={edx}" (high),
+        : [msr] "{rcx}" (msr),
+    );
+
+    return @as(u64, @intCast(high)) << 32 | low;
+}
+
+pub fn readVolatile(T: type, addr: usize) T {
+    return @as(*align(1) volatile T, @ptrFromInt(addr)).*;
+}
+
+pub fn writeVolatile(T: type, addr: usize, value: T) void {
+    @as(*align(1) volatile T, @ptrFromInt(addr)).* = value;
+}
+
+pub fn pause() void {
+    asm volatile ("pause");
+}
+
+pub fn hlt() noreturn {
+    while (true) {
+        asm volatile ("hlt");
+    }
+}
+
+pub fn disableInterrupts() void {
+    asm volatile ("cli");
+}
+
+pub fn enableInterrupts() void {
+    asm volatile ("sti");
+}

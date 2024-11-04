@@ -30,17 +30,17 @@ pub const Space = struct {
     root: [*]u64,
     alloc: std.mem.Allocator,
 
-    const PageField = enum(u64) {
-        Present = 1 << 0,
-        Writable = 1 << 1,
-        User = 1 << 2,
-        WriteThrough = 1 << 3,
-        No_cache = 1 << 4,
-        Accessed = 1 << 5,
-        Dirty = 1 << 6,
-        Huge = 1 << 7,
-        Global = 1 << 8,
-        NoExecute = 1 << 63,
+    const PageField = struct {
+        const present: u64 = 1 << 0;
+        const writable: u64 = 1 << 1;
+        const user: u64 = 1 << 2;
+        const writeThrough: u64 = 1 << 3;
+        const no_cache: u64 = 1 << 4;
+        const accessed: u64 = 1 << 5;
+        const dirty: u64 = 1 << 6;
+        const huge: u64 = 1 << 7;
+        const global: u64 = 1 << 8;
+        const noExecute: u64 = 1 << 63;
     };
 
     pub fn blank() !Self {
@@ -55,28 +55,28 @@ pub const Space = struct {
     }
 
     pub fn translateFlags(flags: u8) u64 {
-        var f: u64 = @intFromEnum(Self.PageField.Present) | @intFromEnum(Self.PageField.NoExecute);
+        var f: u64 = Self.PageField.present | Self.PageField.noExecute;
 
-        if (flags & @intFromEnum(MapFlag.None) == @intFromEnum(MapFlag.None)) {
+        if (flags & MapFlag.none == MapFlag.none) {
             return 0;
         }
 
-        if (flags & @intFromEnum(MapFlag.Read) == @intFromEnum(MapFlag.Read)) {}
+        if (flags & MapFlag.read == MapFlag.read) {}
 
-        if (flags & @intFromEnum(MapFlag.Write) == @intFromEnum(MapFlag.Write)) {
-            f |= @intFromEnum(Self.PageField.Writable);
+        if (flags & MapFlag.write == MapFlag.write) {
+            f |= Self.PageField.writable;
         }
 
-        if (flags & @intFromEnum(MapFlag.Execute) == @intFromEnum(MapFlag.Execute)) {
-            f &= ~@intFromEnum(Self.PageField.NoExecute);
+        if (flags & MapFlag.execute == MapFlag.execute) {
+            f &= ~Self.PageField.noExecute;
         }
 
-        if (flags & @intFromEnum(MapFlag.User) == @intFromEnum(MapFlag.User)) {
-            f |= @intFromEnum(Self.PageField.User);
+        if (flags & MapFlag.user == MapFlag.user) {
+            f |= Self.PageField.user;
         }
 
-        if (flags & @intFromEnum(MapFlag.Huge) == @intFromEnum(MapFlag.Huge)) {
-            f |= @intFromEnum(Self.PageField.Huge);
+        if (flags & MapFlag.huge == MapFlag.huge) {
+            f |= Self.PageField.huge;
         }
 
         return f;
@@ -92,9 +92,9 @@ pub const Space = struct {
     }
 
     fn getEntry(self: *Self, index: usize, alloc: bool) !Self {
-        if (self.root[index] & @intFromEnum(Self.PageField.Present) == @intFromEnum(Self.PageField.Present)) {
+        if (self.root[index] & Self.PageField.present == Self.PageField.present) {
             return .{
-                .root = @as([*]u64, @ptrFromInt(pmm.lower2upper(Self.getEntryAddr(self.root[index])))),
+                .root = @ptrFromInt(pmm.lower2upper(Self.getEntryAddr(self.root[index]))),
                 .alloc = self.alloc,
             };
         }
@@ -104,7 +104,7 @@ pub const Space = struct {
         }
 
         const page = try Self.blank();
-        self.root[index] = pmm.upper2lower(@intFromPtr(page.root)) | @intFromEnum(Self.PageField.Present) | @intFromEnum(Self.PageField.Writable) | @intFromEnum(Self.PageField.User);
+        self.root[index] = pmm.upper2lower(@intFromPtr(page.root)) | Self.PageField.present | Self.PageField.writable | Self.PageField.user;
         return page;
     }
 
@@ -119,13 +119,13 @@ pub const Space = struct {
 
         var pml3 = try self.getEntry(pml4Index, true);
 
-        if (flags & @intFromEnum(Self.PageField.Huge) == @intFromEnum(Self.PageField.Huge) and pSize == utils.gib(1)) {
+        if (flags & Self.PageField.huge == Self.PageField.huge and pSize == utils.gib(1)) {
             pml3.root[pml3Index] = phys | flags;
             return;
         }
 
         var pml2 = try pml3.getEntry(pml3Index, true);
-        if (flags & @intFromEnum(Self.PageField.Huge) == @intFromEnum(Self.PageField.Huge)) {
+        if (flags & Self.PageField.huge == Self.PageField.huge) {
             pml2.root[pml2Index] = phys | flags;
             return;
         }
@@ -135,7 +135,7 @@ pub const Space = struct {
     }
 
     pub fn map(self: *Self, virt: u64, phys: u64, len: u64, flags: u8) !void {
-        const _align: usize = if (flags & @intFromEnum(MapFlag.Huge) == @intFromEnum(MapFlag.Huge)) pSize else std.mem.page_size;
+        const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.mem.page_size;
 
         const aligned_virt = std.mem.alignBackward(u64, virt, _align);
         const aligned_phys = std.mem.alignBackward(u64, phys, _align);
@@ -145,7 +145,7 @@ pub const Space = struct {
 
         var i: usize = 0;
         while (i < aligned_len) : (i += _align) {
-            try self.mapPage(aligned_virt, aligned_phys, f);
+            try self.mapPage(aligned_virt + i, aligned_phys + i, f);
         }
     }
 
@@ -157,15 +157,14 @@ pub const Space = struct {
 fn mapSection(start: u64, end: u64, flags: u8) !void {
     if (limine.kaddr.response) |kaddr| {
         const aligned_start = std.mem.alignBackward(u64, start, std.mem.page_size);
-        const aligned_end = std.mem.alignForward(u64, end, std.mem.page_size);
+        const len = std.mem.alignForward(u64, end - start, std.mem.page_size);
 
-        const f = Space.translateFlags(flags);
-        var i: usize = aligned_start;
-
-        while (i < aligned_end) : (i += std.mem.page_size) {
-            const phys = i - kaddr.virtual_base + kaddr.physical_base;
-            try kernelPage.mapPage(i, phys, f);
-        }
+        try kernelPage.map(
+            aligned_start,
+            (aligned_start - kaddr.virtual_base) + kaddr.physical_base,
+            len,
+            flags,
+        );
     } else {
         return error.CantReadKernelAddr;
     }
@@ -183,19 +182,19 @@ pub fn setup() !void {
     try mapSection(
         @intFromPtr(&Sections.text_start_addr),
         @intFromPtr(&Sections.text_end_addr),
-        @intFromEnum(MapFlag.Read) | @intFromEnum(MapFlag.Execute),
+        MapFlag.read | MapFlag.execute,
     );
 
     try mapSection(
         @intFromPtr(&Sections.rodata_start_addr),
         @intFromPtr(&Sections.rodata_end_addr),
-        @intFromEnum(MapFlag.Read),
+        MapFlag.read,
     );
 
     try mapSection(
         @intFromPtr(&Sections.data_start_addr),
         @intFromPtr(&Sections.data_end_addr),
-        @intFromEnum(MapFlag.Read) | @intFromEnum(MapFlag.Write),
+        MapFlag.read | MapFlag.write,
     );
 
     log.debug("Kernel sections mapped", .{});
@@ -203,8 +202,8 @@ pub fn setup() !void {
     try kernelPage.map(
         pmm.lower2upper(pSize),
         pSize,
-        utils.gib(4),
-        @intFromEnum(MapFlag.Write) | @intFromEnum(MapFlag.Read) | @intFromEnum(MapFlag.Huge),
+        @max(utils.gib(4), pmm.availableMem()),
+        MapFlag.write | MapFlag.read | MapFlag.huge,
     );
 
     if (limine.mmap.response) |mmap| {
@@ -215,7 +214,7 @@ pub fn setup() !void {
                     pmm.lower2upper(entry.base),
                     entry.base,
                     entry.length,
-                    @intFromEnum(MapFlag.Read) | @intFromEnum(MapFlag.Write) | @intFromEnum(MapFlag.Huge),
+                    MapFlag.read | MapFlag.write | MapFlag.huge,
                 );
             }
         }

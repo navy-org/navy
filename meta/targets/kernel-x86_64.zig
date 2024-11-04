@@ -1,7 +1,7 @@
 const std = @import("std");
 
-pub fn getBuildTarget() std.zig.CrossTarget {
-    var target: std.zig.CrossTarget = .{ .cpu_arch = .x86_64, .os_tag = .freestanding, .abi = .none };
+pub fn getBuildTarget() std.Target.Query {
+    var target: std.Target.Query = .{ .cpu_arch = .x86_64, .os_tag = .freestanding, .abi = .none };
 
     const Features = std.Target.x86.Feature;
     target.cpu_features_sub.addFeature(@intFromEnum(Features.mmx));

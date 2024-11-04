@@ -1,8 +1,8 @@
-pub const MapFlag = enum(u8) {
-    None = 1 << 0,
-    Read = 1 << 1,
-    Write = 1 << 2,
-    Execute = 1 << 3,
-    User = 1 << 4,
-    Huge = 1 << 5,
+pub const MapFlag = struct {
+    pub const none: u8 = 1 << 0;
+    pub const read: u8 = 1 << 1;
+    pub const write: u8 = 1 << 2;
+    pub const execute: u8 = 1 << 3;
+    pub const user: u8 = 1 << 4;
+    pub const huge: u8 = 1 << 5;
 };

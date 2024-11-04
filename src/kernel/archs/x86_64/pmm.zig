@@ -8,7 +8,7 @@ var bitmap: ?Bitmap = null;
 var free_pages: usize = 0;
 const log = std.log.scoped(.pmm);
 
-pub fn lower2upper(lower: u64) u64 {
+pub fn lower2upper(lower: u64) usize {
     if (limine.hhdm.response) |hhdm| {
         return lower + hhdm.offset;
     } else {
@@ -16,12 +16,16 @@ pub fn lower2upper(lower: u64) u64 {
     }
 }
 
-pub fn upper2lower(upper: u64) u64 {
+pub fn upper2lower(upper: u64) usize {
     if (limine.hhdm.response) |hhdm| {
         return upper - hhdm.offset;
     } else {
         @panic("hhdm response is null");
     }
+}
+
+pub fn availableMem() usize {
+    return free_pages * std.mem.page_size;
 }
 
 pub fn setup() !void {

@@ -19,7 +19,6 @@ if [ ! -f $img/kernel.elf ]; then
 fi
 
 cat << EOF > $img/efi/boot/limine.conf
-randomize_memory: yes
 timeout: 0
 /navy
     protocol: limine

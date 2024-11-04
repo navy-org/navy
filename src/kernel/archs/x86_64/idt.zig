@@ -1,13 +1,14 @@
 const logger = @import("logger");
 const std = @import("std");
 const elf = @import("elf");
-const utils = @import("utils");
 
 const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
 const Registers = @import("./regs.zig").Registers;
 const limine = @import("./limine.zig");
 const PageAllocator = @import("./pmm.zig").PageAllocator;
+const Lapic = @import("./acpi/apic.zig").Lapic;
+const Serial = @import("./serial.zig").Serial;
 
 extern fn idt_flush(addr: u64) void;
 extern const __interrupts_vector: [IDT_ENTRY_COUNT]u64;
@@ -16,6 +17,7 @@ const log = std.log.scoped(.idt);
 const IDT_ENTRY_COUNT: usize = 256;
 const IDT_INTERRUPT_PRESENT: usize = (1 << 7);
 const IDT_INTERRUPT_GATE: usize = 0xe;
+const INT_BREAKPOINT = 3;
 
 var idt: Idt = std.mem.zeroes(Idt);
 
@@ -113,24 +115,30 @@ const exception_message: [32][]const u8 = .{
     "Reserved",
 };
 
-fn kernel_panic(regs: *Registers) void {
+var sym: ?elf.Symbols = null;
+
+fn dumpRegs(regs: *Registers) void {
     var backtrace = std.debug.StackIterator.init(@returnAddress(), null);
     defer backtrace.deinit();
 
-    var sym: ?elf.Symbols = null;
+    if (sym == null) {
+        if (limine.kernel.response) |k| {
+            var pallocator = PageAllocator.new();
+            const alloc = pallocator.allocator();
 
-    if (limine.kernel.response) |k| {
-        var pallocator = PageAllocator.new();
-        const alloc = pallocator.allocator();
-
-        const bin = elf.Elf.fromSlice(k.kernel_file.address);
-        sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+            const bin = elf.Elf.fromSlice(k.kernel_file.address);
+            sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+        }
     }
 
     logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n\n", .{});
-    logger.print("    KERNEL PANIC\n\n", .{});
-    logger.print("    {s} was raised\n", .{exception_message[regs.*.intno]});
-    logger.print("    interrupt: {x}, err: {x}\n\n", .{ regs.*.intno, regs.*.err });
+    if (regs.intno != INT_BREAKPOINT) {
+        logger.print("    KERNEL PANIC\n\n", .{});
+        logger.print("    {s} was raised\n", .{exception_message[regs.*.intno]});
+        logger.print("    interrupt: {x}, err: {x}\n\n", .{ regs.*.intno, regs.*.err });
+    } else {
+        logger.print("    BREAKPOINT\n\n", .{});
+    }
     logger.print("    RAX {x:0>16} RBX {x:0>16} RCX {x:0>16} RDX {x:0>16}\n", .{ regs.*.rax, regs.*.rbx, regs.*.rcx, regs.*.rdx });
     logger.print("    RSI {x:0>16} RDI {x:0>16} RBP {x:0>16} RSP {x:0>16}\n", .{ regs.*.rsi, regs.*.rdi, regs.*.rbp, regs.*.rsp });
     logger.print("    R8  {x:0>16} R9  {x:0>16} R10 {x:0>16} R11 {x:0>16}\n", .{ regs.*.r8, regs.*.r9, regs.*.r10, regs.*.r11 });
@@ -161,29 +169,50 @@ fn kernel_panic(regs: *Registers) void {
                 return;
             };
 
-            logger.print("    * {s: <65}: {d: <3} ({s})\n", .{ info.lineInfo.file_name, info.lineInfo.line, info.symbol });
+            logger.print("    * {s: <70}: {d: <3} ({s})\n", .{ info.lineInfo.file_name, info.lineInfo.line, info.symbol });
         } else {
             logger.print("    * 0x{x:0>16}\n", .{address});
         }
     }
 
     logger.print("\n--------------------------------------------------------------------------------------------------- !!!\n\n", .{});
-
-    if (sym) |*s| {
-        s.deinit();
-    }
-
-    while (true) {
-        asm volatile ("hlt");
-    }
 }
 
 pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
-    const regs = Registers.from_rsp(rsp);
+    const regs = Registers.fromRsp(rsp);
+    const irq = regs.intno - exception_message.len;
 
-    if (regs.*.intno <= exception_message.len) {
-        kernel_panic(regs);
+    if (regs.intno == INT_BREAKPOINT) {
+        dumpRegs(regs);
+
+        var buffer: [8]u8 = std.mem.zeroes([8]u8);
+        var allocator = std.heap.FixedBufferAllocator.init(&buffer);
+        const alloc = allocator.allocator();
+
+        logger.print("\n\nPress any key to continue...\n", .{});
+
+        const s = Serial{};
+        _ = s.read(alloc, 1) catch |err| {
+            log.err("Failed to read from serial port: {any}\n", .{err});
+            @panic("Failed to read from serial port");
+        };
+
+        Lapic.eoi();
+        return rsp;
+    } else if (regs.intno < exception_message.len) {
+        dumpRegs(regs);
+
+        if (sym) |*s| {
+            s.deinit();
+        }
+
+        as.hlt();
     }
 
+    if (irq == 0) {
+        // Clock
+    } else {}
+
+    Lapic.eoi();
     return rsp;
 }
