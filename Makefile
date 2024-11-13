@@ -8,11 +8,12 @@ LOADER = $(SYSROOT)/efi/boot/bootx64.efi
 KERNEL = $(SYSROOT)/kernel.elf
 FIRMWARE = $(CACHE)/OVMF.fd
 
-SRC = $(shell find . -name '*.zig')
+SRC = $(shell find . -name '*.zig') $(shell find . -name "*.s")
 
-$(LOADER):
+$(LOADER): $(SRC)
 	@$(MKCWD)
-	@curl -L https://github.com/limine-bootloader/limine/raw/refs/heads/v8.x-binary/BOOTX64.EFI -o $@
+	@zig build
+	@cp ./zig-out/bin/bootx64.efi $@
 
 $(KERNEL): $(SRC)
 	@$(MKCWD)
@@ -26,6 +27,20 @@ $(FIRMWARE):
 .PHONY: build
 build: $(KERNEL)
 
+.PHONY: gdb
+gdb: $(LOADER) $(KERNEL) $(FIRMWARE)
+	qemu-system-x86_64 \
+		--no-reboot \
+		--no-shutdown \
+		-s \
+		-S \
+		-smp 4 \
+		-serial \
+		mon:stdio \
+		-display none \
+		-drive format=raw,file=fat:rw:$(SYSROOT) \
+		-bios $(FIRMWARE)
+
 .PHONY: qemu
 qemu: $(LOADER) $(KERNEL) $(FIRMWARE)
 	@bash $(LIMINE_GEN) $(SYSROOT)
@@ -33,7 +48,8 @@ qemu: $(LOADER) $(KERNEL) $(FIRMWARE)
 		--no-reboot \
 		--no-shutdown \
 		-smp 4 \
-		-serial mon:stdio \
+		-serial \
+		mon:stdio \
 		-display none \
 		-drive format=raw,file=fat:rw:$(SYSROOT) \
 		-bios $(FIRMWARE)

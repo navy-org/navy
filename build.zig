@@ -38,6 +38,7 @@ fn getFileName(b: *std.Build, path: []const u8) []const u8 {
 
 pub fn build(b: *std.Build) !void {
     const cross_target_spec = b.option(std.Target.Cpu.Arch, "arch", "Target Architecture") orelse std.Target.Cpu.Arch.x86_64;
+
     const optimize = b.standardOptimizeOption(.{});
 
     var liblist = try libs(b);
@@ -56,6 +57,14 @@ pub fn build(b: *std.Build) !void {
         .target = b.resolveTargetQuery(target),
         .optimize = optimize,
         .code_model = .kernel,
+        .strip = false,
+    });
+
+    const loader = b.addExecutable(.{
+        .name = arch.efiFilename,
+        .root_source_file = b.path("src/loader/main.zig"),
+        .target = b.resolveTargetQuery(arch.efiTarget),
+        .optimize = optimize,
     });
 
     var modules = std.StringHashMap(*std.Build.Module).init(b.allocator);
@@ -65,15 +74,13 @@ pub fn build(b: *std.Build) !void {
         const libname = getFileName(b, lib.root_source_file.?.dirname().src_path.sub_path);
         try modules.put(libname, lib);
         kernel.root_module.addImport(libname, lib);
+        loader.root_module.addImport(libname, lib);
     }
 
-    const limine = b.dependency("limine", .{});
-    kernel.root_module.addImport("limine", limine.module("limine"));
-    try modules.put("limine", limine.module("limine"));
-
-    arch.addBuildOption(b, kernel, modules);
+    arch.addBuildOption(b, kernel, loader, modules);
 
     kernel.want_lto = false;
 
+    b.installArtifact(loader);
     b.installArtifact(kernel);
 }

@@ -1,8 +1,8 @@
 const std = @import("std");
 const builtin = @import("builtin");
-const arch = @import("arch");
+const Serial = @import("arch").serial.Serial;
 const logger = @import("logger");
-const elf = @import("elf");
+const arch = @import("arch");
 const log = std.log.scoped(.main);
 
 pub const std_options = std.Options{
@@ -11,7 +11,7 @@ pub const std_options = std.Options{
 };
 
 fn main() !void {
-    var serial = try arch.serial.Serial.init();
+    var serial = try Serial.init();
     try logger.setGlobalWriter(serial.writer());
     log.info("Hello, World!", .{});
     try arch.setup();
@@ -37,7 +37,11 @@ pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) nor
     arch.as.hlt();
 }
 
-export fn _start() callconv(.C) noreturn {
+export fn _start(magic: usize) callconv(.C) noreturn {
+    if (magic != 0xB00B1E5) {
+        log.err("Invalid magic number: 0x{x:0>16}", .{magic});
+    }
+
     main() catch |err| {
         log.err("Kernel fatal error: {}", .{err});
     };

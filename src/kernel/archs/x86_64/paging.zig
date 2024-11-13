@@ -1,4 +1,5 @@
-const as = @import("./asm.zig");
+pub const as = @import("./asm.zig");
+
 const cpuid = @import("./cpuid.zig");
 const limine = @import("./limine.zig");
 const logger = @import("logger");
@@ -29,6 +30,7 @@ pub const Space = struct {
 
     root: [*]u64,
     alloc: std.mem.Allocator,
+    offset: usize,
 
     const PageField = struct {
         const present: u64 = 1 << 0;
@@ -43,15 +45,26 @@ pub const Space = struct {
         const noExecute: u64 = 1 << 63;
     };
 
-    pub fn blank() !Self {
-        var pageAlloc = pmm.PageAllocator.new();
-        var allocator = pageAlloc.allocator();
-        const root = try allocator.alloc(u8, std.mem.page_size);
+    pub fn blank(alloc: std.mem.Allocator, offset: usize) !Self {
+        const root = try alloc.alloc(u8, std.mem.page_size);
 
         return .{
             .root = @alignCast(@ptrCast(root)),
-            .alloc = allocator,
+            .alloc = alloc,
+            .offset = offset,
         };
+    }
+
+    pub fn address(self: Self) u64 {
+        return self.rmOffset(@intFromPtr(self.root));
+    }
+
+    pub fn addOffset(self: Self, offset: u64) usize {
+        return offset + self.offset;
+    }
+
+    pub fn rmOffset(self: Self, offset: u64) usize {
+        return offset - self.offset;
     }
 
     pub fn translateFlags(flags: u8) u64 {
@@ -94,8 +107,9 @@ pub const Space = struct {
     fn getEntry(self: *Self, index: usize, alloc: bool) !Self {
         if (self.root[index] & Self.PageField.present == Self.PageField.present) {
             return .{
-                .root = @ptrFromInt(pmm.lower2upper(Self.getEntryAddr(self.root[index]))),
+                .root = @ptrFromInt(self.addOffset(Self.getEntryAddr(self.root[index]))),
                 .alloc = self.alloc,
+                .offset = self.offset,
             };
         }
 
@@ -103,8 +117,8 @@ pub const Space = struct {
             return error.PageNotFound;
         }
 
-        const page = try Self.blank();
-        self.root[index] = pmm.upper2lower(@intFromPtr(page.root)) | Self.PageField.present | Self.PageField.writable | Self.PageField.user;
+        const page = try Self.blank(self.alloc, self.offset);
+        self.root[index] = self.rmOffset(@intFromPtr(page.root)) | Self.PageField.present | Self.PageField.writable | Self.PageField.user;
         return page;
     }
 
@@ -150,7 +164,7 @@ pub const Space = struct {
     }
 
     pub fn load(self: Self) void {
-        as.cr3.write(@truncate(pmm.upper2lower(@intFromPtr(self.root))));
+        as.cr3.write(@truncate(self.rmOffset(@intFromPtr(self.root))));
     }
 };
 
@@ -171,8 +185,11 @@ fn mapSection(start: u64, end: u64, flags: u8) !void {
 }
 
 pub fn setup() !void {
-    kernelPage = try Space.blank();
-    log.debug("Kernel page allocated at {x:0>16}", .{@intFromPtr(kernelPage.root)});
+    var allocator = pmm.PageAllocator.new();
+    const alloc = allocator.allocator();
+
+    kernelPage = try Space.blank(alloc, pmm.lower2upper(0));
+    log.debug("Kernel page allocated at {x:0>16}", .{kernelPage.address()});
 
     if (try cpuid.has1GBPages()) {
         pSize = utils.gib(1);

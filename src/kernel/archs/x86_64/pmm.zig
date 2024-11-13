@@ -1,5 +1,4 @@
 const Bitmap = @import("ds").Bitmap;
-const limine = @import("./limine.zig");
 const std = @import("std");
 const Lock = @import("sync").Spinlock;
 

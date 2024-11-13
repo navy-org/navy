@@ -1,67 +1,42 @@
-/* Tell the linker that we want an x86_64 ELF64 output file */
-OUTPUT_FORMAT(elf64-x86-64)
-OUTPUT_ARCH(i386:x86-64)
-
-/* We want the symbol _start to be our entry point */
 ENTRY(_start)
-
-/* Define the program headers we want so the bootloader gives us the right */
-/* MMU permissions */
-PHDRS
-{
-    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
-    rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
-    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
-}
 
 SECTIONS
 {
-    /* We wanna be placed in the topmost 2GiB of the address space, for optimisations */
-    /* and because that is what the Limine spec mandates. */
-    /* Any address in this region will do, but often 0xffffffff80000000 is chosen as */
-    /* that is the beginning of the region. */
     . = 0xffffffff80000000;
 
-    text_start_addr = .;
+    .handover : ALIGN(4K)
+    {
+        KEEP(*(.handover*))
+    }
 
-    .text : {
-        *(.text .text.*)
-    } :text
+    .text : ALIGN(4K)
+    {
+        *(.text*)
+    }
 
-    text_end_addr = .;
+    .rodata : ALIGN(4K)
+    {
+        __init_array_start = .;
+        *(.ctors)
+        *(.init_array)
+        __init_array_end = .;
 
-    /* Move to the next memory page for .rodata */
-    . += CONSTANT(MAXPAGESIZE);
+        __fini_array_start = .;
+        *(.fini_array)
+        *(.dtors)
+        __fini_array_end = .;
 
-    rodata_start_addr = .;
+        *(.rodata*)
+    }
 
-    PROVIDE(symbol_table = 1);
+    .data : ALIGN(4K)
+    {
+        *(.data*)
+    }
 
-    .rodata : {
-        *(.rodata .rodata.*)
-    } :rodata
-
-    rodata_end_addr = .;
-
-    /* Move to the next memory page for .data */
-    . += CONSTANT(MAXPAGESIZE);
-
-    data_start_addr = .;
-
-    .data : {
-        *(.data .data.*)
-    } :data
-
-    .bss : {
+    .bss : ALIGN(4K)
+    {
         *(COMMON)
-        *(.bss .bss.*)
-    } :data
-
-    data_end_addr = .;
-
-    /* Discard .note.* and .eh_frame since they may cause issues on some hosts. */
-    /DISCARD/ : {
-        *(.eh_frame)
-        *(.note .note.*)
+        *(.bss*)
     }
 }

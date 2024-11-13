@@ -5,9 +5,8 @@ const elf = @import("elf");
 const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
 const Registers = @import("./regs.zig").Registers;
-const limine = @import("./limine.zig");
-const PageAllocator = @import("./pmm.zig").PageAllocator;
-const Lapic = @import("./acpi/apic.zig").Lapic;
+// const PageAllocator = @import("./pmm.zig").PageAllocator;
+// const Lapic = @import("./acpi/apic.zig").Lapic;
 const Serial = @import("./serial.zig").Serial;
 
 extern fn idt_flush(addr: u64) void;
@@ -121,15 +120,15 @@ fn dumpRegs(regs: *Registers) void {
     var backtrace = std.debug.StackIterator.init(@returnAddress(), null);
     defer backtrace.deinit();
 
-    if (sym == null) {
-        if (limine.kernel.response) |k| {
-            var pallocator = PageAllocator.new();
-            const alloc = pallocator.allocator();
-
-            const bin = elf.Elf.fromSlice(k.kernel_file.address);
-            sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
-        }
-    }
+    // if (sym == null) {
+    //     if (limine.kernel.response) |k| {
+    //         var pallocator = PageAllocator.new();
+    //         const alloc = pallocator.allocator();
+    //
+    //         const bin = elf.Elf.fromSlice(k.kernel_file.address);
+    //         sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+    //     }
+    // }
 
     logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n\n", .{});
     if (regs.intno != INT_BREAKPOINT) {
@@ -197,7 +196,7 @@ pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
             @panic("Failed to read from serial port");
         };
 
-        Lapic.eoi();
+        // Lapic.eoi();
         return rsp;
     } else if (regs.intno < exception_message.len) {
         dumpRegs(regs);
@@ -213,6 +212,6 @@ pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
         // Clock
     } else {}
 
-    Lapic.eoi();
+    // Lapic.eoi();
     return rsp;
 }
