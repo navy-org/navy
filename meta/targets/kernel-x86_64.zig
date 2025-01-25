@@ -27,5 +27,5 @@ pub fn addBuildOption(b: *std.Build, kernel: *std.Build.Step.Compile, modules: s
         arch.addImport(key.*, module.?);
     }
 
-    kernel.setLinkerScriptPath(b.path("meta/targets/kernel-x86_64.ld"));
+    kernel.setLinkerScript(b.path("meta/targets/kernel-x86_64.ld"));
 }

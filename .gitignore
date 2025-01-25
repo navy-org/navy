@@ -2,3 +2,4 @@ zig-out/
 .cache/
 .image/
 .zig-cache/
+.direnv/
