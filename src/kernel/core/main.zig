@@ -5,6 +5,13 @@ const logger = @import("logger");
 const elf = @import("elf");
 const log = std.log.scoped(.main);
 
+pub const os = struct {
+    pub const heap = struct {
+        var page_alloc = arch.pmm.PageAllocator.new();
+        pub const page_allocator = page_alloc.allocator();
+    };
+};
+
 pub const std_options = std.Options{
     .log_level = if (builtin.mode == .Debug) .debug else .info,
     .logFn = logger.log,

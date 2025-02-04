@@ -1,6 +1,7 @@
 pub const endian = std.builtin.Endian.little;
 pub const serial = @import("./serial.zig");
 pub const as = @import("./asm.zig");
+pub const pmm = @import("./pmm.zig");
 
 const std = @import("std");
 
@@ -12,7 +13,6 @@ const logger = @import("logger");
 const madt = @import("./acpi/madt.zig");
 const paging = @import("./paging.zig");
 const Hpet = @import("./acpi/hpet.zig").Hpet;
-const pmm = @import("./pmm.zig");
 const rsdp = @import("./acpi/rsdp.zig");
 
 const ArchError = error{LimineRsdpUnavailable};
