@@ -2,8 +2,8 @@ const std = @import("std");
 const as = @import("./asm.zig");
 
 pub const Serial = struct {
-    const Self = @This();
     const port: u16 = 0x3f8;
+
     pub const Error = error{FaultySerialPort};
 
     pub fn init() !Serial {
@@ -26,16 +26,16 @@ pub const Serial = struct {
         return .{};
     }
 
-    pub fn writer(self: *Self) std.io.AnyWriter {
+    pub fn writer(self: *Serial) std.io.AnyWriter {
         return .{ .context = self, .writeFn = writeOpaque };
     }
 
     fn writeOpaque(context: *const anyopaque, bytes: []const u8) Error!usize {
-        const ptr: *const Self = @alignCast(@ptrCast(context));
+        const ptr: *const Serial = @alignCast(@ptrCast(context));
         return write(ptr.*, bytes);
     }
 
-    pub fn write(self: Self, bytes: []const u8) usize {
+    pub fn write(self: Serial, bytes: []const u8) usize {
         _ = self;
 
         for (bytes) |b| {
@@ -46,12 +46,12 @@ pub const Serial = struct {
         return bytes.len;
     }
 
-    fn hasCharacter(self: Self) u8 {
+    fn hasCharacter(self: Serial) u8 {
         _ = self;
         return as.in8(port + 5) & 1;
     }
 
-    pub fn read(self: Self, alloc: std.mem.Allocator, len: usize) ![]u8 {
+    pub fn read(self: Serial, alloc: std.mem.Allocator, len: usize) ![]u8 {
         var buffer = try alloc.alloc(u8, len);
 
         for (0..len) |i| {

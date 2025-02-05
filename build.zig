@@ -51,8 +51,8 @@ pub fn build(b: *std.Build) !void {
     const target = arch.getBuildTarget();
 
     const kernel = b.addExecutable(.{
-        .name = "kernel.elf",
-        .root_source_file = b.path("src/kernel/core/main.zig"),
+        .name = "navy",
+        .root_source_file = b.path("src/kernel/main.zig"),
         .target = b.resolveTargetQuery(target),
         .optimize = optimize,
         .code_model = .kernel,
@@ -71,9 +71,8 @@ pub fn build(b: *std.Build) !void {
     kernel.root_module.addImport("limine", limine.module("limine"));
     try modules.put("limine", limine.module("limine"));
 
-    arch.addBuildOption(b, kernel, modules);
-
     kernel.want_lto = false;
 
     b.installArtifact(kernel);
+    arch.addBuildOption(b, kernel, modules);
 }

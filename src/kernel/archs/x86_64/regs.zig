@@ -1,6 +1,4 @@
 pub const Registers = packed struct {
-    const Self = @This();
-
     r15: u64,
     r14: u64,
     r13: u64,
@@ -24,7 +22,7 @@ pub const Registers = packed struct {
     rsp: u64,
     ss: u64,
 
-    pub fn fromRsp(rsp: u64) *Self {
+    pub fn fromRsp(rsp: u64) *Registers {
         return @ptrFromInt(rsp);
     }
 };

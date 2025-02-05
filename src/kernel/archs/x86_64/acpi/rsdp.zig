@@ -13,7 +13,6 @@ const RsdpError = error{
 };
 
 pub const Rsdp = extern struct {
-    const Self = @This();
     const v1Length: u32 = 20;
 
     signature: [8]u8,
@@ -28,12 +27,12 @@ pub const Rsdp = extern struct {
     extended_checksum: u8,
     reserved: [3]u8,
 
-    fn validate(self: *align(1) Self) !void {
+    fn validate(self: *align(1) Rsdp) !void {
         if (!std.mem.eql(u8, &self.signature, "RSD PTR ")) {
             return RsdpError.InvalidRsdpSignature;
         }
 
-        const length = if (self.revision > 0) self.length else Self.v1Length;
+        const length = if (self.revision > 0) self.length else Rsdp.v1Length;
 
         var sum: u8 = 0;
         const slice: [*]align(1) u8 = @ptrCast(self);
@@ -47,15 +46,15 @@ pub const Rsdp = extern struct {
         }
     }
 
-    pub fn fromMem(address: *anyopaque) !*align(1) Self {
+    pub fn fromMem(address: *anyopaque) !*align(1) Rsdp {
         log.debug("RSDP address: {x:0>16}", .{@intFromPtr(address)});
-        const self: *align(1) Self = @ptrFromInt(lower2upper(@intFromPtr(address)));
+        const self: *align(1) Rsdp = @ptrFromInt(lower2upper(@intFromPtr(address)));
         try self.validate();
         rsdp = self;
         return self;
     }
 
-    pub fn findSdt(self: *align(1) Self) !sdt.Sdt {
+    pub fn findSdt(self: *align(1) Rsdp) !sdt.Sdt {
         var value: sdt.Sdt = undefined;
         if (self.revision == 0) {
             log.debug("RSDT address: {x:0>16}", .{lower2upper(self.rsdt_address)});

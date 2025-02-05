@@ -26,8 +26,6 @@ pub const Iso = extern struct {
 };
 
 pub const Madt = packed struct {
-    const Self = @This();
-
     const EntryTypes = struct {
         const Lapic: u8 = 0;
         const Ioapic: u8 = 1;
@@ -45,17 +43,17 @@ pub const Madt = packed struct {
     flags: u32,
     entries: void,
 
-    pub fn lapic(self: *align(1) Self) apic.Lapic {
+    pub fn lapic(self: *align(1) Madt) apic.Lapic {
         return apic.Lapic.fromAddress(lower2upper(self.localApicAddr));
     }
 
-    pub fn getIsoFromIrq(self: *align(1) Self, irq: u8) ?*align(1) Iso {
+    pub fn getIsoFromIrq(self: *align(1) Madt, irq: u8) ?*align(1) Iso {
         var i: usize = 0;
 
-        while (i < self.header.length - @sizeOf(Self)) {
+        while (i < self.header.length - @sizeOf(Madt)) {
             const entry: *align(1) HeaderEntry = @ptrFromInt(@intFromPtr(&self.entries) + i);
 
-            if (entry.type == Self.EntryTypes.Iso) {
+            if (entry.type == Madt.EntryTypes.Iso) {
                 const iso: *align(1) Iso = @ptrCast(entry);
                 if (iso.irq == irq) {
                     return iso;
@@ -68,13 +66,13 @@ pub const Madt = packed struct {
         return null;
     }
 
-    pub fn getIoApicFromGsi(self: *align(1) Self, gsi: u32) ?*align(1) apic.Ioapic {
+    pub fn getIoApicFromGsi(self: *align(1) Madt, gsi: u32) ?*align(1) apic.Ioapic {
         var i: usize = 0;
 
-        while (i < self.header.length - @sizeOf(Self)) {
+        while (i < self.header.length - @sizeOf(Madt)) {
             const entry: *align(1) HeaderEntry = @ptrFromInt(@intFromPtr(&self.entries) + i);
 
-            if (entry.type == Self.EntryTypes.Ioapic) {
+            if (entry.type == Madt.EntryTypes.Ioapic) {
                 const ioapic: *align(1) apic.Ioapic = @ptrCast(entry);
                 if (ioapic.gsiBase <= gsi and gsi < ioapic.gsiBase + ioapic.countGsi()) {
                     return ioapic;
@@ -87,7 +85,7 @@ pub const Madt = packed struct {
         return null;
     }
 
-    pub fn setup() !*align(1) Self {
+    pub fn setup() !*align(1) Madt {
         if (sdt.sdt == null) {
             return MadtError.SdtUnavailable;
         }

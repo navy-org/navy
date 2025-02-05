@@ -24,7 +24,7 @@ fn main() !void {
     try arch.setup();
 }
 
-pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
+fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
     logger.print("\nZig panic!\n", .{});
     logger.print("{s}\n\n", .{msg});
 

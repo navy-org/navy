@@ -22,8 +22,6 @@ const INT_BREAKPOINT = 3;
 var idt: Idt = std.mem.zeroes(Idt);
 
 const IdtEntry = packed struct {
-    const Self = @This();
-
     offset_low: u16,
     selector: u16,
     ist: u8,
@@ -32,7 +30,7 @@ const IdtEntry = packed struct {
     offset_high: u32,
     zero: u32 = 0,
 
-    pub fn init(base: u64, entry_type: u8) Self {
+    pub fn init(base: u64, entry_type: u8) IdtEntry {
         return .{
             .offset_low = @intCast(base & 0xffff),
             .offset_middle = @intCast((base >> 16) & 0xffff),
@@ -45,24 +43,21 @@ const IdtEntry = packed struct {
 };
 
 const Idt = extern struct {
-    const Self = @This();
     entries: [IDT_ENTRY_COUNT]IdtEntry,
 };
 
 const IdtDescriptor = packed struct {
-    const Self = @This();
-
     size: u16,
     offset: u64,
 
-    pub fn load(_idt: *const Idt) Self {
+    pub fn load(_idt: *const Idt) IdtDescriptor {
         return .{
             .size = @intCast(@sizeOf(Idt) - 1),
             .offset = @intFromPtr(_idt),
         };
     }
 
-    pub fn apply(self: *const Self) void {
+    pub fn apply(self: *const IdtDescriptor) void {
         idt_flush(@intFromPtr(self));
     }
 };

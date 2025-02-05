@@ -154,13 +154,11 @@ pub fn free(_: *anyopaque, buf: []u8, _: u8, _: usize) void {
 }
 
 pub const PageAllocator = struct {
-    const Self = @This();
-
-    pub fn new() Self {
+    pub fn new() PageAllocator {
         return .{};
     }
 
-    pub fn allocator(self: *Self) std.mem.Allocator {
+    pub fn allocator(self: *PageAllocator) std.mem.Allocator {
         return .{
             .ptr = self,
             .vtable = &.{

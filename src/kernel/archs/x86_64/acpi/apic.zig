@@ -10,7 +10,6 @@ const log = std.log.scoped(.apic);
 const apicMsr = 0x1b;
 
 pub const Lapic = struct {
-    const Self = @This();
     const LapicError = error{MadtUnavailable};
 
     const msrEnable = 0x800;
@@ -46,43 +45,43 @@ pub const Lapic = struct {
 
     addr: usize,
 
-    pub fn read(self: Self, reg: u64) u32 {
+    pub fn read(self: Lapic, reg: u64) u32 {
         return as.readVolatile(u32, self.addr + reg);
     }
 
-    pub fn write(self: Self, reg: u64, value: u32) void {
+    pub fn write(self: Lapic, reg: u64, value: u32) void {
         as.writeVolatile(u32, self.addr + reg, value);
     }
 
-    pub fn fromAddress(address: usize) Self {
+    pub fn fromAddress(address: usize) Lapic {
         return .{
             .addr = address,
         };
     }
 
-    pub fn init(self: Self) void {
+    pub fn init(self: Lapic) void {
         as.writeMsr(apicMsr, as.readMsr(apicMsr) | msrEnable & ~@as(u64, 1 << 10));
 
         self.write(
-            Self.Registers.spurious,
-            self.read(Self.Registers.spurious) | (Self.spuriousAll | Self.spuriousEnableApic),
+            Lapic.Registers.spurious,
+            self.read(Lapic.Registers.spurious) | (Lapic.spuriousAll | Lapic.spuriousEnableApic),
         );
 
         log.debug("Lapic initialized", .{});
     }
 
-    pub fn initTimer(self: Self) !void {
-        self.write(Self.Registers.timerDiv, Self.Divisor._16);
-        self.write(Self.Registers.timerInitCnt, maxInt(u32));
+    pub fn initTimer(self: Lapic) !void {
+        self.write(Lapic.Registers.timerDiv, Lapic.Divisor._16);
+        self.write(Lapic.Registers.timerInitCnt, maxInt(u32));
 
         Hpet.sleep(10);
 
-        self.write(Self.Registers.lvtTimer, Self.timerMasked);
-        const ticks = maxInt(u32) - self.read(Self.Registers.timerCurrCnt);
+        self.write(Lapic.Registers.lvtTimer, Lapic.timerMasked);
+        const ticks = maxInt(u32) - self.read(Lapic.Registers.timerCurrCnt);
 
-        self.write(Self.Registers.lvtTimer, Self.timerIrq | Self.timerPeriodic);
-        self.write(Self.Registers.timerDiv, Self.Divisor._16);
-        self.write(Self.Registers.timerInitCnt, ticks / 10);
+        self.write(Lapic.Registers.lvtTimer, Lapic.timerIrq | Lapic.timerPeriodic);
+        self.write(Lapic.Registers.timerDiv, Lapic.Divisor._16);
+        self.write(Lapic.Registers.timerInitCnt, ticks / 10);
 
         as.enableInterrupts();
 
@@ -90,12 +89,11 @@ pub const Lapic = struct {
     }
 
     pub fn eoi() void {
-        madt.getMadt().lapic().write(Self.Registers.eoi, 0);
+        madt.getMadt().lapic().write(Lapic.Registers.eoi, 0);
     }
 };
 
 pub const Ioapic = extern struct {
-    const Self = @This();
     const IoapicError = error{
         IoapicUnavailable,
     };
@@ -138,13 +136,13 @@ pub const Ioapic = extern struct {
         reserved2: u8,
     };
 
-    fn write(self: *align(1) Self, reg: u32, value: u32) void {
+    fn write(self: *align(1) Ioapic, reg: u32, value: u32) void {
         const base = lower2upper(self.addr);
         as.writeVolatile(u32, base, reg);
         as.writeVolatile(u32, base + 0x10, value);
     }
 
-    fn read(self: *align(1) Self, reg: u32) u32 {
+    fn read(self: *align(1) Ioapic, reg: u32) u32 {
         const base = lower2upper(self.addr);
         as.writeVolatile(u32, base, reg);
         return as.readVolatile(u32, base + 0x10);
@@ -157,11 +155,11 @@ pub const Ioapic = extern struct {
         if (ioapic) |i| {
             redirect.redirect.vector = intno;
 
-            if (flags & Self.Flags.ActiveHighLow == Self.Flags.ActiveHighLow) {
+            if (flags & Ioapic.Flags.ActiveHighLow == Ioapic.Flags.ActiveHighLow) {
                 redirect.redirect.polarity = 1;
             }
 
-            if (flags & Self.Flags.TriggerEdgeLow == Self.Flags.TriggerEdgeLow) {
+            if (flags & Ioapic.Flags.TriggerEdgeLow == Ioapic.Flags.TriggerEdgeLow) {
                 redirect.redirect.trigger = 1;
             }
 
@@ -175,7 +173,7 @@ pub const Ioapic = extern struct {
         }
     }
 
-    pub fn countGsi(self: *align(1) Self) usize {
+    pub fn countGsi(self: *align(1) Ioapic) usize {
         var val = self.read(1);
         const ver: *align(1) IoapicVersion = @ptrCast(&val);
         return @intCast(ver.max_redir);
@@ -184,15 +182,15 @@ pub const Ioapic = extern struct {
     pub fn redirectIrq(lapic_id: u32, intno: u8, irq: u8) !void {
         const iso = madt.getMadt().getIsoFromIrq(irq);
         if (iso) |i| {
-            try Self.setGsiRedirect(lapic_id, intno, @as(u8, @intCast(i.gsi)), i.flags);
+            try Ioapic.setGsiRedirect(lapic_id, intno, @as(u8, @intCast(i.gsi)), i.flags);
         } else {
-            try Self.setGsiRedirect(lapic_id, intno, irq, 0);
+            try Ioapic.setGsiRedirect(lapic_id, intno, irq, 0);
         }
     }
 
     pub fn redirectLegacyIrq() !void {
         for (0..16) |i| {
-            try Self.redirectIrq(0, @as(u8, @intCast(i)) + 32, @as(u8, @intCast(i)));
+            try Ioapic.redirectIrq(0, @as(u8, @intCast(i)) + 32, @as(u8, @intCast(i)));
         }
     }
 };

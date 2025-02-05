@@ -25,8 +25,6 @@ const Sections = struct {
 };
 
 pub const Space = struct {
-    const Self = @This();
-
     root: [*]u64,
     alloc: std.mem.Allocator,
 
@@ -43,7 +41,7 @@ pub const Space = struct {
         const noExecute: u64 = 1 << 63;
     };
 
-    pub fn blank() !Self {
+    pub fn blank() !Space {
         var pageAlloc = pmm.PageAllocator.new();
         var allocator = pageAlloc.allocator();
         const root = try allocator.alloc(u8, std.mem.page_size);
@@ -55,7 +53,7 @@ pub const Space = struct {
     }
 
     pub fn translateFlags(flags: u8) u64 {
-        var f: u64 = Self.PageField.present | Self.PageField.noExecute;
+        var f: u64 = Space.PageField.present | Space.PageField.noExecute;
 
         if (flags & MapFlag.none == MapFlag.none) {
             return 0;
@@ -64,19 +62,19 @@ pub const Space = struct {
         if (flags & MapFlag.read == MapFlag.read) {}
 
         if (flags & MapFlag.write == MapFlag.write) {
-            f |= Self.PageField.writable;
+            f |= Space.PageField.writable;
         }
 
         if (flags & MapFlag.execute == MapFlag.execute) {
-            f &= ~Self.PageField.noExecute;
+            f &= ~Space.PageField.noExecute;
         }
 
         if (flags & MapFlag.user == MapFlag.user) {
-            f |= Self.PageField.user;
+            f |= Space.PageField.user;
         }
 
         if (flags & MapFlag.huge == MapFlag.huge) {
-            f |= Self.PageField.huge;
+            f |= Space.PageField.huge;
         }
 
         return f;
@@ -91,10 +89,10 @@ pub const Space = struct {
         return addr & 0x000ffffffffff000;
     }
 
-    fn getEntry(self: *Self, index: usize, alloc: bool) !Self {
-        if (self.root[index] & Self.PageField.present == Self.PageField.present) {
+    fn getEntry(self: *Space, index: usize, alloc: bool) !Space {
+        if (self.root[index] & Space.PageField.present == Space.PageField.present) {
             return .{
-                .root = @ptrFromInt(pmm.lower2upper(Self.getEntryAddr(self.root[index]))),
+                .root = @ptrFromInt(pmm.lower2upper(Space.getEntryAddr(self.root[index]))),
                 .alloc = self.alloc,
             };
         }
@@ -103,29 +101,29 @@ pub const Space = struct {
             return error.PageNotFound;
         }
 
-        const page = try Self.blank();
-        self.root[index] = pmm.upper2lower(@intFromPtr(page.root)) | Self.PageField.present | Self.PageField.writable | Self.PageField.user;
+        const page = try Space.blank();
+        self.root[index] = pmm.upper2lower(@intFromPtr(page.root)) | Space.PageField.present | Space.PageField.writable | Space.PageField.user;
         return page;
     }
 
-    pub fn mapPage(self: *Self, virt: u64, phys: u64, flags: u64) !void {
+    pub fn mapPage(self: *Space, virt: u64, phys: u64, flags: u64) !void {
         std.debug.assert(virt % std.mem.page_size == 0);
         std.debug.assert(phys % std.mem.page_size == 0);
 
-        const pml4Index = Self.getEntryIndex(virt, 3);
-        const pml3Index = Self.getEntryIndex(virt, 2);
-        const pml2Index = Self.getEntryIndex(virt, 1);
-        const pml1Index = Self.getEntryIndex(virt, 0);
+        const pml4Index = Space.getEntryIndex(virt, 3);
+        const pml3Index = Space.getEntryIndex(virt, 2);
+        const pml2Index = Space.getEntryIndex(virt, 1);
+        const pml1Index = Space.getEntryIndex(virt, 0);
 
         var pml3 = try self.getEntry(pml4Index, true);
 
-        if (flags & Self.PageField.huge == Self.PageField.huge and pSize == utils.gib(1)) {
+        if (flags & Space.PageField.huge == Space.PageField.huge and pSize == utils.gib(1)) {
             pml3.root[pml3Index] = phys | flags;
             return;
         }
 
         var pml2 = try pml3.getEntry(pml3Index, true);
-        if (flags & Self.PageField.huge == Self.PageField.huge) {
+        if (flags & Space.PageField.huge == Space.PageField.huge) {
             pml2.root[pml2Index] = phys | flags;
             return;
         }
@@ -134,14 +132,14 @@ pub const Space = struct {
         pml1.root[pml1Index] = phys | flags;
     }
 
-    pub fn map(self: *Self, virt: u64, phys: u64, len: u64, flags: u8) !void {
+    pub fn map(self: *Space, virt: u64, phys: u64, len: u64, flags: u8) !void {
         const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.mem.page_size;
 
         const aligned_virt = std.mem.alignBackward(u64, virt, _align);
         const aligned_phys = std.mem.alignBackward(u64, phys, _align);
         const aligned_len = std.mem.alignForward(u64, len, _align);
 
-        const f = Self.translateFlags(flags);
+        const f = Space.translateFlags(flags);
 
         var i: usize = 0;
         while (i < aligned_len) : (i += _align) {
@@ -149,7 +147,7 @@ pub const Space = struct {
         }
     }
 
-    pub fn load(self: Self) void {
+    pub fn load(self: Space) void {
         as.cr3.write(@truncate(pmm.upper2lower(@intFromPtr(self.root))));
     }
 };

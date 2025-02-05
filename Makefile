@@ -17,7 +17,7 @@ $(LOADER):
 $(KERNEL): $(SRC)
 	@$(MKCWD)
 	@zig build
-	@cp ./zig-out/bin/kernel.elf $@
+	@cp ./zig-out/bin/navy $@
 
 $(FIRMWARE):
 	@$(MKCWD)
@@ -29,7 +29,7 @@ build: $(KERNEL)
 .PHONY: qemu
 qemu: $(LOADER) $(KERNEL) $(FIRMWARE)
 	@bash $(LIMINE_GEN) $(SYSROOT)
-	qemu-system-x86_64 \
+	@qemu-system-x86_64 \
 		--no-reboot \
 		--no-shutdown \
 		-smp 4 \
@@ -40,11 +40,11 @@ qemu: $(LOADER) $(KERNEL) $(FIRMWARE)
 
 .PHONY: clean
 clean:
-	rm -rf ./zig-cache/ ./zig-out/
+	@rm -rf ./.zig-cache/ ./zig-out/
 
 .PHONY: nuke
 nuke: clean
-	rm -rf $(SYSROOT)
+	@rm -rf $(SYSROOT)
 
 .PHONY: path
 path:

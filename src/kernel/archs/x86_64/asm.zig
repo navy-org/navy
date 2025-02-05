@@ -16,10 +16,9 @@ pub fn out8(port: u16, value: u8) void {
 }
 
 const Cr = struct {
-    const Self = @This();
     number: u8,
 
-    pub fn read(self: Self) u64 {
+    pub fn read(self: Cr) u64 {
         var ret: u64 = 0;
 
         switch (self.number) {
@@ -49,7 +48,7 @@ const Cr = struct {
         return ret;
     }
 
-    pub fn write(self: Self, value: u64) void {
+    pub fn write(self: Cr, value: u64) void {
         switch (self.number) {
             0 => asm volatile ("mov %[value], %%cr0"
                 :

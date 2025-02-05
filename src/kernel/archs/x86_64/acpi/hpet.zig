@@ -8,7 +8,6 @@ const log = std.log.scoped(.hpet);
 pub const Hpet = packed struct {
     pub const signature: *const [4]u8 = "HPET";
 
-    const Self = @This();
     const HpetError = error{SdtUnavailable};
     var hpet: *align(1) Hpet = undefined;
     var hpet_tick: u64 = 0;
@@ -41,11 +40,11 @@ pub const Hpet = packed struct {
     minimum_tick: u16,
     page_protection: u8,
 
-    fn write(self: *align(1) Self, offset: u64, value: u64) void {
+    fn write(self: *align(1) Hpet, offset: u64, value: u64) void {
         as.writeVolatile(u64, lower2upper(self.address) + offset, value);
     }
 
-    fn read(self: *align(1) Self, offset: u64) u64 {
+    fn read(self: *align(1) Hpet, offset: u64) u64 {
         return as.readVolatile(u64, lower2upper(self.address) + offset);
     }
 

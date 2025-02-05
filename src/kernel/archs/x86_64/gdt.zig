@@ -34,8 +34,6 @@ const TssFlags = enum(u8) {
 };
 
 const GdtEntry = packed struct {
-    const Self = @This();
-
     limit_low: u16,
     base_low: u16,
     base_middle: u8,
@@ -44,8 +42,8 @@ const GdtEntry = packed struct {
     flags: u4,
     base_high: u8,
 
-    pub fn fast_init(access: u8, flags: u8) Self {
-        var entry = std.mem.zeroes(Self);
+    pub fn fast_init(access: u8, flags: u8) GdtEntry {
+        var entry = std.mem.zeroes(GdtEntry);
 
         entry.access = access | @intFromEnum(GdtAccess.Present) | @intFromEnum(GdtAccess.ReadWrite) | @intFromEnum(GdtAccess.Descriptor);
         entry.flags = @intCast(flags | @intFromEnum(GdtFlags.Granularity));
@@ -79,8 +77,6 @@ const Tss = packed struct {
 };
 
 const TssEntry = packed struct {
-    const Self = @This();
-
     length: u16,
     base_low: u16,
     base_middle: u8,
@@ -89,7 +85,7 @@ const TssEntry = packed struct {
     base_upper: u32,
     reserved: u32 = 0,
 
-    pub fn from_addr(addr: u64) Self {
+    pub fn from_addr(addr: u64) TssEntry {
         return .{
             .length = @intCast(@sizeOf(Tss)),
             .base_low = @intCast(addr & 0xffff),
@@ -107,19 +103,17 @@ const Gdt = extern struct {
 };
 
 const GdtDescriptor = packed struct {
-    const Self = @This();
-
     limit: u16,
     base: u64,
 
-    pub fn load(_gdt: *Gdt) Self {
+    pub fn load(_gdt: *Gdt) GdtDescriptor {
         return .{
             .limit = @intCast(@sizeOf(Gdt) - 1),
             .base = @intFromPtr(_gdt),
         };
     }
 
-    pub fn apply(self: *const Self) void {
+    pub fn apply(self: *const GdtDescriptor) void {
         gdt_flush(@intFromPtr(self));
     }
 };
