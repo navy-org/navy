@@ -32,15 +32,20 @@ pub const Symbols = struct {
 pub const Elf = struct {
     header: *std.elf.Ehdr,
     shtab: [*]std.elf.Shdr,
+    phdr: [*]std.elf.Phdr,
     shstrtab: *std.elf.Shdr,
+    raw: [*]u8,
 
     pub fn fromSlice(data: [*]u8) Elf {
         const header: *std.elf.Ehdr = @alignCast(@ptrCast(data));
         const shtab: [*]std.elf.Shdr = @alignCast(@ptrCast(data + header.e_shoff));
+        const phdr: [*]std.elf.Phdr = @alignCast(@ptrCast(data + header.e_phoff));
 
         return .{
+            .raw = data,
             .header = header,
             .shtab = shtab,
+            .phdr = phdr,
             .shstrtab = &shtab[header.e_shstrndx],
         };
     }

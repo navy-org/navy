@@ -1,8 +1,13 @@
+pub const loader = @import("loader");
+pub const sched = @import("./sched.zig");
+pub const syscall = @import("./syscall.zig");
+
 const std = @import("std");
 const builtin = @import("builtin");
 const arch = @import("arch");
 const logger = @import("logger");
 const elf = @import("elf");
+const Task = @import("./task.zig").Task;
 const log = std.log.scoped(.main);
 
 pub const os = struct {
@@ -17,14 +22,24 @@ pub const std_options = std.Options{
     .logFn = logger.log,
 };
 
+pub var serial: arch.serial.Serial = undefined;
+
 fn main() !void {
-    var serial = try arch.serial.Serial.init();
+    serial = try arch.serial.Serial.init();
     try logger.setGlobalWriter(serial.writer());
     log.info("Hello, World!", .{});
     try arch.setup();
+    try sched.setup();
+
+    if (arch.loader.findFile("/bin/hello")) |hello| {
+        const t = try Task.from_elf("/bin/hello", elf.Elf.fromSlice(hello.address));
+        try sched.push_task(t);
+    } else {
+        log.err("Couldn't find /bin/hello", .{});
+    }
 }
 
-fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
+pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
     logger.print("\nZig panic!\n", .{});
     logger.print("{s}\n\n", .{msg});
 

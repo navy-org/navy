@@ -1,10 +1,12 @@
 const std = @import("std");
 const log = std.log.scoped(.gdt);
+const PageAllocator = @import("./pmm.zig").PageAllocator;
+const kib = @import("utils").kib;
 
 extern fn gdt_flush(addr: u64) void;
 extern fn tss_flush() void;
 
-pub const GdtType = enum(u3) {
+pub const GdtType = enum(u64) {
     Null = 0,
     KernelCode = 1,
     KernelData = 2,
@@ -119,6 +121,7 @@ const GdtDescriptor = packed struct {
 };
 
 var gdt: Gdt = std.mem.zeroes(Gdt);
+var tss: Tss = std.mem.zeroes(Tss);
 
 pub fn setup() void {
     gdt.entries[@intFromEnum(GdtType.Null)] = std.mem.zeroes(GdtEntry);
@@ -134,4 +137,20 @@ pub fn setup() void {
 
     tss_flush();
     log.debug("Gdt loaded", .{});
+}
+
+pub fn setup_tss() !void {
+    var allocator = PageAllocator.new();
+    const alloc = allocator.allocator();
+
+    const ist0 = (try alloc.alloc(u8, kib(1))).ptr;
+    const ist1 = (try alloc.alloc(u8, kib(1))).ptr;
+    const rsp0 = (try alloc.alloc(u8, kib(1))).ptr;
+
+    tss.ist.ist0 = @intFromPtr(ist0) + kib(1);
+    tss.ist.ist1 = @intFromPtr(ist1) + kib(1);
+    tss.rsp.rsp0 = @intFromPtr(rsp0) + kib(1);
+
+    gdt.tss = TssEntry.from_addr(@intFromPtr(&tss));
+    tss_flush();
 }

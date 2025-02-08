@@ -1,7 +1,7 @@
 #!/bin/bash
 
 img=$1
-modules=${@:2}
+modules=(/bin/hello)
 
 if [ -z $img ]; then
     echo "Usage: $0 <image>"
@@ -18,9 +18,14 @@ if [ ! -f $img/kernel.elf ]; then
     exit 1
 fi
 
-cat << EOF > $img/efi/boot/limine.conf
+if [ ! -d $img/boot ]; then
+    mkdir -p $img/boot
+fi
+
+cat << EOF > $img/boot/limine.conf
 timeout: 0
 /navy
+    serial yes
     protocol: limine
     kernel_path: boot():/kernel.elf
 EOF
@@ -30,8 +35,7 @@ for module in $modules; do
         echo "Error: $img/$module not found"
         exit 1
     fi
-    cat << EOF >> $img/efi/boot/limine.conf
-$cfg
-    module_path: boot():${module}
+    cat << EOF >> $img/boot/limine.conf
+${cfg}    module_path: boot():${module}
 EOF
 done

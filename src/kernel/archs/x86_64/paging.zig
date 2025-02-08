@@ -47,9 +47,19 @@ pub const Space = struct {
         const root = try allocator.alloc(u8, std.mem.page_size);
 
         return .{
-            .root = @alignCast(@ptrCast(root)),
+            .root = @alignCast(@ptrCast(root.ptr)),
             .alloc = allocator,
         };
+    }
+
+    pub fn create() !Space {
+        var page = try Space.blank();
+
+        for (255..512) |i| {
+            page.root[i] = kernelPage.root[i];
+        }
+
+        return page;
     }
 
     pub fn translateFlags(flags: u8) u64 {
@@ -89,7 +99,7 @@ pub const Space = struct {
         return addr & 0x000ffffffffff000;
     }
 
-    fn getEntry(self: *Space, index: usize, alloc: bool) !Space {
+    fn getEntry(self: Space, index: usize, alloc: bool) !Space {
         if (self.root[index] & Space.PageField.present == Space.PageField.present) {
             return .{
                 .root = @ptrFromInt(pmm.lower2upper(Space.getEntryAddr(self.root[index]))),
@@ -106,7 +116,7 @@ pub const Space = struct {
         return page;
     }
 
-    pub fn mapPage(self: *Space, virt: u64, phys: u64, flags: u64) !void {
+    pub fn mapPage(self: Space, virt: u64, phys: u64, flags: u64) !void {
         std.debug.assert(virt % std.mem.page_size == 0);
         std.debug.assert(phys % std.mem.page_size == 0);
 
@@ -132,7 +142,7 @@ pub const Space = struct {
         pml1.root[pml1Index] = phys | flags;
     }
 
-    pub fn map(self: *Space, virt: u64, phys: u64, len: u64, flags: u8) !void {
+    pub fn map(self: Space, virt: u64, phys: u64, len: u64, flags: u8) !void {
         const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.mem.page_size;
 
         const aligned_virt = std.mem.alignBackward(u64, virt, _align);
@@ -166,6 +176,10 @@ fn mapSection(start: u64, end: u64, flags: u8) !void {
     } else {
         return error.CantReadKernelAddr;
     }
+}
+
+pub fn kernelSpace() Space {
+    return kernelPage;
 }
 
 pub fn setup() !void {

@@ -56,6 +56,7 @@ pub const Rsdp = extern struct {
 
     pub fn findSdt(self: *align(1) Rsdp) !sdt.Sdt {
         var value: sdt.Sdt = undefined;
+
         if (self.revision == 0) {
             log.debug("RSDT address: {x:0>16}", .{lower2upper(self.rsdt_address)});
             value = .{

@@ -1,6 +1,7 @@
 const logger = @import("logger");
 const std = @import("std");
 const elf = @import("elf");
+const sched = @import("kernel").sched;
 
 const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
@@ -9,6 +10,7 @@ const limine = @import("./limine.zig");
 const PageAllocator = @import("./pmm.zig").PageAllocator;
 const Lapic = @import("./acpi/apic.zig").Lapic;
 const Serial = @import("./serial.zig").Serial;
+const Spinlock = @import("sync").Spinlock;
 
 extern fn idt_flush(addr: u64) void;
 extern const __interrupts_vector: [IDT_ENTRY_COUNT]u64;
@@ -21,23 +23,30 @@ const INT_BREAKPOINT = 3;
 
 var idt: Idt = std.mem.zeroes(Idt);
 
-const IdtEntry = packed struct {
+const IdtEntry = packed struct(u128) {
     offset_low: u16,
     selector: u16,
-    ist: u8,
-    flags: u8,
+    ist: u3,
+    reserved0: u5 = 0,
+    gate_type: u4,
+    zero: u1,
+    dpl: u2,
+    present: u1,
     offset_middle: u16,
     offset_high: u32,
-    zero: u32 = 0,
+    reserved1: u32 = 0,
 
-    pub fn init(base: u64, entry_type: u8) IdtEntry {
+    pub fn init(base: u64, gate_type: u4) IdtEntry {
         return .{
+            .ist = 0,
+            .zero = 0,
+            .present = 1,
             .offset_low = @intCast(base & 0xffff),
             .offset_middle = @intCast((base >> 16) & 0xffff),
             .offset_high = @intCast(base >> 32 & 0xffffffff),
-            .ist = 0,
             .selector = @as(u16, @intFromEnum(GdtType.KernelCode)) * 8,
-            .flags = @intCast(IDT_INTERRUPT_PRESENT | entry_type),
+            .gate_type = gate_type,
+            .dpl = 0,
         };
     }
 };
@@ -111,8 +120,12 @@ const exception_message: [32][]const u8 = .{
 };
 
 var sym: ?elf.Symbols = null;
+var lock = Spinlock.init();
 
 fn dumpRegs(regs: *Registers) void {
+    lock.lock();
+    defer lock.unlock();
+
     var backtrace = std.debug.StackIterator.init(@returnAddress(), null);
     defer backtrace.deinit();
 
@@ -159,9 +172,9 @@ fn dumpRegs(regs: *Registers) void {
         }
 
         if (sym) |*s| {
-            const info = s.infoForAddr(address) catch |err| {
-                log.err("Error: {any}\n", .{err});
-                return;
+            const info = s.infoForAddr(address) catch {
+                logger.print("    ?* 0x{x:0>16}\n", .{address});
+                continue;
             };
 
             logger.print("    * {s: <70}: {d: <3} ({s})\n", .{ info.lineInfo.file_name, info.lineInfo.line, info.symbol });
@@ -175,7 +188,6 @@ fn dumpRegs(regs: *Registers) void {
 
 pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
     const regs = Registers.fromRsp(rsp);
-    const irq = regs.intno - exception_message.len;
 
     if (regs.intno == INT_BREAKPOINT) {
         dumpRegs(regs);
@@ -202,11 +214,12 @@ pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
         }
 
         as.hlt();
+    } else {
+        const irq = regs.intno - exception_message.len;
+        if (irq == 0) {
+            sched.yield(regs);
+        } else {}
     }
-
-    if (irq == 0) {
-        // Clock
-    } else {}
 
     Lapic.eoi();
     return rsp;

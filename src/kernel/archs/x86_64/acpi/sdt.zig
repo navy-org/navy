@@ -9,8 +9,6 @@ const SdtError = error{
 };
 
 pub const SdtHeader = packed struct {
-    const Self = @This();
-
     signature: u32,
     length: u32,
     revision: u8,
@@ -21,7 +19,7 @@ pub const SdtHeader = packed struct {
     creator_id: u32,
     creator_revision: u32,
 
-    pub fn validate(self: *align(1) Self) !void {
+    pub fn validate(self: *align(1) SdtHeader) !void {
         var sum: u8 = 0;
         const slice: [*]align(1) u8 = @ptrCast(self);
 
@@ -34,7 +32,7 @@ pub const SdtHeader = packed struct {
         }
     }
 
-    pub fn getSignature(self: *align(1) Self) []u8 {
+    pub fn getSignature(self: *align(1) SdtHeader) []u8 {
         return @as([*]u8, @ptrCast(&self.signature))[0..4];
     }
 };
@@ -47,7 +45,9 @@ pub fn SdtFactory(PointerLength: type) type {
         sdtAddr: void,
 
         pub fn len(self: Self) usize {
-            return (self.header.length - @sizeOf(SdtHeader)) / @sizeOf(PointerLength);
+            _ = self;
+            return 64;
+            // return (self.header.length - @sizeOf(SdtHeader)) / @sizeOf(PointerLength);
         }
 
         pub fn lookup(self: *align(1) Self, t: type) !*align(1) t {

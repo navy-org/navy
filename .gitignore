@@ -3,3 +3,4 @@ zig-out/
 .image/
 .zig-cache/
 .direnv/
+.st-folder/

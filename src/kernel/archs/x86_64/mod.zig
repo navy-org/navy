@@ -2,29 +2,33 @@ pub const endian = std.builtin.Endian.little;
 pub const serial = @import("./serial.zig");
 pub const as = @import("./asm.zig");
 pub const pmm = @import("./pmm.zig");
+pub const paging = @import("./paging.zig");
+pub const context = @import("./ctx.zig");
+pub const syscall = @import("./syscall.zig");
+pub const loader = @import("./limine.zig");
 
 const std = @import("std");
 
 const apic = @import("./acpi/apic.zig");
 const gdt = @import("./gdt.zig");
 const idt = @import("./idt.zig");
-const limine = @import("./limine.zig");
 const logger = @import("logger");
 const madt = @import("./acpi/madt.zig");
-const paging = @import("./paging.zig");
 const Hpet = @import("./acpi/hpet.zig").Hpet;
 const rsdp = @import("./acpi/rsdp.zig");
 
 const ArchError = error{LimineRsdpUnavailable};
 
 pub fn setup() !void {
-    limine.dumpMmap();
+    loader.dumpMmap();
     gdt.setup();
     idt.setup();
     try pmm.setup();
+    try gdt.setup_tss();
     try paging.setup();
+    syscall.setup();
 
-    if (limine.rsdp.response) |r| {
+    if (loader.rsdp.response) |r| {
         const _rsdp = try rsdp.Rsdp.fromMem(r.address);
         _ = try _rsdp.findSdt();
         const m = try madt.Madt.setup();

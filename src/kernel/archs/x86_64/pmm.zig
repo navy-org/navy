@@ -85,6 +85,8 @@ pub fn setup() !void {
             }
         }
 
+        bitmap.?.set(0);
+
         log.debug("Free pages: {}", .{free_pages});
         log.debug("Pmm initialized", .{});
     } else {

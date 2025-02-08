@@ -80,6 +80,18 @@ pub const cr2 = Cr{ .number = 2 };
 pub const cr3 = Cr{ .number = 3 };
 pub const cr4 = Cr{ .number = 4 };
 
+pub const Msr = struct {
+    pub const apic = 0x1B;
+    pub const efer = 0xC0000080;
+    pub const star = 0xC0000081;
+    pub const lstar = 0xC0000082;
+    pub const compat_star = 0xC0000083;
+    pub const syscall_flag_mask = 0xC0000084;
+    pub const fs_base = 0xC0000100;
+    pub const gs_base = 0xC0000101;
+    pub const kern_gs_base = 0xc0000102;
+};
+
 pub fn writeMsr(msr: u64, value: u64) void {
     const low: u32 = @truncate(value);
     const high: u32 = @truncate(value >> 32);

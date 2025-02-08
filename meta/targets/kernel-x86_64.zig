@@ -1,6 +1,7 @@
 const std = @import("std");
+const helpers = @import("../helpers.zig");
 
-pub fn getBuildTarget() std.Target.Query {
+pub fn getKernelTarget() std.Target.Query {
     var target: std.Target.Query = .{ .cpu_arch = .x86_64, .os_tag = .freestanding, .abi = .none };
 
     const Features = std.Target.x86.Feature;
@@ -18,14 +19,10 @@ pub fn addBuildOption(b: *std.Build, kernel: *std.Build.Step.Compile, modules: s
     const arch = b.createModule(.{ .root_source_file = b.path("src/kernel/archs/x86_64/mod.zig") });
     arch.addAssemblyFile(b.path("src/kernel/archs/x86_64/helper.s"));
 
+    arch.addImport("kernel", kernel.root_module);
     kernel.root_module.addImport("arch", arch);
 
-    var it = modules.keyIterator();
-
-    while (it.next()) |key| {
-        const module = modules.get(key.*);
-        arch.addImport(key.*, module.?);
-    }
+    helpers.applyModule(modules, arch);
 
     kernel.setLinkerScript(b.path("meta/targets/kernel-x86_64.ld"));
 }
