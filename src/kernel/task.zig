@@ -3,6 +3,7 @@ const Elf = @import("elf").Elf;
 const MapFlags = @import("hal").MapFlag;
 const Spinlock = @import("sync").Spinlock;
 
+const AnyCap = @import("./capability.zig").AnyCap;
 const pmm = @import("arch").pmm;
 const PageAllocator = pmm.PageAllocator;
 const upper2lower = pmm.upper2lower;
@@ -11,12 +12,14 @@ const Space = @import("arch").paging.Space;
 const Context = @import("arch").context.Context;
 
 const log = std.log.scoped(.task);
+var serial = @import("root").serial;
 
 pub const Task = struct {
     name: []const u8,
-    pid: i32,
+    pid: u32,
     space: Space,
     ctx: *Context,
+    caps: std.ArrayList(AnyCap),
 
     var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
     const alloc = gpa.allocator();
@@ -52,7 +55,7 @@ pub const Task = struct {
         var ctx = try alloc.create(Context);
 
         if (need_stack) {
-            var page: [*]u8 = @ptrCast(try palloc.alloc(u8, Context.STACK_SIZE));
+            var page: [*]u8 = (try palloc.alloc(u8, Context.STACK_SIZE)).ptr;
             @memset(page[0..Context.STACK_SIZE], 0);
             try space.map(Context.STACK_BASE, upper2lower(@intFromPtr(page)), Context.STACK_SIZE, MapFlags.user | MapFlags.read | MapFlags.write);
         }
@@ -61,8 +64,9 @@ pub const Task = struct {
 
         self.name = name;
         self.ctx = ctx;
-
         self.space = space;
+        self.caps = std.ArrayList(AnyCap).init(alloc);
+        try self.caps.append(serial.capability());
 
         return self;
     }

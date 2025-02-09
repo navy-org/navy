@@ -29,20 +29,36 @@ pub fn build(b: *std.Build) !void {
     });
 
     const limine = b.dependency("limine", .{});
+
     kernel.?.root_module.addImport("loader", limine.module("limine"));
     kernel.?.want_lto = false;
 
     const libs = try helpers.fetchLibs(b);
-    const apps = try helpers.findModules(b, "src/apps", "main.zig");
+    var apps = try helpers.findModules(b, "src/apps", "main.zig");
+    const servers = try helpers.findModules(b, "src/srvs", "main.zig");
+
+    try apps.appendSlice(servers.items);
+
+    const entry = b.createModule(.{ .root_source_file = b.path("src/libs/navy/entry.zig") });
+    entry.resolved_target = target;
+    helpers.applyModule(libs, entry);
 
     for (apps.items) |app| {
-        helpers.applyModule(libs, app);
+        var app_entry = try b.allocator.create(std.Build.Module);
+        defer b.allocator.destroy(app_entry);
 
-        app.resolved_target = target;
+        std.mem.copyForwards(
+            u8,
+            @as([*]u8, @ptrCast(app_entry))[0..@sizeOf(std.Build.Module)],
+            @as([*]u8, @ptrCast(entry))[0..@sizeOf(std.Build.Module)],
+        );
+
+        app_entry.addImport("main", app);
+        helpers.applyModule(libs, app);
 
         const exe = b.addExecutable(.{
             .name = helpers.getFileName(b, app.root_source_file.?.dirname().src_path.sub_path),
-            .root_module = app,
+            .root_module = app_entry,
         });
 
         exe.setLinkerScript(b.path("meta/targets/user-x86_64.ld"));

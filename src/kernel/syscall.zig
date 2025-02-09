@@ -1,6 +1,11 @@
 const Syscalls = @import("navy").Syscalls;
 const serial = @import("root").serial;
 const std = @import("std");
+
+const sched = @import("./sched.zig");
+const Channel = @import("./channel.zig").Channel;
+const AnyCap = @import("./capability.zig").AnyCap;
+
 const log = std.log.scoped(.syscall);
 
 pub const SysArgs = struct {
@@ -12,15 +17,30 @@ pub const SysArgs = struct {
     arg6: usize,
 };
 
-fn serial_out(s: [*]const u8, sz: usize) u64 {
-    return serial.write(s[0..sz]);
+fn write(capId: usize, bytes: [*]const u8, sz: usize) !u64 {
+    const task = sched.current();
+    var cap: AnyCap = task.caps.items[capId];
+
+    return try cap.write.?(&cap, bytes[0..sz]);
+}
+
+fn mkchannel() !u64 {
+    const task = sched.current();
+    var channel = try Channel.create();
+    const cap = channel.capability();
+    try task.caps.append(cap);
+
+    return task.caps.items.len;
 }
 
 pub fn handle(no: usize, args: SysArgs) u64 {
     const syscall: Syscalls = @enumFromInt(no);
 
     const ret = switch (syscall) {
-        .serial_out => serial_out(@ptrFromInt(args.arg1), args.arg2),
+        .write => write(args.arg1, @ptrFromInt(args.arg2), args.arg3),
+        .mkchannel => mkchannel(),
+    } catch {
+        return 1;
     };
 
     return ret;

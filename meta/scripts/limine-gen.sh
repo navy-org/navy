@@ -1,7 +1,7 @@
 #!/bin/bash
 
 img=$1
-modules=(/bin/hello)
+modules=${@:2}
 
 if [ -z $img ]; then
     echo "Usage: $0 <image>"
