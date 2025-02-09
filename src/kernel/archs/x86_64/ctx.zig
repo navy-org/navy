@@ -38,7 +38,6 @@ pub const Context = packed struct {
     pub const STACK_SIZE = mib(2);
     pub const STACK_TOP = 0x7fffffffe000;
     pub const STACK_BASE = (STACK_TOP - STACK_SIZE);
-    pub const KRNL_STACK = kib(1);
 
     var allocator = PageAlloc.new();
     const alloc = allocator.allocator();
@@ -60,8 +59,8 @@ pub const Context = packed struct {
     pub fn setup(self: *Context, ip: u64, sp: u64) !void {
         self.regs = std.mem.zeroes(Registers);
 
-        const krnl_stck = try alloc.alloc(u8, kib(1));
-        self.syscall_kernel_stack = @intFromPtr(krnl_stck.ptr) + kib(1);
+        const krnl_stck = try alloc.alloc(u8, STACK_SIZE);
+        self.syscall_kernel_stack = @intFromPtr(krnl_stck.ptr) + STACK_SIZE;
 
         self.regs.rip = ip;
         self.regs.rflags = Rflags.interrupt_enable | Rflags.reserved1;

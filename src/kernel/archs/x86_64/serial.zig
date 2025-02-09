@@ -1,5 +1,6 @@
 const std = @import("std");
 const as = @import("./asm.zig");
+const AnyCap = @import("kernel").capability.AnyCap;
 
 pub const Serial = struct {
     const port: u16 = 0x3f8;
@@ -28,6 +29,10 @@ pub const Serial = struct {
 
     pub fn writer(self: *Serial) std.io.AnyWriter {
         return .{ .context = self, .writeFn = writeOpaque };
+    }
+
+    pub fn capability(self: *Serial) AnyCap {
+        return .{ .context = self, .write = writeOpaque, .read = null, .close = null };
     }
 
     fn writeOpaque(context: *const anyopaque, bytes: []const u8) Error!usize {

@@ -53,7 +53,7 @@ pub const Space = struct {
     }
 
     pub fn create() !Space {
-        var page = try Space.blank();
+        const page = try Space.blank();
 
         for (255..512) |i| {
             page.root[i] = kernelPage.root[i];

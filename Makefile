@@ -14,7 +14,7 @@ LIMINE := $(CACHE)/limine
 LIMINE_VER = v8.x-binary
 
 SRC_KRNL = $(shell find ./src/kernel/ -name '*.zig')
-SRC_APP = $(shell find ./src/apps/ -name '*.zig')
+SRC_APP = $(shell find ./src/apps/ -name '*.zig') $(shell find ./src/srvs/ -name '*.zig')
 
 $(LOADER):
 	@$(MKCWD)
@@ -53,6 +53,7 @@ $(SYSROOT)/limine-bios.sys:
 	@curl -L https://github.com/limine-bootloader/limine/raw/refs/heads/$(LIMINE_VER)/limine-bios.sys -o $@
 
 $(BIN_FOLDER): $(SRC_APP)
+	@zig build
 	@mkdir -p $(BIN_FOLDER)
 	@mv ./zig-out/bin/* $(BIN_FOLDER)
 
@@ -62,9 +63,10 @@ $(KERNEL): $(SRC_KRNL)
 	@mv ./zig-out/bin/navy $@
 
 
+
 $(ISO_FILE): build $(BIN_FOLDER) $(KERNEL) $(LIMINE) $(SYSROOT)/limine-bios-cd.bin $(SYSROOT)/limine-uefi-cd.bin $(SYSROOT)/limine-bios.sys
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
 	@$(MKCWD)
-	@bash $(LIMINE_GEN) $(SYSROOT)
 
 	@xorriso -as mkisofs -b limine-bios-cd.bin \
 		-no-emul-boot -boot-load-size 4 -boot-info-table \
@@ -83,7 +85,7 @@ build:
 
 .PHONY: qemu
 qemu: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
-	@bash $(LIMINE_GEN) $(SYSROOT)
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
 	@qemu-system-x86_64 \
 		--no-reboot \
 		--no-shutdown \
@@ -95,7 +97,7 @@ qemu: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
 
 .PHONY: qemu-int
 qemu-int: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
-	@bash $(LIMINE_GEN) $(SYSROOT)
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
 	@qemu-system-x86_64 \
 		--no-reboot \
 		--no-shutdown \

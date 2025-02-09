@@ -1,6 +1,7 @@
 pub const loader = @import("loader");
 pub const sched = @import("./sched.zig");
 pub const syscall = @import("./syscall.zig");
+pub const capability = @import("./capability.zig");
 
 const std = @import("std");
 const builtin = @import("builtin");
@@ -31,11 +32,11 @@ fn main() !void {
     try arch.setup();
     try sched.setup();
 
-    if (arch.loader.findFile("/bin/hello")) |hello| {
-        const t = try Task.from_elf("/bin/hello", elf.Elf.fromSlice(hello.address));
+    if (arch.loader.findFile("/bin/bus")) |boostrap| {
+        const t = try Task.from_elf("/bin/bus", elf.Elf.fromSlice(boostrap.address));
         try sched.push_task(t);
     } else {
-        log.err("Couldn't find /bin/hello", .{});
+        log.err("Couldn't find /bin/bus", .{});
     }
 }
 
