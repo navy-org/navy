@@ -1,23 +1,35 @@
 const std = @import("std");
-const AnyCap = @import("./capability.zig").AnyCap;
 const PageAllocator = @import("arch").pmm.PageAllocator;
+const Spinlock = @import("sync").Spinlock;
 const kib = @import("utils").kib;
+const sched = @import("./sched.zig");
+
+const AnyCap = @import("./capability.zig").AnyCap;
 
 pub const Channel = struct {
     const CHANNEL_SIZE = kib(1);
-    var palloc = PageAllocator.new();
-    const alloc = palloc.allocator();
 
-    buffer: []u8,
-    seek: usize = 0,
-    refcount: usize = 2,
+    const Message = struct { sender: usize, msg: []u8 };
 
-    pub fn create() !Channel {
-        return .{ .buffer = (try Channel.alloc.alloc(u8, CHANNEL_SIZE)) };
+    const Messages = std.DoublyLinkedList(Message);
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
+    const alloc = gpa.allocator();
+
+    msg: Messages,
+
+    refcount: usize,
+
+    pub fn new() !*Channel {
+        const self = try alloc.create(Channel);
+        self.refcount = 2;
+        self.msg = .{};
+        return self;
     }
 
     pub fn capability(self: *Channel) AnyCap {
         return .{
+            .type = .channel,
             .context = self,
             .read = readOpaque,
             .write = writeOpaque,
@@ -25,38 +37,58 @@ pub const Channel = struct {
         };
     }
 
-    fn writeOpaque(ptr: *anyopaque, buffer: []const u8) anyerror!usize {
-        const self: *Channel = @ptrCast(@alignCast(ptr));
-        return self.write(buffer);
+    fn writeOpaque(context: *anyopaque, bytes: []const u8) anyerror!usize {
+        const ptr: *Channel = @ptrCast(@alignCast(context));
+        return write(ptr, bytes);
     }
 
-    fn readOpaque(ptr: *const anyopaque, bytes: []u8) anyerror!usize {
-        const self: *const Channel = @ptrCast(@alignCast(ptr));
-        return self.read(bytes);
+    fn readOpaque(context: *anyopaque, buffer: []u8) anyerror!usize {
+        const ptr: *Channel = @ptrCast(@alignCast(context));
+        return read(ptr, buffer);
     }
 
-    fn closeOpaque(ptr: *anyopaque) anyerror!void {
-        const self: *Channel = @ptrCast(@alignCast(ptr));
-        self.close();
+    fn closeOpaque(context: *anyopaque) anyerror!void {
+        const ptr: *Channel = @ptrCast(@alignCast(context));
+        close(ptr);
     }
 
-    fn write(self: *Channel, bytes: []const u8) usize {
-        @memset(self.buffer, 0);
-        std.mem.copyForwards(u8, self.buffer, bytes);
+    fn write(self: *Channel, bytes: []const u8) !usize {
+        const pid = sched.current().pid;
+
+        var m = try alloc.create(Messages.Node);
+        m.data = .{ .sender = pid, .msg = try alloc.alloc(u8, bytes.len) };
+        @memcpy(m.data.msg, bytes);
+        self.msg.append(m);
         return bytes.len;
     }
 
-    fn read(self: *const Channel, buffer: []u8) usize {
+    fn read(self: *Channel, buffer: []u8) usize {
+        const pid = sched.current().pid;
+        var found = false;
+
+        while (!found) {
+            if (self.msg.first) |m| {
+                if (m.data.sender != pid) {
+                    found = true;
+                }
+            }
+        }
+
+        while (self.msg.len == 0) {}
         @memset(buffer, 0);
-        std.mem.copyForwards(u8, buffer, self.buffer);
-        return self.buffer.len;
+        const m = self.msg.popFirst().?.data;
+        std.mem.copyForwards(u8, buffer, m.msg);
+        return buffer.len;
     }
 
     fn close(self: *Channel) void {
         self.refcount -= 1;
 
         if (self.refcount == 0) {
-            alloc.free(self.buffer);
+            var node = self.msg.first;
+            while (node) |n| : (node = n.next) {
+                alloc.destroy(node.?);
+            }
         }
     }
 };

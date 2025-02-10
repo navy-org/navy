@@ -65,7 +65,7 @@ $(KERNEL): $(SRC_KRNL)
 
 
 $(ISO_FILE): build $(BIN_FOLDER) $(KERNEL) $(LIMINE) $(SYSROOT)/limine-bios-cd.bin $(SYSROOT)/limine-uefi-cd.bin $(SYSROOT)/limine-bios.sys
-	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus /bin/init /bin/other
 	@$(MKCWD)
 
 	@xorriso -as mkisofs -b limine-bios-cd.bin \
@@ -85,7 +85,7 @@ build:
 
 .PHONY: qemu
 qemu: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
-	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus /bin/init /bin/other
 	@qemu-system-x86_64 \
 		--no-reboot \
 		--no-shutdown \
@@ -97,7 +97,7 @@ qemu: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
 
 .PHONY: qemu-int
 qemu-int: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)
-	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus
+	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus /bin/init /bin/other
 	@qemu-system-x86_64 \
 		--no-reboot \
 		--no-shutdown \

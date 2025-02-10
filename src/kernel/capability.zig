@@ -1,7 +1,19 @@
+const std = @import("std");
+const Spinlock = @import("sync").Spinlock;
+
 pub const AnyCap = struct {
+    pub const Perm = struct {
+        const read = 1 << 0;
+        const write = 1 << 1;
+        const exec = 1 << 2;
+    };
+
+    pub const Types = enum { cnode, channel, io };
+
+    type: Types,
     context: *anyopaque,
 
-    read: ?*const fn (ptr: *const anyopaque, buffer: []u8) anyerror!usize,
+    read: ?*const fn (ptr: *anyopaque, buffer: []u8) anyerror!usize,
     write: ?*const fn (ptr: *anyopaque, bytes: []const u8) anyerror!usize,
     close: ?*const fn (ptr: *anyopaque) anyerror!void,
 
@@ -15,5 +27,91 @@ pub const AnyCap = struct {
 
     fn closeOpaque(self: AnyCap) anyerror!void {
         self.close.?(self.context);
+    }
+
+    pub fn mint(self: AnyCap, perm: Perm) AnyCap {
+        var minted_cap = self;
+
+        if (perm & Perm.read == 0) {
+            minted_cap.read = null;
+        }
+
+        if (perm & Perm.write == 0) {
+            minted_cap.write = null;
+        }
+
+        if (perm & Perm.exec == 0) {
+            // TODO:
+        }
+
+        return minted_cap;
+    }
+};
+
+pub const CNode = struct {
+    var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
+    const alloc = gpa.allocator();
+
+    caps: std.ArrayList(AnyCap),
+
+    pub fn new() !*CNode {
+        const self = try alloc.create(CNode);
+        self.caps = std.ArrayList(AnyCap).init(alloc);
+        return self;
+    }
+
+    pub fn capability(self: *CNode) AnyCap {
+        return .{
+            .type = .cnode,
+            .context = self,
+            .read = readOpaque,
+            .write = writeOpaque,
+            .close = closeOpaque,
+        };
+    }
+
+    fn writeOpaque(context: *anyopaque, buffer: []const u8) anyerror!usize {
+        const ptr: *CNode = @ptrCast(@alignCast(context));
+        return write(ptr, buffer);
+    }
+
+    fn readOpaque(context: *anyopaque, buffer: []u8) anyerror!usize {
+        const ptr: *CNode = @ptrCast(@alignCast(context));
+        return read(ptr, buffer);
+    }
+
+    fn closeOpaque(context: *anyopaque) anyerror!void {
+        const ptr: *CNode = @ptrCast(@alignCast(context));
+        try close(ptr);
+    }
+
+    fn write(self: *CNode, bytes: []const u8) !usize {
+        for (self.caps.items) |cap| {
+            if (cap.write) |w| {
+                _ = try w(cap.context, bytes);
+            }
+        }
+
+        return bytes.len;
+    }
+
+    fn read(self: *CNode, buffer: []u8) !usize {
+        var allocator = std.heap.FixedBufferAllocator.init(buffer);
+        const fixed_alloc = allocator.allocator();
+
+        for (self.caps.items) |cap| {
+            if (cap.read) |r| {
+                const buf = try fixed_alloc.alloc(u8, 64);
+                _ = try r(cap.context, buf);
+            }
+        }
+
+        return 0;
+    }
+
+    fn close(self: *CNode) !void {
+        for (self.caps.items) |cap| {
+            try cap.close.?(cap.context);
+        }
     }
 };

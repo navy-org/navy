@@ -32,7 +32,13 @@ pub const Serial = struct {
     }
 
     pub fn capability(self: *Serial) AnyCap {
-        return .{ .context = self, .write = writeOpaque, .read = null, .close = null };
+        return .{
+            .type = .io,
+            .context = self,
+            .write = writeOpaque,
+            .read = null,
+            .close = null,
+        };
     }
 
     fn writeOpaque(context: *const anyopaque, bytes: []const u8) Error!usize {

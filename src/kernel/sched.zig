@@ -1,7 +1,14 @@
 const std = @import("std");
 const arch = @import("arch");
-const Task = @import("./task.zig").Task;
+const capability = @import("./capability.zig");
 const Spinlock = @import("sync").Spinlock;
+
+const AnyCap = capability.AnyCap;
+const CNode = capability.CNode;
+const Task = @import("./task.zig").Task;
+const Channel = @import("./channel.zig").Channel;
+const Error = error{TaskEntryNotFound};
+
 const log = std.log.scoped(.sched);
 
 pub var lock = Spinlock.init();
@@ -22,6 +29,21 @@ const Internals = struct {
 
 pub fn push_task(task: *Task) !void {
     task.pid = Internals.pid;
+
+    if (task.pid > 1) {
+        var channel = try Channel.new();
+        const cap = channel.capability();
+
+        const bus = try get_task(1);
+        const cnode: *CNode = @ptrCast(@alignCast(bus.caps.items[1].context));
+        try cnode.caps.append(cap);
+
+        try task.caps.append(cap);
+    } else if (task.pid == 1) {
+        var cnode = try CNode.new();
+        try task.caps.append(cnode.capability());
+    }
+
     Internals.pid += 1;
     var node = try Internals.alloc.create(Internals.TaskList.Node);
     node.data = task;
@@ -38,13 +60,15 @@ pub fn current() *Task {
     return Internals.current_task.data;
 }
 
-pub fn get_task(pid: u32) *Task {
-    var task = Internals.tasks.first.?;
+pub fn get_task(pid: u32) !*Task {
+    var task = Internals.tasks.first;
     while (task) |t| : (task = t.next) {
         if (t.data.pid == pid) {
             return t.data;
         }
     }
+
+    return Error.TaskEntryNotFound;
 }
 
 pub fn yield(regs: *arch.context.Registers) void {

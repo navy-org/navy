@@ -130,13 +130,13 @@ fn dumpRegs(regs: *Registers) void {
     defer backtrace.deinit();
 
     if (sym == null) {
-        // if (limine.kernel.response) |k| {
-        //     var pallocator = PageAllocator.new();
-        //     const alloc = pallocator.allocator();
-        //
-        //     const bin = elf.Elf.fromSlice(k.kernel_file.address);
-        //     sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
-        // }
+        if (limine.kernel.response) |k| {
+            var pallocator = PageAllocator.new();
+            const alloc = pallocator.allocator();
+
+            const bin = elf.Elf.fromSlice(k.kernel_file.address);
+            sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+        }
     }
 
     logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n\n", .{});

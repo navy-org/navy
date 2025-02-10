@@ -2,10 +2,12 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 pub const Cap = usize;
+pub const BUS = 1;
 
 pub const Syscalls = enum(usize) {
-    write = 0,
-    mkchannel = 1,
+    write,
+    read,
+    mkchannel,
 };
 
 pub const syscall = if (builtin.target.cpu.arch == .x86_64) @import("./x86_64.zig") else @compileError("This architecture is not supported");
@@ -27,4 +29,8 @@ pub fn mkchannel() Cap {
 
 pub fn write(capId: usize, byte: [*]const u8, count: usize) u64 {
     return syscall.syscall3(.write, capId, @intFromPtr(byte), count);
+}
+
+pub fn read(capId: usize, buffer: [*]u8, count: usize) u64 {
+    return syscall.syscall3(.read, capId, @intFromPtr(buffer), count);
 }

@@ -1,18 +1,19 @@
 const std = @import("std");
-const Elf = @import("elf").Elf;
-const MapFlags = @import("hal").MapFlag;
-const Spinlock = @import("sync").Spinlock;
-
-const AnyCap = @import("./capability.zig").AnyCap;
 const pmm = @import("arch").pmm;
+const MapFlags = @import("hal").MapFlag;
+var serial = @import("root").serial;
+
 const PageAllocator = pmm.PageAllocator;
 const upper2lower = pmm.upper2lower;
 
+const AnyCap = @import("./capability.zig").AnyCap;
+const Channel = @import("./channel.zig").Channel;
 const Space = @import("arch").paging.Space;
 const Context = @import("arch").context.Context;
+const Elf = @import("elf").Elf;
+const Spinlock = @import("sync").Spinlock;
 
 const log = std.log.scoped(.task);
-var serial = @import("root").serial;
 
 pub const Task = struct {
     name: []const u8,
