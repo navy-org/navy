@@ -1,6 +1,9 @@
 const std = @import("std");
 const serial = @import("root").serial;
 const sched = @import("./sched.zig");
+const pmm = @import("arch").pmm;
+const navy = @import("navy");
+const MapFlags = @import("hal").MapFlag;
 
 const Channel = @import("./channel.zig").Channel;
 const AnyCap = @import("./capability.zig").AnyCap;
@@ -20,7 +23,7 @@ pub const SysArgs = struct {
 };
 
 fn write(capId: usize, bytes: [*]const u8, sz: usize) !u64 {
-    const task = sched.current();
+    const task = sched.current().?;
 
     const cap_idx = capId & 0xffff;
 
@@ -48,7 +51,7 @@ fn write(capId: usize, bytes: [*]const u8, sz: usize) !u64 {
 }
 
 fn read(capId: usize, buffer: [*]u8, sz: usize) !u64 {
-    const task = sched.current();
+    const task = sched.current().?;
 
     const cap_idx = capId & 0xffff;
 
@@ -88,12 +91,41 @@ fn read(capId: usize, buffer: [*]u8, sz: usize) !u64 {
 }
 
 fn mkchannel() !u64 {
-    const task = sched.current();
+    const task = sched.current().?;
     var channel = try Channel.new();
     const cap = channel.capability();
     try task.caps.append(cap);
 
     return task.caps.items.len;
+}
+
+fn mmap(addr: u64, len: usize, prot: u8) !u64 {
+    // TODO: Vmem for allocating address ?
+
+    const task = sched.current().?;
+    var palloc = pmm.PageAllocator.new();
+    const alloc = palloc.allocator();
+
+    const slice = try alloc.alloc(u8, len);
+    const ptr = @intFromPtr(slice.ptr);
+    const aligned_len = std.mem.alignForward(usize, len, std.mem.page_size);
+
+    const map_addr = if (addr != 0) addr else pmm.upper2lower(ptr);
+    try task.space.map(map_addr, pmm.upper2lower(ptr), aligned_len, prot | MapFlags.user);
+    return map_addr;
+}
+
+fn munmap(addr: u64, len: usize) !u64 {
+    var space = sched.current().?.space;
+    const slice = @as([*]u8, @ptrFromInt(pmm.lower2upper(try space.virt2phys(addr))));
+
+    try space.unmap(addr, len);
+
+    var palloc = pmm.PageAllocator.new();
+    const alloc = palloc.allocator();
+    alloc.free(slice[0..len]);
+
+    return 0;
 }
 
 pub fn handle(no: usize, args: SysArgs) u64 {
@@ -103,9 +135,11 @@ pub fn handle(no: usize, args: SysArgs) u64 {
         .write => write(args.arg1, @ptrFromInt(args.arg2), args.arg3),
         .read => read(args.arg1, @ptrFromInt(args.arg2), args.arg3),
         .mkchannel => mkchannel(),
+        .mmap => mmap(args.arg1, args.arg2, @intCast(args.arg3)),
+        .munmap => munmap(args.arg1, args.arg2),
     } catch |err| {
         const sys: Syscalls = @enumFromInt(no);
-        std.log.err("{s} | Syscall {any} failed {}", .{ sched.current().name, sys, err });
+        std.log.err("{s} | Syscall {any} failed {}", .{ sched.current().?.name, sys, err });
         return @intFromError(err);
     };
 

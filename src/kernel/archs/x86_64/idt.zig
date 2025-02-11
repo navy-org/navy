@@ -130,13 +130,13 @@ fn dumpRegs(regs: *Registers) void {
     defer backtrace.deinit();
 
     if (sym == null) {
-        if (limine.kernel.response) |k| {
-            var pallocator = PageAllocator.new();
-            const alloc = pallocator.allocator();
-
-            const bin = elf.Elf.fromSlice(k.kernel_file.address);
-            sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
-        }
+        // if (limine.kernel.response) |k| {
+        //     var pallocator = PageAllocator.new();
+        //     const alloc = pallocator.allocator();
+        //
+        //     const bin = elf.Elf.fromSlice(k.kernel_file.address);
+        //     sym = elf.Symbols.from_elf(bin, .little, alloc) catch null;
+        // }
     }
 
     logger.print("\n!!! ---------------------------------------------------------------------------------------------------\n\n", .{});
@@ -147,6 +147,11 @@ fn dumpRegs(regs: *Registers) void {
     } else {
         logger.print("    BREAKPOINT\n\n", .{});
     }
+
+    if (sched.current()) |task| {
+        logger.print("    Current task: {s}\n", .{task.name});
+    }
+
     logger.print("    RAX {x:0>16} RBX {x:0>16} RCX {x:0>16} RDX {x:0>16}\n", .{ regs.*.rax, regs.*.rbx, regs.*.rcx, regs.*.rdx });
     logger.print("    RSI {x:0>16} RDI {x:0>16} RBP {x:0>16} RSP {x:0>16}\n", .{ regs.*.rsi, regs.*.rdi, regs.*.rbp, regs.*.rsp });
     logger.print("    R8  {x:0>16} R9  {x:0>16} R10 {x:0>16} R11 {x:0>16}\n", .{ regs.*.r8, regs.*.r9, regs.*.r10, regs.*.r11 });

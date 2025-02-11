@@ -53,7 +53,7 @@ pub const Channel = struct {
     }
 
     fn write(self: *Channel, bytes: []const u8) !usize {
-        const pid = sched.current().pid;
+        const pid = sched.current().?.pid;
 
         var m = try alloc.create(Messages.Node);
         m.data = .{ .sender = pid, .msg = try alloc.alloc(u8, bytes.len) };
@@ -63,7 +63,7 @@ pub const Channel = struct {
     }
 
     fn read(self: *Channel, buffer: []u8) !usize {
-        const pid = sched.current().pid;
+        const pid = sched.current().?.pid;
         var message = self.msg.first;
         var msg: ?Message = null;
         var node: *Messages.Node = undefined;

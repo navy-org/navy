@@ -142,6 +142,34 @@ pub const Space = struct {
         pml1.root[pml1Index] = phys | flags;
     }
 
+    fn unmapPage(self: Space, virt: u64) !void {
+        const pml4Index = Space.getEntryIndex(virt, 3);
+        const pml3Index = Space.getEntryIndex(virt, 2);
+        const pml2Index = Space.getEntryIndex(virt, 1);
+        const pml1Index = Space.getEntryIndex(virt, 0);
+
+        const pml3 = try self.getEntry(pml4Index, false);
+        const pml2 = try pml3.getEntry(pml3Index, false);
+        const pml1 = try pml2.getEntry(pml2Index, false);
+
+        const entry = &pml1.root[pml1Index];
+        entry.* = 0;
+    }
+
+    pub fn virt2phys(self: Space, virt: u64) !u64 {
+        const pml4Index = Space.getEntryIndex(virt, 3);
+        const pml3Index = Space.getEntryIndex(virt, 2);
+        const pml2Index = Space.getEntryIndex(virt, 1);
+        const pml1Index = Space.getEntryIndex(virt, 0);
+
+        const pml3 = try self.getEntry(pml4Index, false);
+        const pml2 = try pml3.getEntry(pml3Index, false);
+        const pml1 = try pml2.getEntry(pml2Index, false);
+
+        const entry = pml1.root[pml1Index];
+        return Space.getEntryAddr(entry);
+    }
+
     pub fn map(self: Space, virt: u64, phys: u64, len: u64, flags: u8) !void {
         const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.mem.page_size;
 
@@ -154,6 +182,16 @@ pub const Space = struct {
         var i: usize = 0;
         while (i < aligned_len) : (i += _align) {
             try self.mapPage(aligned_virt + i, aligned_phys + i, f);
+        }
+    }
+
+    pub fn unmap(self: Space, virt: u64, len: usize) !void {
+        const aligned_virt = std.mem.alignBackward(u64, virt, std.mem.page_size);
+        const aligned_len = std.mem.alignBackward(u64, len, std.mem.page_size);
+
+        var i: usize = 0;
+        while (i < aligned_len) : (i += std.mem.page_size) {
+            try self.unmapPage(aligned_virt + i);
         }
     }
 

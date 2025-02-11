@@ -13,7 +13,7 @@ const log = std.log.scoped(.sched);
 
 pub var lock = Spinlock.init();
 
-const QUANTUM = 64;
+const QUANTUM = 32;
 
 const Internals = struct {
     const TaskList = std.DoublyLinkedList(*Task);
@@ -56,7 +56,11 @@ pub fn setup() !void {
     Internals.current_task = Internals.tasks.first.?;
 }
 
-pub fn current() *Task {
+pub fn current() ?*Task {
+    if (Internals.pid == 0) {
+        // NOTE: That means that the scheduler is most likely not initialised
+        return null;
+    }
     return Internals.current_task.data;
 }
 
