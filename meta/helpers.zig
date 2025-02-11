@@ -32,21 +32,18 @@ pub fn getFileName(b: *std.Build, path: []const u8) []const u8 {
     return pathBuf;
 }
 
-pub fn fetchLibs(b: *std.Build) !std.StringHashMap(*std.Build.Module) {
-    var modules = std.StringHashMap(*std.Build.Module).init(b.allocator);
+pub fn mkLibs(b: *std.Build, modules: std.ArrayList(*std.Build.Module)) !std.StringHashMap(*std.Build.Module) {
+    var map = std.StringHashMap(*std.Build.Module).init(b.allocator);
 
-    var liblist = try findModules(b, "src/libs/", "mod.zig");
-    defer liblist.deinit();
-
-    for (liblist.items) |lib| {
+    for (modules.items) |lib| {
         const libname = getFileName(b, lib.root_source_file.?.dirname().src_path.sub_path);
-        try modules.put(libname, lib);
+        try map.put(libname, lib);
     }
 
-    return modules;
+    return map;
 }
 
-pub fn applyModule(modules: std.StringHashMap(*std.Build.Module), module: *std.Build.Module) void {
+pub fn applyModules(modules: std.StringHashMap(*std.Build.Module), module: *std.Build.Module) void {
     var it = modules.keyIterator();
     while (it.next()) |key| {
         const mod = modules.get(key.*);

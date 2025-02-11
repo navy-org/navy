@@ -1,5 +1,6 @@
 const std = @import("std");
 const Spinlock = @import("sync").Spinlock;
+const Channel = @import("./channel.zig");
 
 pub const AnyCap = struct {
     pub const Perm = struct {
@@ -96,17 +97,17 @@ pub const CNode = struct {
     }
 
     fn read(self: *CNode, buffer: []u8) !usize {
-        var allocator = std.heap.FixedBufferAllocator.init(buffer);
-        const fixed_alloc = allocator.allocator();
-
-        for (self.caps.items) |cap| {
+        var id: i64 = -1;
+        for (0..self.caps.items.len, self.caps.items) |i, cap| {
             if (cap.read) |r| {
-                const buf = try fixed_alloc.alloc(u8, 64);
-                _ = try r(cap.context, buf);
+                const sz = r(cap.context, buffer) catch 0;
+                if (sz != 0) {
+                    id = @intCast(i);
+                }
             }
         }
 
-        return 0;
+        return if (id != -1) @intCast(id + 1) else error.NoMessage;
     }
 
     fn close(self: *CNode) !void {

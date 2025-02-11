@@ -1,14 +1,21 @@
 const std = @import("std");
 const log = std.log.scoped(.init);
 
-const navy = @import("navy");
+const bus = @import("bus");
+
+const Error = error{BUSDIDNTACK};
+
+fn init() !void {
+    const req = bus.Helo.new("init");
+    _ = req.send();
+
+    const resp = try bus.Ipc.recv();
+    if (resp.req_type != .ack) {
+        return error.BUSDIDNTACK;
+    }
+}
 
 pub fn main() !void {
-    var buffer: [64]u8 = undefined;
-
-    _ = navy.write(navy.BUS, "HELLO", 5);
-    log.info("Hello from init", .{});
-
-    _ = navy.read(navy.BUS, &buffer, 64);
-    log.info("Got message: {s}", .{buffer});
+    try init();
+    log.debug("Init is registered!", .{});
 }

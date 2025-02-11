@@ -5,12 +5,12 @@ const kib = @import("utils").kib;
 const sched = @import("./sched.zig");
 
 const AnyCap = @import("./capability.zig").AnyCap;
+const ChanError = error{NoMessage};
 
 pub const Channel = struct {
     const CHANNEL_SIZE = kib(1);
 
     const Message = struct { sender: usize, msg: []u8 };
-
     const Messages = std.DoublyLinkedList(Message);
 
     var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
@@ -44,7 +44,7 @@ pub const Channel = struct {
 
     fn readOpaque(context: *anyopaque, buffer: []u8) anyerror!usize {
         const ptr: *Channel = @ptrCast(@alignCast(context));
-        return read(ptr, buffer);
+        return try read(ptr, buffer);
     }
 
     fn closeOpaque(context: *anyopaque) anyerror!void {
@@ -62,23 +62,28 @@ pub const Channel = struct {
         return bytes.len;
     }
 
-    fn read(self: *Channel, buffer: []u8) usize {
+    fn read(self: *Channel, buffer: []u8) !usize {
         const pid = sched.current().pid;
-        var found = false;
+        var message = self.msg.first;
+        var msg: ?Message = null;
+        var node: *Messages.Node = undefined;
 
-        while (!found) {
-            if (self.msg.first) |m| {
-                if (m.data.sender != pid) {
-                    found = true;
-                }
+        while (message) |m| : (message = m.next) {
+            if (m.data.sender != pid) {
+                msg = m.data;
+                node = m;
+                break;
             }
         }
 
-        while (self.msg.len == 0) {}
-        @memset(buffer, 0);
-        const m = self.msg.popFirst().?.data;
-        std.mem.copyForwards(u8, buffer, m.msg);
-        return buffer.len;
+        if (msg) |m| {
+            @memset(buffer, 0);
+            std.mem.copyForwards(u8, buffer, m.msg);
+            self.msg.remove(node);
+            return buffer.len;
+        } else {
+            return error.NoMessage;
+        }
     }
 
     fn close(self: *Channel) void {

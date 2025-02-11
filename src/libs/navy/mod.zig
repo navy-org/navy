@@ -2,7 +2,6 @@ const std = @import("std");
 const builtin = @import("builtin");
 
 pub const Cap = usize;
-pub const BUS = 1;
 
 pub const Syscalls = enum(usize) {
     write,

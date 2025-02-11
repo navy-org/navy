@@ -33,18 +33,34 @@ pub fn build(b: *std.Build) !void {
     kernel.?.root_module.addImport("loader", limine.module("limine"));
     kernel.?.want_lto = false;
 
-    const libs = try helpers.fetchLibs(b);
-    // var apps = try helpers.findModules(b, "src/apps", "main.zig");
+    var liblist = try helpers.findModules(b, "src/libs/", "mod.zig");
+    defer liblist.deinit();
 
+    const libs = try helpers.mkLibs(b, liblist);
+
+    var srvlist = try helpers.findModules(b, "src/srvs/", "lib.zig");
+    defer srvlist.deinit();
+
+    for (srvlist.items) |lib| {
+        helpers.applyModules(libs, lib);
+    }
+
+    const srvlibs = try helpers.mkLibs(b, srvlist);
+
+    var apps = try helpers.findModules(b, "src/apps", "main.zig");
     const servers = try helpers.findModules(b, "src/srvs", "main.zig");
-    // try apps.appendSlice(servers.items);
+    try apps.appendSlice(servers.items);
+    defer servers.deinit();
+    defer apps.deinit();
 
     for (servers.items) |app| {
         const entry = b.createModule(.{ .root_source_file = b.path("src/libs/navy/entry.zig") });
         entry.resolved_target = target;
-        helpers.applyModule(libs, entry);
 
-        helpers.applyModule(libs, app);
+        helpers.applyModules(libs, entry);
+        helpers.applyModules(libs, app);
+        helpers.applyModules(srvlibs, app);
+
         entry.addImport("main", app);
 
         const exe = b.addExecutable(.{
@@ -56,7 +72,7 @@ pub fn build(b: *std.Build) !void {
         b.installArtifact(exe);
     }
 
-    helpers.applyModule(libs, kernel.?.root_module);
+    helpers.applyModules(libs, kernel.?.root_module);
     b.installArtifact(kernel.?);
     arch.addBuildOption(b, kernel.?, libs);
 }

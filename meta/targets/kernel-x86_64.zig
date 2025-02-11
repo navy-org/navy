@@ -22,7 +22,7 @@ pub fn addBuildOption(b: *std.Build, kernel: *std.Build.Step.Compile, modules: s
     arch.addImport("kernel", kernel.root_module);
     kernel.root_module.addImport("arch", arch);
 
-    helpers.applyModule(modules, arch);
+    helpers.applyModules(modules, arch);
 
     kernel.setLinkerScript(b.path("meta/targets/kernel-x86_64.ld"));
 }

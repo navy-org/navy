@@ -32,28 +32,16 @@ fn main() !void {
     try arch.setup();
     try sched.setup();
 
-    if (arch.loader.findFile("/bin/bus")) |bus| {
-        const t = try Task.from_elf("/bin/bus", elf.Elf.fromSlice(bus.address));
-        try sched.push_task(t);
-    } else {
-        log.err("Couldn't find /bin/bus", .{});
-        return;
-    }
+    const servers: [2][]const u8 = .{ "/bin/bus", "/bin/init" };
 
-    if (arch.loader.findFile("/bin/init")) |init| {
-        const i = try Task.from_elf("/bin/init", elf.Elf.fromSlice(init.address));
-        try sched.push_task(i);
-    } else {
-        log.err("Couldn't find /bin/init", .{});
-        return;
-    }
-
-    if (arch.loader.findFile("/bin/other")) |other| {
-        const i = try Task.from_elf("/bin/other", elf.Elf.fromSlice(other.address));
-        try sched.push_task(i);
-    } else {
-        log.err("Couldn't find /bin/other", .{});
-        return;
+    for (servers) |server| {
+        if (arch.loader.findFile(server)) |srv| {
+            const t = try Task.from_elf(server, elf.Elf.fromSlice(srv.address));
+            try sched.push_task(t);
+        } else {
+            log.err("Couldn't load {s}", .{server});
+            break;
+        }
     }
 }
 
