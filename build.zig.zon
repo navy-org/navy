@@ -1,6 +1,7 @@
 .{
-    .name = "navy",
+    .name = .navy,
     .version = "0.0.0",
+    .fingerprint = 0xe314e9d3789d039a,
     .dependencies = .{
         .limine = .{
             .url = "git+https://github.com/48cf/limine-zig.git#7b29b6e6f6d35052f01ed3831085a39aae131705",

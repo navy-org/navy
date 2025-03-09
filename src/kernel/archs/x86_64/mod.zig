@@ -9,6 +9,7 @@ pub const loader = @import("./limine.zig");
 
 const std = @import("std");
 
+const utils = @import("utils");
 const apic = @import("./acpi/apic.zig");
 const gdt = @import("./gdt.zig");
 const idt = @import("./idt.zig");
@@ -18,6 +19,10 @@ const Hpet = @import("./acpi/hpet.zig").Hpet;
 const rsdp = @import("./acpi/rsdp.zig");
 
 const ArchError = error{LimineRsdpUnavailable};
+
+// NOTE: 1Gib doesn't work for some reason.
+pub const page_size_max = utils.mib(2);
+pub const page_size_min = utils.kib(4);
 
 pub fn setup() !void {
     loader.dumpMmap();

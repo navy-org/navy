@@ -18,9 +18,11 @@ pub const os = struct {
     };
 };
 
-pub const std_options = std.Options{
+pub const std_options: std.Options = .{
     .log_level = if (builtin.mode == .Debug) .debug else .info,
     .logFn = logger.log,
+    .page_size_max = arch.page_size_max,
+    .page_size_min = arch.page_size_min,
 };
 
 pub var serial: arch.serial.Serial = undefined;

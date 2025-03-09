@@ -30,13 +30,13 @@ pub const PageAllocator = struct {
         return .{};
     }
 
-    fn alloc(_: *anyopaque, len: usize, _: u8, _: usize) ?[*]u8 {
-        const npage = std.mem.alignForward(usize, len, std.mem.page_size) / std.mem.page_size;
+    fn alloc(_: *anyopaque, len: usize, _: std.mem.Alignment, _: usize) ?[*]u8 {
+        const npage = std.mem.alignForward(usize, len, std.heap.page_size_min) / std.heap.page_size_min;
         const slice = mmap(0, npage, MmapProt.Read | MmapProt.Write);
         return slice.ptr;
     }
 
-    fn free(_: *anyopaque, buf: []u8, _: u8, _: usize) void {
+    fn free(_: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
         _ = munmap(@alignCast(buf));
     }
 
@@ -45,6 +45,7 @@ pub const PageAllocator = struct {
             .ptr = self,
             .vtable = &.{
                 .alloc = PageAllocator.alloc,
+                .remap = std.mem.Allocator.noRemap,
                 .free = PageAllocator.free,
                 .resize = std.mem.Allocator.noResize,
             },
@@ -64,11 +65,11 @@ pub fn read(capId: usize, buffer: [*]u8, count: usize) u64 {
     return syscall.syscall3(.read, capId, @intFromPtr(buffer), count);
 }
 
-pub fn mmap(addr: usize, len: usize, prot: usize) []align(std.mem.page_size) u8 {
+pub fn mmap(addr: usize, len: usize, prot: usize) []align(std.heap.page_size_min) u8 {
     const ptr = syscall.syscall3(.mmap, addr, len, prot);
-    return @as([*]align(std.mem.page_size) u8, @ptrFromInt(ptr))[0..len];
+    return @as([*]align(std.heap.page_size_min) u8, @ptrFromInt(ptr))[0..len];
 }
 
-pub fn munmap(memory: []align(std.mem.page_size) u8) u64 {
+pub fn munmap(memory: []align(std.heap.page_size_min) u8) u64 {
     return syscall.syscall2(.munmap, @intFromPtr(memory.ptr), memory.len);
 }

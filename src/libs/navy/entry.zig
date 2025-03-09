@@ -8,6 +8,8 @@ const logger = @import("logger");
 pub const std_options = std.Options{
     .log_level = if (builtin.mode == .Debug) .debug else .info,
     .logFn = logger.log,
+    // NOTE: Kinda of dirty but fine for now...
+    .page_size_max = 4096,
 };
 
 pub const os = struct {
