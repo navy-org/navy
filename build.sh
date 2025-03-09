@@ -7,7 +7,7 @@ if [ -z "$CUTEKIT_PYTHON" ]; then
 fi
 
 if [ -z "$CUTEKIT_VERSION" ]; then
-    export CUTEKIT_VERSION="stable"
+    export CUTEKIT_VERSION="0.7.3"
 fi
 
 $CUTEKIT_PYTHON -m cutekit > /dev/null 2>/dev/null || {
