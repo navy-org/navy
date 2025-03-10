@@ -5,18 +5,18 @@ const main = @import("main");
 
 const logger = @import("logger");
 
+pub const os = struct {
+    pub const heap = struct {
+        var page_alloc = navy.PageAllocator.new();
+        pub const page_allocator = page_alloc.allocator();
+    };
+};
+
 pub const std_options = std.Options{
     .log_level = if (builtin.mode == .Debug) .debug else .info,
     .logFn = logger.log,
     // NOTE: Kinda of dirty but fine for now...
     .page_size_max = 4096,
-};
-
-pub const os = struct {
-    pub const heap = struct {
-        var page_alloc = navy.PageAllocator{};
-        pub const page_allocator = page_alloc.allocator();
-    };
 };
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {

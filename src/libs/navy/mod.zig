@@ -31,8 +31,7 @@ pub const PageAllocator = struct {
     }
 
     fn alloc(_: *anyopaque, len: usize, _: std.mem.Alignment, _: usize) ?[*]u8 {
-        const npage = std.mem.alignForward(usize, len, std.heap.page_size_min) / std.heap.page_size_min;
-        const slice = mmap(0, npage, MmapProt.Read | MmapProt.Write);
+        const slice = mmap(0, len, MmapProt.Read | MmapProt.Write);
         return slice.ptr;
     }
 
@@ -44,9 +43,9 @@ pub const PageAllocator = struct {
         return .{
             .ptr = self,
             .vtable = &.{
-                .alloc = PageAllocator.alloc,
+                .alloc = alloc,
+                .free = free,
                 .remap = std.mem.Allocator.noRemap,
-                .free = PageAllocator.free,
                 .resize = std.mem.Allocator.noResize,
             },
         };
