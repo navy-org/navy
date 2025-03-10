@@ -64,11 +64,11 @@ pub fn read(capId: usize, buffer: [*]u8, count: usize) u64 {
     return syscall.syscall3(.read, capId, @intFromPtr(buffer), count);
 }
 
-pub fn mmap(addr: usize, len: usize, prot: usize) []align(std.heap.page_size_min) u8 {
+pub fn mmap(addr: usize, len: usize, prot: usize) []align(std.heap.pageSize()) u8 {
     const ptr = syscall.syscall3(.mmap, addr, len, prot);
-    return @as([*]align(std.heap.page_size_min) u8, @ptrFromInt(ptr))[0..len];
+    return @as([*]align(std.heap.pageSize()) u8, @ptrFromInt(ptr))[0..len];
 }
 
-pub fn munmap(memory: []align(std.heap.page_size_min) u8) u64 {
+pub fn munmap(memory: []align(std.heap.pageSize()) u8) u64 {
     return syscall.syscall2(.munmap, @intFromPtr(memory.ptr), memory.len);
 }

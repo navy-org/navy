@@ -108,7 +108,7 @@ fn mmap(addr: u64, len: usize, prot: u8) !u64 {
 
     const slice = try alloc.alloc(u8, len);
     const ptr = @intFromPtr(slice.ptr);
-    const aligned_len = std.mem.alignForward(usize, len, std.heap.page_size_min);
+    const aligned_len = std.mem.alignForward(usize, len, std.heap.pageSize());
 
     const map_addr = if (addr != 0) addr else pmm.upper2lower(ptr);
     try task.space.map(map_addr, pmm.upper2lower(ptr), aligned_len, prot | MapFlags.user);

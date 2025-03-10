@@ -44,7 +44,7 @@ pub const Space = struct {
     pub fn blank() !Space {
         var pageAlloc = pmm.PageAllocator.new();
         var allocator = pageAlloc.allocator();
-        const root = try allocator.alloc(u8, std.heap.page_size_min);
+        const root = try allocator.alloc(u8, std.heap.pageSize());
 
         return .{
             .root = @alignCast(@ptrCast(root.ptr)),
@@ -117,8 +117,8 @@ pub const Space = struct {
     }
 
     pub fn mapPage(self: Space, virt: u64, phys: u64, flags: u64) !void {
-        std.debug.assert(virt % std.heap.page_size_min == 0);
-        std.debug.assert(phys % std.heap.page_size_min == 0);
+        std.debug.assert(virt % std.heap.pageSize() == 0);
+        std.debug.assert(phys % std.heap.pageSize() == 0);
 
         const pml4Index = Space.getEntryIndex(virt, 3);
         const pml3Index = Space.getEntryIndex(virt, 2);
@@ -171,7 +171,7 @@ pub const Space = struct {
     }
 
     pub fn map(self: Space, virt: u64, phys: u64, len: u64, flags: u8) !void {
-        const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.heap.page_size_min;
+        const _align: usize = if (flags & MapFlag.huge == MapFlag.huge) pSize else std.heap.pageSize();
 
         const aligned_virt = std.mem.alignBackward(u64, virt, _align);
         const aligned_phys = std.mem.alignBackward(u64, phys, _align);
@@ -186,11 +186,11 @@ pub const Space = struct {
     }
 
     pub fn unmap(self: Space, virt: u64, len: usize) !void {
-        const aligned_virt = std.mem.alignBackward(u64, virt, std.heap.page_size_min);
-        const aligned_len = std.mem.alignBackward(u64, len, std.heap.page_size_min);
+        const aligned_virt = std.mem.alignBackward(u64, virt, std.heap.pageSize());
+        const aligned_len = std.mem.alignBackward(u64, len, std.heap.pageSize());
 
         var i: usize = 0;
-        while (i < aligned_len) : (i += std.heap.page_size_min) {
+        while (i < aligned_len) : (i += std.heap.pageSize()) {
             try self.unmapPage(aligned_virt + i);
         }
     }
@@ -202,8 +202,8 @@ pub const Space = struct {
 
 fn mapSection(start: u64, end: u64, flags: u8) !void {
     if (limine.kaddr.response) |kaddr| {
-        const aligned_start = std.mem.alignBackward(u64, start, std.heap.page_size_min);
-        const len = std.mem.alignForward(u64, end - start, std.heap.page_size_min);
+        const aligned_start = std.mem.alignBackward(u64, start, std.heap.pageSize());
+        const len = std.mem.alignForward(u64, end - start, std.heap.pageSize());
 
         try kernelPage.map(
             aligned_start,

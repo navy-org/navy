@@ -35,7 +35,7 @@ pub const Task = struct {
             if (phentry.p_type == std.elf.PT_LOAD) {
                 log.debug("{s} - loading segment between 0x{x:0>16} & 0x{x:0>16}", .{ name, phentry.p_vaddr, phentry.p_vaddr + phentry.p_memsz });
 
-                const alignedSize = std.mem.alignForward(usize, phentry.p_memsz, std.heap.page_size_min);
+                const alignedSize = std.mem.alignForward(usize, phentry.p_memsz, std.heap.pageSize());
                 const sz = phentry.p_filesz;
                 const page: [*]u8 = @ptrCast(try palloc.alloc(u8, alignedSize));
 

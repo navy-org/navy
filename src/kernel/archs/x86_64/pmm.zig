@@ -25,7 +25,7 @@ pub fn upper2lower(upper: u64) usize {
 }
 
 pub fn availableMem() usize {
-    return free_pages * std.heap.page_size_min;
+    return free_pages * std.heap.pageSize();
 }
 
 pub fn setup() !void {
@@ -42,8 +42,8 @@ pub fn setup() !void {
 
         const bitmap_size = std.mem.alignForward(
             usize,
-            (last_entry.base + last_entry.length) / (std.heap.page_size_min * 8),
-            std.heap.page_size_min,
+            (last_entry.base + last_entry.length) / (std.heap.pageSize() * 8),
+            std.heap.pageSize(),
         );
 
         log.debug("Bitmap size: {}", .{bitmap_size});
@@ -71,14 +71,14 @@ pub fn setup() !void {
                 const start = std.mem.alignBackward(
                     usize,
                     entry.base,
-                    std.heap.page_size_min,
-                ) / std.heap.page_size_min;
+                    std.heap.pageSize(),
+                ) / std.heap.pageSize();
 
                 const len = std.mem.alignForward(
                     usize,
                     entry.length,
-                    std.heap.page_size_min,
-                ) / std.heap.page_size_min;
+                    std.heap.pageSize(),
+                ) / std.heap.pageSize();
 
                 free_pages += len;
                 bitmap.?.unset_range(start, len);
@@ -106,7 +106,7 @@ pub fn alloc(ctx: *anyopaque, len: usize, ptr_align: std.mem.Alignment, ret_addr
     }
 
     lock.lock();
-    const npage = std.mem.alignForward(usize, len, std.heap.page_size_min) / std.heap.page_size_min;
+    const npage = std.mem.alignForward(usize, len, std.heap.pageSize()) / std.heap.pageSize();
     var page_available: usize = 0;
     var base: usize = last_page;
 
@@ -123,7 +123,7 @@ pub fn alloc(ctx: *anyopaque, len: usize, ptr_align: std.mem.Alignment, ret_addr
     if (page_available == npage) {
         bitmap.?.set_range(base, npage);
         lock.unlock();
-        return @as([*]align(std.heap.page_size_min) u8, @ptrFromInt(lower2upper(base * std.heap.page_size_min)))[0..len].ptr;
+        return @as([*]align(std.heap.pageSize()) u8, @ptrFromInt(lower2upper(base * std.heap.pageSize())))[0..len].ptr;
     } else if (!try_again) {
         log.debug("Couldn't allocate {} pages, trying again ...", .{npage});
         try_again = true;
@@ -146,10 +146,10 @@ pub fn free(_: *anyopaque, buf: []u8, _: std.mem.Alignment, _: usize) void {
     const n_pages = std.mem.alignForward(
         usize,
         buf.len,
-        std.heap.page_size_min,
-    ) / std.heap.page_size_min;
+        std.heap.pageSize(),
+    ) / std.heap.pageSize();
 
-    const base = upper2lower(@intFromPtr(buf.ptr)) / std.heap.page_size_min;
+    const base = upper2lower(@intFromPtr(buf.ptr)) / std.heap.pageSize();
     bitmap.?.unset_range(base, n_pages);
 
     lock.unlock();

@@ -21,7 +21,7 @@ const rsdp = @import("./acpi/rsdp.zig");
 const ArchError = error{LimineRsdpUnavailable};
 
 // NOTE: 1Gib doesn't work for some reason.
-pub const page_size_max = utils.mib(2);
+pub const page_size_max = utils.kib(4);
 pub const page_size_min = utils.kib(4);
 
 pub fn setup() !void {
