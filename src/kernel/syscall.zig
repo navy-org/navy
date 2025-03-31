@@ -11,7 +11,7 @@ const CNode = @import("./capability.zig").CNode;
 const Syscalls = @import("navy").Syscalls;
 
 const log = std.log.scoped(.syscall);
-const Error = error{NoCapEntry};
+const Error = error{ NoCapEntry, OutOfMemory };
 
 pub const SysArgs = struct {
     arg1: usize,
@@ -100,30 +100,38 @@ fn mkchannel() !u64 {
 }
 
 fn mmap(addr: u64, len: usize, prot: u8) !u64 {
-    // TODO: Vmem for allocating address ?
-
     const task = sched.current().?;
-    var palloc = pmm.PageAllocator.new();
-    const alloc = palloc.allocator();
 
-    const slice = try alloc.alloc(u8, len);
-    const ptr = @intFromPtr(slice.ptr);
-    const aligned_len = std.mem.alignForward(usize, len, std.heap.pageSize());
+    _ = addr;
+    // const aligned_addr = std.mem.alignBackward(u64, addr, std.heap.pageSize());
+    const aligned_len = std.mem.alignForward(u64, len, std.heap.pageSize());
 
-    const map_addr = if (addr != 0) addr else pmm.upper2lower(ptr);
-    try task.space.map(map_addr, pmm.upper2lower(ptr), aligned_len, prot | MapFlags.user);
-    return map_addr;
+    const map_addr = task.mm.vmem.alloc(aligned_len, 0, 0);
+
+    try task.mm.mmap_push_area(.{
+        .start = @intFromPtr(map_addr),
+        .end = @intFromPtr(map_addr) + aligned_len,
+        .flags = prot | MapFlags.user,
+    });
+
+    return @intFromPtr(map_addr);
 }
 
 fn munmap(addr: u64, len: usize) !u64 {
-    var space = sched.current().?.space;
-    const slice = @as([*]u8, @ptrFromInt(pmm.lower2upper(try space.virt2phys(addr))));
+    // const aligned_addr = std.mem.alignBackward(u64, addr, std.heap.pageSize());
+    const aligned_len = std.mem.alignForward(u64, len, std.heap.pageSize());
 
-    try space.unmap(addr, len);
+    var task = sched.current().?;
+    const slice = @as([*]u8, @ptrFromInt(pmm.lower2upper(try task.space.virt2phys(addr))));
+
+    try task.space.unmap(addr, aligned_len);
 
     var palloc = pmm.PageAllocator.new();
     const alloc = palloc.allocator();
-    alloc.free(slice[0..len]);
+    alloc.free(slice[0..aligned_len]);
+
+    task.mm.vmem.free(addr, aligned_len);
+    task.mm.mmap_remove(addr);
 
     return 0;
 }

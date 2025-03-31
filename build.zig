@@ -28,6 +28,10 @@ pub fn build(b: *std.Build) !void {
         .code_model = .kernel,
     });
 
+    const tinyvmem = b.createModule(.{ .root_source_file = b.path("./src/libs/mem/vmem/vmem.zig") });
+    tinyvmem.addIncludePath(b.path("./src/libs/mem/vmem"));
+    tinyvmem.addCSourceFile(.{ .file = b.path("./src/libs/mem/vmem/vmem.c") });
+
     const limine = b.dependency("limine", .{});
 
     kernel.?.root_module.addImport("loader", limine.module("limine"));
@@ -44,6 +48,9 @@ pub fn build(b: *std.Build) !void {
     for (srvlist.items) |lib| {
         helpers.applyModules(libs, lib);
     }
+
+    helpers.applyModules(libs, tinyvmem);
+    kernel.?.root_module.addImport("vmem", tinyvmem);
 
     const srvlibs = try helpers.mkLibs(b, srvlist);
 

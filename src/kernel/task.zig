@@ -12,6 +12,7 @@ const Space = @import("arch").paging.Space;
 const Context = @import("arch").context.Context;
 const Elf = @import("elf").Elf;
 const Spinlock = @import("sync").Spinlock;
+const TaskMM = @import("./task_mm.zig").TaskMM;
 
 const log = std.log.scoped(.task);
 
@@ -21,6 +22,7 @@ pub const Task = struct {
     space: Space,
     ctx: *Context,
     caps: std.ArrayList(AnyCap),
+    mm: TaskMM,
 
     var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
     const alloc = gpa.allocator();
@@ -59,6 +61,9 @@ pub const Task = struct {
             var page: [*]u8 = (try palloc.alloc(u8, Context.STACK_SIZE)).ptr;
             @memset(page[0..Context.STACK_SIZE], 0);
             try space.map(Context.STACK_BASE, upper2lower(@intFromPtr(page)), Context.STACK_SIZE, MapFlags.user | MapFlags.read | MapFlags.write);
+
+            const nameZ = try alloc.dupeZ(u8, name);
+            self.mm = .init(nameZ);
         }
 
         try ctx.setup(ip, Context.STACK_TOP);

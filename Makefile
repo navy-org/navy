@@ -81,7 +81,7 @@ iso: $(ISO_FILE)
 
 .PHONY: build
 build:
-	@zig build
+	@zig build -Doptimize=Debug
 
 .PHONY: qemu
 qemu: build $(BIN_FOLDER) $(LOADER) $(KERNEL) $(FIRMWARE)

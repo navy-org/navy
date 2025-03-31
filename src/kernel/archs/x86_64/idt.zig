@@ -2,12 +2,13 @@ const logger = @import("logger");
 const std = @import("std");
 const elf = @import("elf");
 const sched = @import("kernel").sched;
+const pmm = @import("./pmm.zig");
 
 const GdtType = @import("./gdt.zig").GdtType;
 const as = @import("./asm.zig");
 const Registers = @import("./regs.zig").Registers;
 const limine = @import("./limine.zig");
-const PageAllocator = @import("./pmm.zig").PageAllocator;
+const PageAllocator = pmm.PageAllocator;
 const Lapic = @import("./acpi/apic.zig").Lapic;
 const Serial = @import("./serial.zig").Serial;
 const Spinlock = @import("sync").Spinlock;
@@ -20,6 +21,7 @@ const IDT_ENTRY_COUNT: usize = 256;
 const IDT_INTERRUPT_PRESENT: usize = (1 << 7);
 const IDT_INTERRUPT_GATE: usize = 0xe;
 const INT_BREAKPOINT = 3;
+const INT_PAGEFAULT = 0xe;
 
 var idt: Idt = std.mem.zeroes(Idt);
 
@@ -193,6 +195,34 @@ fn dumpRegs(regs: *Registers) void {
 
 pub export fn interrupt_handler(rsp: u64) callconv(.C) u64 {
     const regs = Registers.fromRsp(rsp);
+
+    if (regs.intno == INT_PAGEFAULT) {
+        if (sched.current()) |task| {
+            if (task.pid > 0) {
+                const cr2_aligned = std.mem.alignBackward(usize, as.cr2.read(), std.heap.pageSize());
+
+                if (task.mm.mmap_lookup(cr2_aligned)) |area| {
+                    task.mm.mmap_remove(cr2_aligned);
+
+                    var pallocator = PageAllocator.new();
+                    const alloc = pallocator.allocator();
+
+                    const slice = alloc.alloc(u8, std.heap.pageSize()) catch |e| {
+                        log.err("Couldn't map allocated memory: {any}", .{e});
+                        as.hlt();
+                    };
+
+                    task.space.map(cr2_aligned, pmm.upper2lower(@intFromPtr(slice.ptr)), slice.len, area.flags) catch |e| {
+                        log.err("Couldn't map allocated memory: {any}", .{e});
+                        as.hlt();
+                    };
+
+                    Lapic.eoi();
+                    return rsp;
+                }
+            }
+        }
+    }
 
     if (regs.intno == INT_BREAKPOINT) {
         dumpRegs(regs);
