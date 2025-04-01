@@ -65,7 +65,7 @@ $(KERNEL): $(SRC_KRNL)
 
 
 $(ISO_FILE): build $(BIN_FOLDER) $(KERNEL) $(LIMINE) $(SYSROOT)/limine-bios-cd.bin $(SYSROOT)/limine-uefi-cd.bin $(SYSROOT)/limine-bios.sys
-	@bash $(LIMINE_GEN) $(SYSROOT) /bin/bus /bin/init
+	@bash $(LIMINE_GEN) $(SYSROOT)
 	@$(MKCWD)
 
 	@xorriso -as mkisofs -b limine-bios-cd.bin \

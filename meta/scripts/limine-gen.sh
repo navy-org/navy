@@ -30,12 +30,12 @@ timeout: 0
     kernel_path: boot():/kernel.elf
 EOF
 
-for module in $modules; do
-    if [ ! -f $img/$module ]; then
-        echo "Error: $img/$module not found"
+for module in $(ls $img/bin); do
+    if [ ! -f $img/bin/$module ]; then
+        echo "Error: $img/bin/$module not found"
         exit 1
     fi
     cat << EOF >> $img/boot/limine.conf
-${cfg}    module_path: boot():${module}
+${cfg}    module_path: boot():/bin/${module}
 EOF
 done

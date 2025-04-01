@@ -38,7 +38,7 @@ fn main() !void {
 
     for (servers) |server| {
         if (arch.loader.findFile(server)) |srv| {
-            const t = try Task.from_elf(server, elf.Elf.fromSlice(srv.address));
+            const t = try Task.from_elf(server, elf.Elf.fromSlice(srv.address), &[_][]const u8{"MASSIVE"});
             try sched.push_task(t);
         } else {
             log.err("Couldn't load {s}", .{server});

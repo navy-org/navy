@@ -56,7 +56,7 @@ pub const Context = packed struct {
         syscall.set_gs(@intFromPtr(self));
     }
 
-    pub fn setup(self: *Context, ip: u64, sp: u64) !void {
+    pub fn setup(self: *Context, ip: u64, sp: u64, argc: u64, argp: u64) !void {
         self.regs = std.mem.zeroes(Registers);
 
         const krnl_stck = try alloc.alloc(u8, STACK_SIZE);
@@ -67,6 +67,8 @@ pub const Context = packed struct {
         self.regs.cs = (@intFromEnum(GdtType.UserCode) * 8) | 3;
         self.regs.ss = (@intFromEnum(GdtType.UserData) * 8) | 3;
         self.regs.rsp = sp;
+        self.regs.rdi = argc;
+        self.regs.rsi = argp;
         self.regs.rbp = 0;
     }
 };

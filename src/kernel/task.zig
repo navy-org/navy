@@ -30,7 +30,7 @@ pub const Task = struct {
     var allocator = PageAllocator.new();
     const palloc = allocator.allocator();
 
-    pub fn from_elf(name: []const u8, elf: Elf) !*Task {
+    pub fn from_elf(name: []const u8, elf: Elf, args: []const []const u8) !*Task {
         var space = try Space.create();
 
         for (elf.phdr[0..elf.header.e_phnum]) |phentry| {
@@ -48,25 +48,39 @@ pub const Task = struct {
             }
         }
 
-        return try new(name, elf.header.e_entry, space, true);
+        return try new(name, elf.header.e_entry, space, true, args);
     }
 
-    pub fn new(name: []const u8, ip: usize, space: Space, need_stack: bool) !*Task {
+    pub fn new(name: []const u8, ip: usize, space: Space, need_stack: bool, args: []const []const u8) !*Task {
         log.debug("Creating {s}, ip: {x}, space: {x}", .{ name, ip, @intFromPtr(space.root) });
 
         var self = try alloc.create(Task);
         var ctx = try alloc.create(Context);
+        var argp: usize = 0;
 
         if (need_stack) {
             var page: [*]u8 = (try palloc.alloc(u8, Context.STACK_SIZE)).ptr;
             @memset(page[0..Context.STACK_SIZE], 0);
             try space.map(Context.STACK_BASE, upper2lower(@intFromPtr(page)), Context.STACK_SIZE, MapFlags.user | MapFlags.read | MapFlags.write);
 
+            var stack_allocator: std.heap.FixedBufferAllocator = .init(page[0..Context.STACK_SIZE]);
+            const stack_alloc = stack_allocator.allocator();
+            var stack: std.ArrayList([*:0]const u8) = .init(stack_alloc);
+
+            const nameArg = try stack_alloc.dupeZ(u8, name);
+            try stack.append(@ptrFromInt(@intFromPtr(nameArg.ptr) - @intFromPtr(page) + Context.STACK_BASE));
+
+            for (args) |arg| {
+                const argZ = try stack_alloc.dupeZ(u8, arg);
+                try stack.append(@ptrFromInt(@intFromPtr(argZ.ptr) - @intFromPtr(page) + Context.STACK_BASE));
+            }
+
             const nameZ = try alloc.dupeZ(u8, name);
             self.mm = .init(nameZ);
+            argp = @intFromPtr(stack.items.ptr) - @intFromPtr(page) + Context.STACK_BASE;
         }
 
-        try ctx.setup(ip, Context.STACK_TOP);
+        try ctx.setup(ip, Context.STACK_TOP, args.len + 1, argp);
 
         self.name = name;
         self.ctx = ctx;

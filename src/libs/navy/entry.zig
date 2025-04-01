@@ -40,7 +40,9 @@ pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) nor
     unreachable;
 }
 
-export fn _start() callconv(.C) noreturn {
+export fn _start(argc: u64, argp: u64) callconv(.C) noreturn {
+    std.os.argv = @as([*][*:0]u8, @ptrFromInt(argp))[0..argc];
+
     logger.setGlobalWriter(navy.Serial.writer()) catch {};
     main.main() catch |err| {
         std.log.err("error: {}", .{err});

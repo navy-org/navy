@@ -52,7 +52,7 @@ pub fn push_task(task: *Task) !void {
 
 pub fn setup() !void {
     const kernelSpace = arch.paging.kernelSpace;
-    try push_task(try Task.new("kernel", 0, kernelSpace(), false));
+    try push_task(try Task.new("kernel", 0, kernelSpace(), false, &[_][]const u8{}));
     Internals.current_task = Internals.tasks.first.?;
 }
 

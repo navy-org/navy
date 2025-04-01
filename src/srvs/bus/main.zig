@@ -12,7 +12,7 @@ pub fn main() !void {
     var buffer: [64]u8 = undefined;
     var srvs = std.hash_map.StringHashMap(navy.Cap).init(alloc);
 
-    log.info("Hello from bus", .{});
+    log.info("Hello from {s}, this will be {s}", .{ std.os.argv[0], std.os.argv[1] });
 
     while (true) {
         const capId = navy.read(BROADCAST, &buffer, 64);
