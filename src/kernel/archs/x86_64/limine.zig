@@ -35,3 +35,11 @@ pub fn findFile(path: []const u8) ?*impl.File {
 
     return null;
 }
+
+pub fn getFilesMapping() ?[]*impl.File {
+    if (modules.response) |mods| {
+        return mods.modules();
+    }
+
+    return null;
+}

@@ -11,7 +11,7 @@ const CNode = @import("./capability.zig").CNode;
 const Syscalls = @import("navy").Syscalls;
 
 const log = std.log.scoped(.syscall);
-const Error = error{ NoCapEntry, OutOfMemory };
+const Error = error{ NoCapEntry, OutOfMemory, VmemFailed };
 
 pub const SysArgs = struct {
     arg1: usize,
@@ -107,6 +107,10 @@ fn mmap(addr: u64, len: usize, prot: u8) !u64 {
     const aligned_len = std.mem.alignForward(u64, len, std.heap.pageSize());
 
     const map_addr = task.mm.vmem.alloc(aligned_len, 0, 0);
+
+    if (map_addr == null) {
+        return Error.VmemFailed;
+    }
 
     try task.mm.mmap_push_area(.{
         .start = @intFromPtr(map_addr),

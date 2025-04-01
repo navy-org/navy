@@ -24,6 +24,9 @@ pub const Task = struct {
     caps: std.ArrayList(AnyCap),
     mm: TaskMM,
 
+    stack: std.ArrayList([*:0]const u8),
+    phys_stack: [*]u8,
+
     var gpa = std.heap.GeneralPurposeAllocator(.{ .MutexType = Spinlock }){};
     const alloc = gpa.allocator();
 
@@ -51,6 +54,21 @@ pub const Task = struct {
         return try new(name, elf.header.e_entry, space, true, args);
     }
 
+    pub fn addArgRaw(self: *Task, addr: usize) !void {
+        try self.stack.append(@ptrFromInt(addr - @intFromPtr(self.phys_stack) + Context.STACK_BASE));
+        self.ctx.regs.rdi += 1;
+    }
+
+    pub fn addArgZ(self: *Task, arg: []const u8) !void {
+        const argZ = try self.stack.allocator.dupeZ(u8, arg);
+        try self.addArgRaw(@intFromPtr(argZ.ptr));
+    }
+
+    pub fn addArg(self: *Task, arg: []const u8) !void {
+        const argp = try self.stack.allocator.dupe(u8, arg);
+        try self.addArgRaw(@intFromPtr(argp.ptr));
+    }
+
     pub fn new(name: []const u8, ip: usize, space: Space, need_stack: bool, args: []const []const u8) !*Task {
         log.debug("Creating {s}, ip: {x}, space: {x}", .{ name, ip, @intFromPtr(space.root) });
 
@@ -59,25 +77,25 @@ pub const Task = struct {
         var argp: usize = 0;
 
         if (need_stack) {
-            var page: [*]u8 = (try palloc.alloc(u8, Context.STACK_SIZE)).ptr;
-            @memset(page[0..Context.STACK_SIZE], 0);
-            try space.map(Context.STACK_BASE, upper2lower(@intFromPtr(page)), Context.STACK_SIZE, MapFlags.user | MapFlags.read | MapFlags.write);
+            self.phys_stack = (try palloc.alloc(u8, Context.STACK_SIZE)).ptr;
+            @memset(self.phys_stack[0..Context.STACK_SIZE], 0);
+            try space.map(Context.STACK_BASE, upper2lower(@intFromPtr(self.phys_stack)), Context.STACK_SIZE, MapFlags.user | MapFlags.read | MapFlags.write);
 
-            var stack_allocator: std.heap.FixedBufferAllocator = .init(page[0..Context.STACK_SIZE]);
+            var stack_allocator: std.heap.FixedBufferAllocator = .init(self.phys_stack[0..Context.STACK_SIZE]);
             const stack_alloc = stack_allocator.allocator();
-            var stack: std.ArrayList([*:0]const u8) = .init(stack_alloc);
+            self.stack = .init(stack_alloc);
 
             const nameArg = try stack_alloc.dupeZ(u8, name);
-            try stack.append(@ptrFromInt(@intFromPtr(nameArg.ptr) - @intFromPtr(page) + Context.STACK_BASE));
+            try self.stack.append(@ptrFromInt(@intFromPtr(nameArg.ptr) - @intFromPtr(self.phys_stack) + Context.STACK_BASE));
 
             for (args) |arg| {
                 const argZ = try stack_alloc.dupeZ(u8, arg);
-                try stack.append(@ptrFromInt(@intFromPtr(argZ.ptr) - @intFromPtr(page) + Context.STACK_BASE));
+                try self.stack.append(@ptrFromInt(@intFromPtr(argZ.ptr) - @intFromPtr(self.phys_stack) + Context.STACK_BASE));
             }
 
             const nameZ = try alloc.dupeZ(u8, name);
             self.mm = .init(nameZ);
-            argp = @intFromPtr(stack.items.ptr) - @intFromPtr(page) + Context.STACK_BASE;
+            argp = @intFromPtr(self.stack.items.ptr) - @intFromPtr(self.phys_stack) + Context.STACK_BASE;
         }
 
         try ctx.setup(ip, Context.STACK_TOP, args.len + 1, argp);

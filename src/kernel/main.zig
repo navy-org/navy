@@ -8,6 +8,7 @@ const builtin = @import("builtin");
 const arch = @import("arch");
 const logger = @import("logger");
 const elf = @import("elf");
+const MapFlags = @import("hal").MapFlag;
 const Task = @import("./task.zig").Task;
 const log = std.log.scoped(.main);
 
@@ -44,7 +45,9 @@ fn main() !void {
     try arch.setup();
     try sched.setup();
 
-    try sched.push_task(try instanciate_task("/bin/bus", &.{"MASSIVE"}));
+    const bus = try instanciate_task("/bin/bus", &.{});
+    try bus.addArgZ("MASSIVE");
+    try sched.push_task(bus);
     try sched.push_task(try instanciate_task("/bin/init", &.{}));
 
     const vfs = try instanciate_task("/bin/vfs", &.{});
