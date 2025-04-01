@@ -26,6 +26,16 @@ pub const std_options: std.Options = .{
 };
 
 pub var serial: arch.serial.Serial = undefined;
+const Error = error{FileNotFound};
+
+fn instanciate_task(path: []const u8, args: []const []const u8) !*Task {
+    if (arch.loader.findFile(path)) |srv| {
+        const t = try Task.from_elf(path, elf.Elf.fromSlice(srv.address), args);
+        return t;
+    } else {
+        return Error.FileNotFound;
+    }
+}
 
 fn main() !void {
     serial = try arch.serial.Serial.init();
@@ -34,17 +44,11 @@ fn main() !void {
     try arch.setup();
     try sched.setup();
 
-    const servers: [2][]const u8 = .{ "/bin/bus", "/bin/init" };
+    try sched.push_task(try instanciate_task("/bin/bus", &.{"MASSIVE"}));
+    try sched.push_task(try instanciate_task("/bin/init", &.{}));
 
-    for (servers) |server| {
-        if (arch.loader.findFile(server)) |srv| {
-            const t = try Task.from_elf(server, elf.Elf.fromSlice(srv.address), &[_][]const u8{"MASSIVE"});
-            try sched.push_task(t);
-        } else {
-            log.err("Couldn't load {s}", .{server});
-            break;
-        }
-    }
+    const vfs = try instanciate_task("/bin/vfs", &.{});
+    _ = vfs;
 }
 
 pub fn panic(msg: []const u8, _: ?*std.builtin.StackTrace, ret_addr: ?usize) noreturn {
