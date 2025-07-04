@@ -34,7 +34,7 @@ pub fn setup() !void {
     syscall.setup();
 
     if (loader.rsdp.response) |r| {
-        const _rsdp = try rsdp.Rsdp.fromMem(r.address);
+        const _rsdp = try rsdp.Rsdp.fromMem(@ptrFromInt(r.address));
         _ = try _rsdp.findSdt();
         const m = try madt.Madt.setup();
 

@@ -31,7 +31,7 @@ const Error = error{FileNotFound};
 
 fn instanciate_task(path: []const u8, args: []const []const u8) !*Task {
     if (arch.loader.findFile(path)) |srv| {
-        const t = try Task.from_elf(path, elf.Elf.fromSlice(srv.address), args);
+        const t = try Task.from_elf(path, elf.Elf.fromSlice(@ptrCast(srv.address)), args);
         return t;
     } else {
         return Error.FileNotFound;

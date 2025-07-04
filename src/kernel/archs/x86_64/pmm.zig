@@ -34,8 +34,9 @@ pub fn setup() !void {
         var last_entry: *limine.impl.MemoryMapEntry = undefined;
 
         while (index > 0) : (index -= 1) {
-            if (mmap.entries()[index].kind != limine.impl.MemoryMapEntryType.usable) {
-                last_entry = mmap.entries()[index];
+            const entry = mmap.getEntries()[index];
+            if (entry.type != limine.impl.MemoryMapType.usable) {
+                last_entry = entry;
                 break;
             }
         }
@@ -49,8 +50,8 @@ pub fn setup() !void {
         log.debug("Bitmap size: {}", .{bitmap_size});
 
         for (0..mmap.entry_count) |i| {
-            const entry: *limine.impl.MemoryMapEntry = mmap.entries()[i];
-            if (entry.kind == limine.impl.MemoryMapEntryType.usable and entry.length >= bitmap_size) {
+            const entry: *limine.impl.MemoryMapEntry = mmap.getEntries()[i];
+            if (entry.type == limine.impl.MemoryMapType.usable and entry.length >= bitmap_size) {
                 log.debug("Bitmap base address: 0x{x:0>16}", .{entry.base});
                 bitmap = Bitmap.from_mem(@ptrFromInt(lower2upper(entry.base)), bitmap_size);
                 entry.length -= bitmap_size;
@@ -66,8 +67,8 @@ pub fn setup() !void {
         bitmap.?.fill(0xff);
 
         for (0..mmap.entry_count) |i| {
-            const entry: *limine.impl.MemoryMapEntry = mmap.entries()[i];
-            if (entry.kind == limine.impl.MemoryMapEntryType.usable) {
+            const entry: *limine.impl.MemoryMapEntry = mmap.getEntries()[i];
+            if (entry.type == limine.impl.MemoryMapType.usable) {
                 const start = std.mem.alignBackward(
                     usize,
                     entry.base,

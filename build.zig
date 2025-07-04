@@ -7,20 +7,14 @@ const buildError = error{
 
 pub fn build(b: *std.Build) !void {
     const cross_target_spec = b.option(std.Target.Cpu.Arch, "arch", "Target Architecture") orelse std.Target.Cpu.Arch.x86_64;
-
     const optimize = b.standardOptimizeOption(.{});
-
     const arch = switch (cross_target_spec) {
         std.Target.Cpu.Arch.x86_64 => @import("meta/targets/kernel-x86_64.zig"),
         else => return error.InvalidArch,
     };
 
-    var target: std.Build.ResolvedTarget = undefined;
-    var kernel: ?*std.Build.Step.Compile = null;
-
-    target = b.resolveTargetQuery(arch.getKernelTarget());
-
-    kernel = b.addExecutable(.{
+    const target = b.resolveTargetQuery(arch.getKernelTarget());
+    const kernel = b.addExecutable(.{
         .name = "navy",
         .root_source_file = b.path("src/kernel/main.zig"),
         .target = target,
@@ -32,10 +26,13 @@ pub fn build(b: *std.Build) !void {
     tinyvmem.addIncludePath(b.path("./src/libs/mem/vmem"));
     tinyvmem.addCSourceFile(.{ .file = b.path("./src/libs/mem/vmem/vmem.c") });
 
-    const limine = b.dependency("limine", .{});
-
-    kernel.?.root_module.addImport("loader", limine.module("limine"));
-    kernel.?.want_lto = false;
+    const limine = b.dependency("limine", .{
+        .api_revision = 3,
+        .allow_deprecated = false,
+        .no_pointers = false,
+    });
+    kernel.root_module.addImport("loader", limine.module("limine"));
+    kernel.want_lto = false;
 
     var liblist = try helpers.findModules(b, "src/libs/", "mod.zig");
     defer liblist.deinit();
@@ -50,12 +47,13 @@ pub fn build(b: *std.Build) !void {
     }
 
     helpers.applyModules(libs, tinyvmem);
-    kernel.?.root_module.addImport("vmem", tinyvmem);
+    kernel.root_module.addImport("vmem", tinyvmem);
 
     const srvlibs = try helpers.mkLibs(b, srvlist);
 
     var apps = try helpers.findModules(b, "src/apps", "main.zig");
     const servers = try helpers.findModules(b, "src/srvs", "main.zig");
+
     try apps.appendSlice(servers.items);
     defer servers.deinit();
     defer apps.deinit();
@@ -79,7 +77,7 @@ pub fn build(b: *std.Build) !void {
         b.installArtifact(exe);
     }
 
-    helpers.applyModules(libs, kernel.?.root_module);
-    b.installArtifact(kernel.?);
-    arch.addBuildOption(b, kernel.?, libs);
+    helpers.applyModules(libs, kernel.root_module);
+    b.installArtifact(kernel);
+    arch.addBuildOption(b, kernel, libs);
 }

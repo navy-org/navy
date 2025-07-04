@@ -11,7 +11,7 @@ FIRMWARE := $(CACHE)/OVMF.fd
 ISO_FILE := $(CACHE)/navy.iso
 
 LIMINE := $(CACHE)/limine
-LIMINE_VER = v8.x-binary
+LIMINE_VER = v9.x-binary
 
 SRC_KRNL = $(shell find ./src/kernel/ -name '*.zig')
 SRC_APP = $(shell find ./src/apps/ -name '*.zig') $(shell find ./src/srvs/ -name '*.zig')

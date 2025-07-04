@@ -258,8 +258,8 @@ pub fn setup() !void {
 
     if (limine.mmap.response) |mmap| {
         for (0..mmap.entry_count) |j| {
-            const entry = mmap.entries()[j];
-            if (entry.kind != limine.impl.MemoryMapEntryType.framebuffer) {
+            const entry = mmap.getEntries()[j];
+            if (entry.type != limine.impl.MemoryMapType.framebuffer) {
                 try kernelPage.map(
                     pmm.lower2upper(entry.base),
                     entry.base,
