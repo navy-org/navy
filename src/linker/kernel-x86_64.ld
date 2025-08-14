@@ -23,6 +23,8 @@ SECTIONS
     /* that is the beginning of the region. */
     . = 0xffffffff80000000;
 
+    request_start_addr = .;
+
     .handover : ALIGN(4K)
     {
         KEEP(*(.handover*))
@@ -35,15 +37,23 @@ SECTIONS
         KEEP(*(.limine_requests_end))
     } :limine_requests
 
+    request_end_addr = .;
+
     /* Move to the next memory page for .text */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    text_start_addr = .;
 
     .text : {
         *(.text .text.*)
     } :text
 
+    text_end_addr = .;
+
     /* Move to the next memory page for .rodata */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    rodata_start_addr = .;
 
     .rodata : {
         *(.rodata .rodata.*)
@@ -53,8 +63,12 @@ SECTIONS
         *(.note.gnu.build-id)
     } :rodata
 
+    rodata_end_addr = .;
+
     /* Move to the next memory page for .data */
     . = ALIGN(CONSTANT(MAXPAGESIZE));
+
+    data_start_addr = .;
 
     .data : {
         *(.data .data.*)
@@ -68,6 +82,8 @@ SECTIONS
         *(.bss .bss.*)
         *(COMMON)
     } :data
+
+    data_end_addr = .;
 
     /* Discard .note.* and .eh_frame* since they may cause issues on some hosts. */
     /DISCARD/ : {

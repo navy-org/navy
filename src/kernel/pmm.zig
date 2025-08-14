@@ -15,11 +15,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 const std = @import("std");
-const handover = @import("handover");
-
-const bootPayload = @import("arch").boot.bootPayload;
-
 const Bitmap = @import("ds").Bitmap;
+const boot = @import("arch").boot;
+const handover = @import("handover");
 
 var bitmap: ?Bitmap = null;
 var freePages: usize = 0;
@@ -39,10 +37,10 @@ pub fn availableMem() usize {
 
 pub fn setup() !void {
     var bitmapSize: usize = undefined;
-    var index = bootPayload().count - 1;
+    var index = boot.payload.count - 1;
 
     while (index > 0) : (index -= 1) {
-        const entry = &bootPayload().records[index];
+        const entry = &boot.payload.records[index];
         if (@as(handover.Tags, @enumFromInt(entry.tag)) != .END) {
             bitmapSize = std.mem.alignForward(usize, entry.size / std.heap.pageSize() / 8, std.heap.pageSize());
             break;
@@ -51,13 +49,15 @@ pub fn setup() !void {
 
     log.debug("Bitmap size: {}", .{bitmapSize});
 
-    for (0..bootPayload().count) |i| {
-        const entry = &bootPayload().records[i];
+    for (boot.payload.records[0..boot.payload.count]) |*entry| {
         if (@as(handover.Tags, @enumFromInt(entry.tag)) == .FREE and entry.size >= bitmapSize) {
-            const start: usize = if (entry.start == 0) std.heap.pageSize() else entry.start;
+            if (entry.start == 0) {
+                entry.start += std.heap.pageSize();
+                entry.size -= std.heap.pageSize();
+            }
 
-            log.debug("Bitmap base address: 0x{x:0>16}", .{start});
-            bitmap = Bitmap.from_mem(@ptrFromInt(lower2upper(start)), bitmapSize);
+            log.debug("Bitmap base address: 0x{x:0>16}", .{entry.start});
+            bitmap = Bitmap.from_mem(@ptrFromInt(lower2upper(entry.start)), bitmapSize);
             entry.size -= bitmapSize;
             entry.start += bitmapSize;
             break;
@@ -70,8 +70,7 @@ pub fn setup() !void {
 
     bitmap.?.fill(0xff);
 
-    for (0..bootPayload().count) |i| {
-        const entry = bootPayload().records[i];
+    for (boot.payload.records[0..boot.payload.count]) |*entry| {
         if (@as(handover.Tags, @enumFromInt(entry.tag)) == .FREE) {
             const start = std.mem.alignBackward(
                 usize,

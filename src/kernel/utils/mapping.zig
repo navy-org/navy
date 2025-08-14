@@ -14,4 +14,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-pub const mem = @import("./mem.zig");
+pub const MapFlag = struct {
+    pub const none: u8 = 1 << 0;
+    pub const read: u8 = 1 << 1;
+    pub const write: u8 = 1 << 2;
+    pub const execute: u8 = 1 << 3;
+    pub const user: u8 = 1 << 4;
+    pub const huge: u8 = 1 << 5;
+};

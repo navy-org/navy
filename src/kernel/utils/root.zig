@@ -15,3 +15,4 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const handover = @import("./handover.zig");
+pub const MapFlag = @import("./mapping.zig").MapFlag;

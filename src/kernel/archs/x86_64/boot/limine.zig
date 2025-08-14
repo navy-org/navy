@@ -38,16 +38,11 @@ pub fn apply() !*handover.Payload {
         .tag = @intFromEnum(handover.Tags.MAGIC),
     });
 
-    try builder.append(.{
-        .tag = @intFromEnum(handover.Tags.SELF),
-        .start = @intFromPtr(&handoverBuffer),
-        .size = kib(16),
-    });
-
     if (exeAddr.response) |addr| {
         try builder.append(.{
             .tag = @intFromEnum(handover.Tags.KERNEL),
             .start = addr.physAddr,
+            .size = 1,
         });
     } else {
         return error.cantGetKernelAddressInfo;

@@ -31,9 +31,11 @@ pub const page_size_min = utils.mem.kib(4);
 const gdt = @import("./gdt.zig");
 const idt = @import("./idt.zig");
 const pmm = @import("root").pmm;
+const paging = @import("./paging.zig");
 
 pub fn setup() !void {
     gdt.setup();
     idt.setup();
     try pmm.setup();
+    try paging.setup();
 }

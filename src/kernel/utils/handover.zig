@@ -27,3 +27,9 @@ pub fn dumpMmap() void {
     }
     std.log.debug("+-------------------------------------------------------------------+", .{});
 }
+
+pub fn isRecordMappable(r: handover.Record) bool {
+    return r.tag == @intFromEnum(handover.Tags.FREE) or
+        r.tag == @intFromEnum(handover.Tags.LOADER) or
+        r.tag == @intFromEnum(handover.Tags.RESERVED);
+}
