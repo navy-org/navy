@@ -42,7 +42,6 @@ class Image:
         with (rel_path / "limine.conf").open("w") as f:
             f.writelines(
                 [
-                    "randomize_memory: yes\n",
                     "timeout: 0\n\n",
                     f"/{self.__name}\n",
                     "    protocol: limine\n",

@@ -1,14 +1,13 @@
 import os
-from cutekit.builder import hook, _hooks, TargetScope
-from cutekit import const, shell, model
+
+from .hooks import hook
+
+from cutekit import const, model, shell
+from cutekit.builder import TargetScope
 from pathlib import Path
 
-
-_hooks["generate-global-aliases"] = None
-
-
 @hook("generate-global-aliases")
-def _globalHeaderHook(scope: TargetScope):
+def _(scope: TargetScope):
     generatedDir = Path(shell.mkdir(os.path.join(const.GENERATED_DIR, "__aliases__")))
     for c in scope.registry.iter(model.Component):
         if c.type != model.Kind.LIB:
