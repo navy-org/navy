@@ -15,7 +15,6 @@ Res task_new(char const *name, Res address_space, Res ip)
 
     Alloc kmalloc = kmalloc_acquire();
     Task *task = (Task *)try$(kmalloc.calloc(1, sizeof(Task)));
-    task->ports = (IpcPortList){0};
 
     task->name = (char *)try$(kmalloc.calloc(1, strlen(name) + 1));
     task->pid = pid++;
@@ -59,13 +58,7 @@ Res task_new(char const *name, Res address_space, Res ip)
             hal_context_start(task->ctx, 0, USER_STACK_TOP - stack_obj.off);
         }
 
-        vmem_init(&task->vmem, (char *)name, (void *)USER_HEAP_BASE + PMM_PAGE_SIZE, USER_HEAP_SIZE, PMM_PAGE_SIZE, NULL, NULL, NULL, 0, 0);
         try$(sched_add(task));
-
-        if (task->pid > 1)
-        {
-            try$(port_allocate_both(task->pid, 1, IPC_PORT_RECV | IPC_PORT_SEND));
-        }
     }
     else
     {

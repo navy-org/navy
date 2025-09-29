@@ -11,14 +11,6 @@ def generateImg(img: Image, target: str) -> Path:
     img.mkdir("/bin")
     img.cp(img.build("core", f"kernel-{target}"), Path("/kernel.elf"))
 
-    modules += img.cp(img.build("hello", f"navy-{target}"), Path("/bin/hello"))
-    modules += img.cp(img.build("bootstrap", f"navy-{target}"), Path("/bin/bootstrap"))
-    modules += img.cp(
-        img.build("hello.client", f"navy-{target}"), Path("/bin/hello.client")
-    )
-
-
-
     if target == "x86_64":
         img.wget(
             "https://codeberg.org/Limine/Limine/raw/branch/v10.x-binary/BOOTX64.EFI",

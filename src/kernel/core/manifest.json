@@ -8,11 +8,9 @@
     "stdc-shim",
     "loader",
     "kmalloc",
-    "tinyvmem",
     "pmm",
     "sched",
     "elfloader",
-    "portRPC",
     "hal"
   ],
   "tools": {
