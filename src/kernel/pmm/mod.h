@@ -1,6 +1,5 @@
 #pragma once
 
-#include <result>
 #include <stddef.h>
 #include <stdint.h>
 #include <utils.h>
@@ -31,7 +30,7 @@ PhysObj _pmm_alloc(size_t pages, struct pmm_alloc_param param);
 
 #define pmm_alloc(pages, ...) _pmm_alloc(pages, (struct pmm_alloc_param){__VA_ARGS__})
 
-Res pmm_init(void);
+long pmm_init(void);
 
 void pmm_free(PhysObj obj);
 

@@ -1,8 +1,8 @@
+#include <errno.h>
 #include <hal>
 #include <handover>
 #include <logger>
 #include <pmm>
-#include <result>
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -58,11 +58,11 @@ static int64_t transform_flags(HalMemFlags flags)
     return ret_flags;
 }
 
-static Res paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
+static uintptr_t *paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
 {
     if ((pml[index] & PAGE_PRESENT))
     {
-        return uok$(hal_mmap_l2h(PAGE_GET_PHYS(pml[index])));
+        return (void *)hal_mmap_l2h(PAGE_GET_PHYS(pml[index]));
     }
     else if (alloc)
     {
@@ -72,17 +72,17 @@ static Res paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
 
         pml[index] = obj.base | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
-        return uok$(ptr_hddm);
+        return (void *)ptr_hddm;
     }
 
-    return err$(RES_NOMEM);
+    return ERR_PTR(-ENOENT);
 }
 
-static Res kmmap_page(uintptr_t *pml, uint64_t virt, uint64_t phys, int64_t flags)
+static long kmmap_page(uintptr_t *pml, uint64_t virt, uint64_t phys, int64_t flags)
 {
     if (phys % PMM_PAGE_SIZE != 0 || virt % PMM_PAGE_SIZE != 0)
     {
-        return err$(RES_BADALIGN);
+        return -EINVAL;
     }
 
     size_t pml1_entry = PMLX_GET_INDEX(virt, 0);
@@ -90,48 +90,67 @@ static Res kmmap_page(uintptr_t *pml, uint64_t virt, uint64_t phys, int64_t flag
     size_t pml3_entry = PMLX_GET_INDEX(virt, 2);
     size_t pml4_entry = PMLX_GET_INDEX(virt, 3);
 
-    uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc(pml, pml4_entry, true));
+    uintptr_t *pml3 = paging_get_pml_alloc(pml, pml4_entry, true);
+    if (IS_ERR(pml3))
+    {
+        return PTR_ERR(pml3);
+    }
 
     if (page_size == gib$(1) && flags & PAGE_HUGE)
     {
         pml3[pml3_entry] = phys | flags;
-        return ok$();
+        return 0;
     }
 
-    uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, true));
+    uintptr_t *pml2 = paging_get_pml_alloc(pml3, pml3_entry, true);
+    if (IS_ERR(pml2))
+    {
+        return PTR_ERR(pml2);
+    }
 
     if (flags & PAGE_HUGE)
     {
         pml2[pml2_entry] = phys | flags;
-        return ok$();
+        return 0;
     }
 
-    uintptr_t *pml1 = (uintptr_t *)try$(paging_get_pml_alloc(pml2, pml2_entry, true));
+    uintptr_t *pml1 = paging_get_pml_alloc(pml2, pml2_entry, true);
+    if (IS_ERR(pml1))
+    {
+        return PTR_ERR(pml1);
+    }
 
     pml1[pml1_entry] = phys | flags;
-    return ok$();
+    return 0;
 }
 
-static Res kmmap_section(uintptr_t start, uintptr_t end, uint8_t flags)
+static long kmmap_section(uintptr_t start, uintptr_t end, uint8_t flags)
 {
     KernelMmap kaddr = loader_get_kernel_mmap();
     int64_t flags_arch = transform_flags(flags);
     size_t end_loop = align_up$(end, PMM_PAGE_SIZE);
 
+    uintptr_t phys;
+    long err;
+
     for (size_t i = align_down$(start, PMM_PAGE_SIZE); i < end_loop; i += PMM_PAGE_SIZE)
     {
-        uintptr_t phys = i - kaddr.virt + kaddr.phys;
-        try$(kmmap_page(pml4, i, phys, flags_arch));
+        phys = i - kaddr.virt + kaddr.phys;
+        err = kmmap_page(pml4, i, phys, flags_arch);
+        if (IS_ERR_VALUE(err))
+        {
+            return err;
+        }
     }
 
-    return ok$();
+    return 0;
 }
 
-Res hal_space_map(HalPage *self, uintptr_t virt, uintptr_t phys, size_t len, uint8_t flags)
+long hal_space_map(HalPage *self, uintptr_t virt, uintptr_t phys, size_t len, uint8_t flags)
 {
     if (phys % PMM_PAGE_SIZE != 0 || virt % PMM_PAGE_SIZE != 0 || len % PMM_PAGE_SIZE != 0)
     {
-        return err$(RES_BADALIGN);
+        return -EINVAL;
     }
 
     int64_t flags_arch = transform_flags(flags);
@@ -141,19 +160,25 @@ Res hal_space_map(HalPage *self, uintptr_t virt, uintptr_t phys, size_t len, uin
     size_t aligned_virt = align_down$(virt, map_psize);
     size_t aligned_phys = align_down$(phys, map_psize);
 
+    long err;
+
     for (size_t i = 0; i < end; i += map_psize)
     {
-        try$(kmmap_page((uintptr_t *)self, aligned_virt + i, aligned_phys + i, flags_arch));
+        err = kmmap_page((uintptr_t *)self, aligned_virt + i, aligned_phys + i, flags_arch);
+        if (IS_ERR_VALUE(err))
+        {
+            return err;
+        }
     }
 
-    return ok$();
+    return 0;
 }
 
-Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
+long hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
 {
     if (virt % PMM_PAGE_SIZE != 0 || len % PMM_PAGE_SIZE != 0)
     {
-        return err$(RES_BADALIGN);
+        return -EINVAL;
     }
 
     // TODO: Huge pages ?
@@ -165,22 +190,29 @@ Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
         size_t pml3_entry = PMLX_GET_INDEX(i, 2);
         size_t pml4_entry = PMLX_GET_INDEX(i, 3);
 
-        uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false));
-        uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, false));
-        uintptr_t *pml1 = (uintptr_t *)try$(paging_get_pml_alloc(pml2, pml2_entry, false));
+        uintptr_t *pml3 = paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false);
+        uintptr_t *pml2 = paging_get_pml_alloc(pml3, pml3_entry, false);
+        uintptr_t *pml1 = paging_get_pml_alloc(pml2, pml2_entry, false);
+
+        if (IS_ERR(pml1) || IS_ERR(pml2) || IS_ERR(pml3))
+        {
+            return -ENOENT;
+        }
 
         pml1[pml1_entry] = 0;
     }
 
-    return ok$();
+    return 0;
 }
 
-Res paging_init(void)
+void paging_init(void)
 {
+    long err;
     PhysObj obj = pmm_alloc(1);
     if (obj.base == 0)
     {
-        return err$(RES_NOMEM);
+        error$("Couldn't allocate memory for PML4");
+        hal_panic();
     }
 
     log$("PML4: %p", obj.base);
@@ -210,7 +242,12 @@ Res paging_init(void)
 
     for (size_t i = page_size; i < end; i += page_size)
     {
-        try$(kmmap_page(pml4, hal_mmap_l2h(i), i, flags));
+        err = kmmap_page(pml4, hal_mmap_l2h(i), i, flags);
+        if (IS_ERR_VALUE(err))
+        {
+            error$("Couldn't map memory at %p to %p", i, hal_mmap_l2h(i));
+            hal_panic();
+        }
     }
 
     HandoverPayload *hand = handover();
@@ -220,19 +257,23 @@ Res paging_init(void)
     {
         if (rec.tag != HANDOVER_FB)
         {
-            try$(hal_space_map((HalPage *)pml4,
-                               align_down$(hal_mmap_l2h(rec.start), PMM_PAGE_SIZE),
-                               align_down$(rec.start, PMM_PAGE_SIZE),
-                               align_up$(rec.size, PMM_PAGE_SIZE),
-                               HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_HUGE));
+            err = hal_space_map((HalPage *)pml4,
+                                align_down$(hal_mmap_l2h(rec.start), PMM_PAGE_SIZE),
+                                align_down$(rec.start, PMM_PAGE_SIZE),
+                                align_up$(rec.size, PMM_PAGE_SIZE),
+                                HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_HUGE);
+
+            if (IS_ERR_VALUE(err))
+            {
+                error$("Couldn't map memory at %p to %p", rec.start, hal_mmap_l2h(rec.start));
+                hal_panic();
+            }
         }
     }
 
     log$("Memory mapped");
     hal_space_apply((HalPage *)pml4);
     log$("Space applied");
-
-    return ok$();
 }
 
 void hal_space_apply(HalPage *space)
@@ -240,16 +281,15 @@ void hal_space_apply(HalPage *space)
     asm_write_cr(3, hal_mmap_h2l((uintptr_t)space));
 }
 
-Res hal_space_create(HalPage **self)
+long hal_space_create(HalPage **self)
 {
-
     PhysObj obj = pmm_alloc(1);
     uintptr_t *space = (uintptr_t *)hal_mmap_l2h(obj.base);
     memset((void *)space, 0, obj.len);
 
     if (obj.base == 0)
     {
-        return err$(RES_NOMEM);
+        return -ENOMEM;
     }
 
     memset((void *)space, 0, PMM_PAGE_SIZE);
@@ -260,7 +300,7 @@ Res hal_space_create(HalPage **self)
     }
 
     *self = (HalPage *)space;
-    return ok$();
+    return 0;
 }
 
 HalPage *hal_space_kernel(void)
@@ -268,21 +308,21 @@ HalPage *hal_space_kernel(void)
     return (HalPage *)pml4;
 }
 
-Res hal_virt2phys(HalPage *space, uintptr_t virt)
+void *hal_virt2phys(HalPage *space, uintptr_t virt)
 {
     size_t pml1_entry = PMLX_GET_INDEX(virt, 0);
     size_t pml2_entry = PMLX_GET_INDEX(virt, 1);
     size_t pml3_entry = PMLX_GET_INDEX(virt, 2);
     size_t pml4_entry = PMLX_GET_INDEX(virt, 3);
 
-    uintptr_t *pml3 = (uintptr_t *)try$(paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false));
-    uintptr_t *pml2 = (uintptr_t *)try$(paging_get_pml_alloc(pml3, pml3_entry, false));
-    uintptr_t *pml1 = (uintptr_t *)try$(paging_get_pml_alloc(pml2, pml2_entry, false));
+    uintptr_t *pml3 = paging_get_pml_alloc((uintptr_t *)space, pml4_entry, false);
+    uintptr_t *pml2 = paging_get_pml_alloc(pml3, pml3_entry, false);
+    uintptr_t *pml1 = paging_get_pml_alloc(pml2, pml2_entry, false);
 
     if (!(pml1[pml1_entry] & PAGE_PRESENT))
     {
-        return err$(RES_NOENT);
+        return ERR_PTR(-ENOENT);
     }
 
-    return uok$(PAGE_GET_PHYS(pml1[pml1_entry]));
+    return (void *)PAGE_GET_PHYS(pml1[pml1_entry]);
 }

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <logger>
 #include <sched>
@@ -5,7 +6,6 @@
 
 #include "apic.h"
 #include "asm.h"
-#include "regs.h"
 
 enum
 {
@@ -72,7 +72,7 @@ static void kpanic(HalRegs const regs[static 1])
     spinlock_acquire(&lock);
 
     uint64_t cr0, cr2, cr3, cr4;
-    Res task = sched_current();
+    Task *task = sched_current();
 
     asm_read_cr(0, cr0);
     asm_read_cr(2, cr2);
@@ -83,9 +83,9 @@ static void kpanic(HalRegs const regs[static 1])
     print$("    KERNEL PANIC\n");
     print$("    %s was raised\n\n", exception_messages[regs->intno]);
 
-    if (task.type == RES_OK)
+    if (!IS_ERR(task))
     {
-        print$("    task: %s\n", ((Task *)task.uvalue)->name);
+        print$("    task: %s\n", task->name);
     }
     else
     {

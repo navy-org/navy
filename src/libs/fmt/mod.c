@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -81,16 +82,16 @@ char *utoa(uint64_t value, char *str, int base)
     return strrev(str);
 }
 
-Res fmt(Stream stream, char const fmt[static 1], ...)
+long fmt(Stream stream, char const fmt[static 1], ...)
 {
     va_list args;
     va_start(args, fmt);
-    Res res = vfmt(stream, fmt, args);
+    long err = vfmt(stream, fmt, args);
     va_end(args);
-    return res;
+    return err;
 }
 
-Res vfmt(Stream stream, char const fmt[static 1], va_list args)
+long vfmt(Stream stream, char const fmt[static 1], va_list args)
 {
     char *s = (char *)fmt;
 
@@ -182,7 +183,7 @@ Res vfmt(Stream stream, char const fmt[static 1], va_list args)
 
                 default:
                 {
-                    return err$(RES_INVAL);
+                    return -EINVAL;
                 }
             }
         }
@@ -193,5 +194,5 @@ Res vfmt(Stream stream, char const fmt[static 1], va_list args)
         }
     }
 
-    return uok$(0);
+    return 0;
 }

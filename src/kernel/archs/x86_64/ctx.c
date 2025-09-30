@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <kmalloc>
 #include <logger>
@@ -10,13 +11,18 @@
 #include "simd.h"
 #include "syscall.h"
 
-Res hal_context_create(void)
+HalContext *hal_context_create(void)
 {
     Alloc alloc = kmalloc_acquire();
 
-    HalContext *self = (HalContext *)try$(alloc.calloc(1, sizeof(HalContext) + simd_context_size()));
+    HalContext *self = (HalContext *)alloc.calloc(1, sizeof(HalContext) + simd_context_size());
+    if (IS_ERR(self))
+    {
+        return self;
+    }
+
     simd_context_init(self);
-    return uok$(self);
+    return self;
 }
 
 void hal_context_destroy(HalContext *self)
@@ -25,7 +31,7 @@ void hal_context_destroy(HalContext *self)
     alloc.free(self);
 }
 
-Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
+long hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
 {
     self->regs.rip = ip;
     self->regs.rflags = RFLAGS_INTERRUPT_ENABLE | RFLAGS_RESERVED1;
@@ -38,13 +44,13 @@ Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
     PhysObj kStackObj = pmm_alloc(align_up$(STACK_SIZE, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
     if (kStackObj.base == 0)
     {
-        return err$(RES_NOMEM);
+        return -ENOMEM;
     }
 
     self->syscall_kernel_stack = hal_mmap_l2h(kStackObj.base) + KERNEL_STACK_SIZE;
     memset((void *)self->syscall_kernel_stack, 0, KERNEL_STACK_SIZE);
 
-    return ok$();
+    return 0;
 }
 
 void hal_context_save(HalContext *self, HalRegs *regs)

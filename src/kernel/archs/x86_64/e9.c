@@ -1,19 +1,18 @@
-#include <result>
-
 #include "e9.h"
 
-Res e9_putc(char c)
+long e9_putc(char c)
 {
     asm volatile("outb %0, $0xe9" : : "a"(c) : "memory");
-    return ok$();
+    return 1;
 }
 
-Res e9_puts(size_t n, char const *s)
+long e9_puts(size_t n, char const *s)
 {
-    for (size_t i = 0; i < n; i++)
+    size_t i;
+    for (i = 0; i < n; i++)
     {
         e9_putc(s[i]);
     }
 
-    return ok$();
+    return i;
 }

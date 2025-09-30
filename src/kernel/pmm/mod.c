@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <handover>
 #include <logger>
@@ -42,7 +43,7 @@ static void pmm_mark_used(uintptr_t base, size_t len)
     available -= len / PMM_PAGE_SIZE;
 }
 
-Res pmm_init(void)
+long pmm_init(void)
 {
     HandoverPayload *hand = handover();
     HandoverRecord last_entry;
@@ -75,7 +76,7 @@ Res pmm_init(void)
 
     if (bitmap.bitmap == NULL)
     {
-        return err$(RES_NOMEM);
+        return -ENOMEM;
     }
 
     memset(bitmap.bitmap, 0xFF, bitmap.len);
@@ -88,7 +89,7 @@ Res pmm_init(void)
         }
     }
 
-    return ok$();
+    return 0;
 }
 
 PhysObj _pmm_alloc(size_t pages, struct pmm_alloc_param param)

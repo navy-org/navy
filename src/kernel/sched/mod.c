@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <kmalloc>
 #include <logger>
 #include <sync>
@@ -7,12 +8,20 @@
 static Sched sched = {0};
 static Alloc kmalloc;
 
-Res sched_init(void)
+long sched_init(void)
 {
     kmalloc = kmalloc_acquire();
-    Task *kernel = (Task *)try$(task_new("kernel", uok$(hal_space_kernel()), err$(RES_NOENT)));
+    Task *kernel = task_new("kernel", hal_space_kernel(), 0);
+    if (IS_ERR(kernel))
+    {
+        return PTR_ERR(kernel);
+    }
 
-    SchedNode *node = (SchedNode *)try$(kmalloc.calloc(1, sizeof(SchedNode)));
+    SchedNode *node = (SchedNode *)kmalloc.calloc(1, sizeof(SchedNode));
+    if (IS_ERR(node))
+    {
+        return PTR_ERR(node);
+    }
     node->task = kernel;
 
     sched.current = node;
@@ -21,19 +30,24 @@ Res sched_init(void)
 
     log$("Scheduler initialized");
 
-    return ok$();
+    return 0;
 }
 
-Res sched_add(Task *task)
+long sched_add(Task *task)
 {
-    SchedNode *node = (SchedNode *)try$(kmalloc.calloc(1, sizeof(SchedNode)));
+    SchedNode *node = (SchedNode *)kmalloc.calloc(1, sizeof(SchedNode));
+    if (IS_ERR(node))
+    {
+        return PTR_ERR(node);
+    }
+
     node->task = task;
     node->next = NULL;
 
     sched.tail->next = node;
     sched.tail = node;
 
-    return ok$();
+    return 0;
 }
 
 void sched_yield(HalRegs *regs)
@@ -65,17 +79,17 @@ void sched_yield(HalRegs *regs)
     hal_enable_interrupts();
 }
 
-Res sched_current(void)
+Task *sched_current(void)
 {
     if (sched.current == NULL)
     {
-        return err$(RES_NOENT);
+        return ERR_PTR(-ENOENT);
     }
 
-    return uok$(sched.current->task);
+    return sched.current->task;
 }
 
-Res sched_get(size_t pid)
+Task *sched_get(size_t pid)
 {
     SchedNode *node = sched.head;
 
@@ -83,11 +97,11 @@ Res sched_get(size_t pid)
     {
         if (node->task->pid == pid)
         {
-            return uok$((uintptr_t)node->task);
+            return node->task;
         }
 
         node = node->next;
     }
 
-    return err$(RES_NOENT);
+    return ERR_PTR(-ENOENT);
 }

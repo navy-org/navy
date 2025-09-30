@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <kmalloc>
 #include <logger>
@@ -83,16 +84,25 @@ void gdt_init(void)
     log$("TSS loaded");
 }
 
-Res gdt_init_tss(void)
+void gdt_init_tss(void)
 {
     Alloc heap = kmalloc_acquire();
-    tss.ist[1] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
-    tss.ist[0] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
-    tss.rsp[0] = (uintptr_t)(try$(heap.malloc(KERNEL_STACK_SIZE)) + KERNEL_STACK_SIZE);
+
+    void *ist1 = heap.malloc(KERNEL_STACK_SIZE);
+    void *ist0 = heap.malloc(KERNEL_STACK_SIZE);
+    void *rsp0 = heap.malloc(KERNEL_STACK_SIZE);
+
+    if (IS_ERR(ist1) || IS_ERR(ist0) || IS_ERR(rsp0))
+    {
+        error$("Failed to allocate memory for TSS stacks");
+        hal_panic();
+    }
+
+    tss.ist[1] = (uintptr_t)(ist1 + KERNEL_STACK_SIZE);
+    tss.ist[0] = (uintptr_t)(ist0 + KERNEL_STACK_SIZE);
+    tss.rsp[0] = (uintptr_t)(rsp0 + KERNEL_STACK_SIZE);
 
     log$("TSS initialized");
     gdt_load_tss(&tss);
     tss_flush();
-
-    return ok$();
 }

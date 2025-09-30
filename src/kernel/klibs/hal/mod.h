@@ -9,7 +9,7 @@
 #    include <x86_64/regs.h>
 #endif
 
-Res hal_setup(void);
+void hal_setup(void);
 
 /* --- Structs ------------------------------------------------------------  */
 
@@ -51,17 +51,17 @@ uintptr_t hal_mmap_l2h(uintptr_t addr);
 
 uintptr_t hal_mmap_h2l(uintptr_t addr);
 
-Res hal_space_map(HalPage *space, uintptr_t virt, uintptr_t phys, size_t len, uint8_t flags);
+long hal_space_map(HalPage *space, uintptr_t virt, uintptr_t phys, size_t len, uint8_t flags);
 
-Res hal_space_unmap(HalPage *space, uintptr_t virt, size_t len);
+long hal_space_unmap(HalPage *space, uintptr_t virt, size_t len);
 
 void hal_space_apply(HalPage *space);
 
-Res hal_space_create(HalPage **self);
+long hal_space_create(HalPage **self);
 
 HalPage *hal_space_kernel(void);
 
-Res hal_virt2phys(HalPage *space, uintptr_t virt);
+void *hal_virt2phys(HalPage *space, uintptr_t virt);
 
 /* --- Arch Specific ------------------------------------------------------- */
 
@@ -71,9 +71,9 @@ Rsdp *hal_acpi_rsdp(void);
 
 typedef struct _HalContext HalContext;
 
-Res hal_context_create(void);
+HalContext *hal_context_create(void);
 
-Res hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp);
+long hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp);
 
 void hal_context_destroy(HalContext *self);
 
@@ -102,4 +102,4 @@ typedef struct
     SysArg arg6;
 } SysArgs;
 
-Res _syscall_handler(Syscalls no, SysArgs args);
+long _syscall_handler(Syscalls no, SysArgs args);

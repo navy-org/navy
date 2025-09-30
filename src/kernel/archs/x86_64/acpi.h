@@ -1,6 +1,5 @@
 #pragma once
 
-#include <result>
 #include <stdint.h>
 
 typedef struct [[gnu::packed]]
@@ -45,4 +44,4 @@ typedef union
 } Sdt;
 
 void acpi_init(void);
-Res acpi_parse_sdt(char tablename[static 1]);
+SdtHeader *acpi_parse_sdt(char tablename[static 1]);

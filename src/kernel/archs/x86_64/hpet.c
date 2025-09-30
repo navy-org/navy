@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <logger>
 
@@ -16,14 +17,21 @@ static uint64_t hpet_read(uint32_t reg)
     return *(volatile uint64_t *)(hpet_base + reg);
 }
 
-Res hpet_init(void)
+void hpet_init(void)
 {
-    AcpiHpet *hpet = (AcpiHpet *)try$(acpi_parse_sdt("HPET"));
+    AcpiHpet *hpet = (AcpiHpet *)acpi_parse_sdt("HPET");
+    if (IS_ERR(hpet))
+    {
+        log$("Couldn't find HPET table");
+        hal_panic();
+    }
+
     hpet_base = hal_mmap_l2h(hpet->address);
 
     if (hpet->address_space_id == HPET_ADDRESS_SPACE_IO)
     {
-        err$(RES_NOENT);
+        error$("HPET is in I/O space, which is not supported");
+        hal_panic();
     }
 
     hpet_tick = hpet_read(HPET_GENERAL_CAPABILITIES) >> HPET_CAP_COUNTER_CLOCK_OFFSET;
@@ -33,8 +41,6 @@ Res hpet_init(void)
     hpet_write(HPET_GENERAL_CONFIGUATION, HPET_CONF_TURN_ON);
 
     log$("Hpet initialised");
-
-    return ok$();
 }
 
 void hpet_sleep(int ms)

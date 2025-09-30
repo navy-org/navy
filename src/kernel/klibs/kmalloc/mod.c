@@ -1,4 +1,5 @@
 
+#include <errno.h>
 #include <hal>
 #include <libheap/libheap.h>
 #include <pmm>
@@ -39,28 +40,27 @@ static struct Heap heap_impl = (struct Heap){
     .log = hook_log,
 };
 
-static Res kmalloc_malloc(size_t size)
+static void *kmalloc_malloc(size_t size)
 {
     void *ptr = heap_alloc(&heap_impl, size);
-    return ptr == NULL ? err$(RES_NOMEM) : uok$(ptr);
+    return ptr == NULL ? ERR_PTR(-ENOMEM) : ptr;
 }
 
-static Res kmalloc_free(void *ptr)
+static void kmalloc_free(void *ptr)
 {
     heap_free(&heap_impl, ptr);
-    return ok$();
 }
 
-static Res kmalloc_realloc(void *ptr, size_t size)
+static void *kmalloc_realloc(void *ptr, size_t size)
 {
     void *new_ptr = heap_realloc(&heap_impl, ptr, size);
-    return new_ptr == NULL ? err$(RES_NOMEM) : uok$(new_ptr);
+    return new_ptr == NULL ? ERR_PTR(-ENOMEM) : new_ptr;
 }
 
-static Res kmalloc_calloc(size_t nmemb, size_t size)
+static void *kmalloc_calloc(size_t nmemb, size_t size)
 {
     void *ptr = heap_calloc(&heap_impl, nmemb, size);
-    return ptr == NULL ? err$(RES_NOMEM) : uok$(ptr);
+    return ptr == NULL ? ERR_PTR(-ENOMEM) : ptr;
 }
 
 Alloc kmalloc_acquire(void)

@@ -1,6 +1,8 @@
+#include <errno.h>
 #include <hal>
 #include <logger>
 #include <string.h>
+#include <utils.h>
 
 #include "acpi.h"
 
@@ -36,7 +38,7 @@ static int acpi_checksum(SdtHeader *table)
     return sum == 0;
 }
 
-Res acpi_parse_sdt(char tablename[static 1])
+SdtHeader *acpi_parse_sdt(char tablename[static 1])
 {
     size_t entry_count = 0;
     SdtHeader *tmp;
@@ -63,9 +65,9 @@ Res acpi_parse_sdt(char tablename[static 1])
 
         if (memcmp(tmp->signature, tablename, 4) == 0 && acpi_checksum(tmp))
         {
-            return uok$(tmp);
+            return tmp;
         }
     }
 
-    return err$(RES_NOENT);
+    return ERR_PTR(-ENOENT);
 }

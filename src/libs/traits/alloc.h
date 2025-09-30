@@ -1,13 +1,13 @@
 #pragma once
 
-#include <result>
+#include <stddef.h>
 
 typedef struct _Alloc
 {
-    Res (*realloc)(void *ptr, size_t size);
-    Res (*malloc)(size_t size);
-    Res (*free)(void *ptr);
-    Res (*calloc)(size_t count, size_t size);
+    void *(*realloc)(void *ptr, size_t size);
+    void *(*malloc)(size_t size);
+    void (*free)(void *ptr);
+    void *(*calloc)(size_t count, size_t size);
 } Alloc;
 
 typedef Alloc (*AllocAcquireFn)(void);

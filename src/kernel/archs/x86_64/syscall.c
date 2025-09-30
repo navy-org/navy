@@ -21,6 +21,6 @@ void syscall_set_gs(uintptr_t addr)
 
 void syscall_handler(HalRegs *regs)
 {
-    regs->rax = _syscall_handler(regs->rax, (SysArgs){regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9, regs->r10}).type;
+    regs->rax = _syscall_handler(regs->rax, (SysArgs){regs->rdi, regs->rsi, regs->rdx, regs->r8, regs->r9, regs->r10});
     return;
 }

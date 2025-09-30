@@ -17,12 +17,12 @@ typedef struct
     SchedNode *current;
 } Sched;
 
-Res sched_init(void);
+long sched_init(void);
 
-Res sched_add(Task *task);
+long sched_add(Task *task);
 
 void sched_yield(HalRegs *regs);
 
-Res sched_current(void);
+Task *sched_current(void);
 
-Res sched_get(size_t pid);
+Task *sched_get(size_t pid);

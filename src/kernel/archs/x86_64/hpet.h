@@ -34,5 +34,5 @@ typedef struct [[gnu::packed]]
     uint8_t page_protection;
 } AcpiHpet;
 
-Res hpet_init(void);
+void hpet_init(void);
 void hpet_sleep(int ms);

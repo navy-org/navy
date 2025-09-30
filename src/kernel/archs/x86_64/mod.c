@@ -1,6 +1,5 @@
 #include <hal>
 #include <pmm>
-#include <result>
 #include <traits>
 
 #include "apic.h"
@@ -19,18 +18,16 @@ Stream hal_dbg_stream(void)
     };
 }
 
-Res hal_setup(void)
+void hal_setup(void)
 {
     gdt_init();
     idt_init();
-    try$(pmm_init());
-    try$(paging_init());
-    try$(gdt_init_tss());
+    pmm_init();
+    paging_init();
+    gdt_init_tss();
     syscall_init();
     acpi_init();
-    try$(hpet_init());
-    try$(apic_init());
+    hpet_init();
+    apic_init();
     simd_init();
-
-    return ok$();
 }

@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <hal>
 #include <handover>
 #include <logger>
@@ -8,27 +9,32 @@
 
 #include "mod.h"
 
-Res elfloader_instantiate(char const *filename)
+long elfloader_instantiate(char const *filename)
 {
+    long err;
     HandoverRecord file = handover_file_find(handover(), filename);
     if (file.size == 0)
     {
-        return err$(RES_NOENT);
+        return -ENOENT;
     }
 
     Elf64_Ehdr *hdr = (Elf64_Ehdr *)file.start;
     if (memcmp(hdr->e_ident, ELFMAG, SELFMAG) != 0)
     {
-        return err$(RES_INVAL);
+        return -EINVAL;
     }
 
     if (hdr->e_ident[EI_CLASS] != ELFCLASS64)
     {
-        return err$(RES_INVAL);
+        return -EINVAL;
     }
 
     HalPage *vspace;
-    try$(hal_space_create(&vspace));
+    err = hal_space_create(&vspace);
+    if (IS_ERR_VALUE(err))
+    {
+        return err;
+    }
 
     for (size_t i = 0; i < hdr->e_phnum; i++)
     {
@@ -42,20 +48,29 @@ Res elfloader_instantiate(char const *filename)
             PhysObj paddr = pmm_alloc(align_up$(phdr->p_memsz, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
             if (paddr.len == 0)
             {
-                return err$(RES_NOMEM);
+                return -ENOMEM;
             }
 
             log$("%s segment mapped to 0x%x", filename, paddr.base);
-            try$(hal_space_map(vspace, phdr->p_vaddr, paddr.base, align_up$(phdr->p_memsz, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER | HAL_MEM_EXEC));
+            err = hal_space_map(vspace, phdr->p_vaddr, paddr.base, align_up$(phdr->p_memsz, PMM_PAGE_SIZE), HAL_MEM_READ | HAL_MEM_WRITE | HAL_MEM_USER | HAL_MEM_EXEC);
+
+            if (IS_ERR_VALUE(err))
+            {
+                return err;
+            }
 
             memcpy((void *)hal_mmap_l2h(paddr.base), (void *)file.start + phdr->p_offset, phdr->p_filesz);
             memset((void *)hal_mmap_l2h(paddr.base + phdr->p_filesz), 0, phdr->p_memsz - phdr->p_filesz);
         }
     }
 
-    try$(task_new(filename, uok$(vspace), uok$(hdr->e_entry)));
+    Task *task = task_new(filename, vspace, hdr->e_entry);
+    if (IS_ERR(task))
+    {
+        return PTR_ERR(task);
+    }
 
     hal_enable_interrupts();
 
-    return ok$();
+    return 0;
 }

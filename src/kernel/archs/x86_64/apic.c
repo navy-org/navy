@@ -1,5 +1,7 @@
+#include <errno.h>
 #include <hal>
 #include <logger>
+#include <utils.h>
 
 #include "apic.h"
 #include "asm.h"
@@ -183,15 +185,19 @@ void ioapic_redirect_irq(uint32_t lapic_id, uint8_t intno, uint8_t irq)
     }
 }
 
-Res apic_init(void)
+void apic_init(void)
 {
-    madt = (Madt *)try$(acpi_parse_sdt("APIC"));
+    madt = (Madt *)acpi_parse_sdt("APIC");
+    if (IS_ERR(madt))
+    {
+        error$("Coudln't find the Madt");
+        hal_panic();
+    }
+
     lapic_enable();
     ioapic_redirect_legacy();
 
     hal_enable_interrupts();
 
     log$("APIC initialised");
-
-    return ok$();
 }

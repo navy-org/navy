@@ -1,6 +1,5 @@
 #pragma once
 
-#include <result>
 #include <stdint.h>
 
 #define PAGE_GET_PHYS(x)            (x & 0x000ffffffffff000)
@@ -26,4 +25,4 @@ struct [[gnu::packed]] _page
     uintptr_t *_raw;
 };
 
-Res paging_init(void);
+void paging_init(void);

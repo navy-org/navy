@@ -1,7 +1,6 @@
 #pragma once
 
 #include <hal>
-#include <result>
 
 typedef struct
 {
@@ -11,4 +10,6 @@ typedef struct
     HalContext *ctx;
 } Task;
 
-Res task_new(char const *name, Res address_space, Res ip);
+Task *task_new(char const *name, HalPage *address_space, uintptr_t ip);
+
+void task_destroy(Task *task);
