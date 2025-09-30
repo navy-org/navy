@@ -1,13 +1,12 @@
 #pragma once
 
 #include <hal>
-#include <navy>
 #include <result>
 
 typedef struct
 {
     const char *name;
-    pid_t pid;
+    size_t pid;
     HalPage *space;
     HalContext *ctx;
 } Task;

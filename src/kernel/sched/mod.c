@@ -75,7 +75,7 @@ Res sched_current(void)
     return uok$(sched.current->task);
 }
 
-Res sched_get(pid_t pid)
+Res sched_get(size_t pid)
 {
     SchedNode *node = sched.head;
 

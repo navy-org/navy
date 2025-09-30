@@ -5,42 +5,22 @@
     "props": {
         "toolchain": "clang",
         "arch": "x86_64",
-        "bits": "64",
         "sys": "kernel",
-        "loader": "limine",
         "abi": "sysv",
-        "encoding": "utf8",
+        "bits": "64",
+        "loader": "limine",
         "freestanding": true,
-        "host": false
-    },
-    "routing": {
-        "stdc-math": "ce-libm-dummy"
+        "host": false,
+        "sys-encoding": "utf8",
+        "sys-line-ending": "lf",
+        "sys-path-separator": "slash",
+        "sys-terminal": "ansi"
     },
     "tools": {
         "cc": {
             "cmd": "{shell.latest('clang')}",
             "args": [
-                "-Wno-cast-function-type-mismatch",
-                "-target",
-                "x86_64-none-elf",
-                "-ffreestanding",
-                "-fno-stack-protector",
-                "-mno-80387",
-                "-mno-mmx",
-                "-mno-3dnow",
-                "-mno-sse",
-                "-mno-sse2",
-                "-mno-red-zone",
-                "-mcmodel=kernel",
-                "-Dauto=__auto_type",
-                "-g"
-            ]
-        },
-        "cxx": {
-            "cmd": "{shell.latest('clang++')}",
-            "args": [
-                "-target",
-                "x86_64-none-elf",
+                "--target=x86_64-none-elf",
                 "-ffreestanding",
                 "-fno-stack-protector",
                 "-mno-80387",
@@ -52,18 +32,34 @@
                 "-mcmodel=kernel"
             ]
         },
+        "cxx": {
+            "cmd": "{shell.latest('clang++')}",
+            "args": [
+                "--target=x86_64-none-elf",
+                "-ffreestanding",
+                "-fno-stack-protector",
+                "-mno-80387",
+                "-mno-mmx",
+                "-mno-3dnow",
+                "-mno-sse",
+                "-mno-sse2",
+                "-mno-red-zone",
+                "-mcmodel=kernel",
+                "-fno-exceptions",
+                "-fno-rtti"
+            ]
+        },
         "ld": {
             "cmd": "{shell.latest('ld.lld')}",
             "args": [
                 "-m",
                 "elf_x86_64",
-                "-T",
-                "meta/targets/kernel-x86_64.ld",
+                "-T{utils.relpath('kernel-x86_64.ld')}",
                 "-z",
                 "max-page-size=0x1000"
             ],
             "files": [
-                "meta/targets/kernel-x86_64.ld"
+                "{utils.relpath('kernel-x86_64.ld')}"
             ]
         },
         "ar": {
@@ -83,3 +79,4 @@
         }
     }
 }
+
