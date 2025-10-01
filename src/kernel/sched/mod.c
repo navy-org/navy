@@ -6,18 +6,16 @@
 #include "mod.h"
 
 static Sched sched = {0};
-static Alloc kmalloc;
 
 long sched_init(void)
 {
-    kmalloc = kmalloc_acquire();
     Task *kernel = task_new("kernel", hal_space_kernel(), 0);
     if (IS_ERR(kernel))
     {
         return PTR_ERR(kernel);
     }
 
-    SchedNode *node = (SchedNode *)kmalloc.calloc(1, sizeof(SchedNode));
+    SchedNode *node = (SchedNode *)kmalloc_calloc(1, sizeof(SchedNode));
     if (IS_ERR(node))
     {
         return PTR_ERR(node);
@@ -35,7 +33,7 @@ long sched_init(void)
 
 long sched_add(Task *task)
 {
-    SchedNode *node = (SchedNode *)kmalloc.calloc(1, sizeof(SchedNode));
+    SchedNode *node = (SchedNode *)kmalloc_calloc(1, sizeof(SchedNode));
     if (IS_ERR(node))
     {
         return PTR_ERR(node);

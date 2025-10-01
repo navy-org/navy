@@ -11,9 +11,9 @@
     return (void *)error;
 }
 
-[[gnu::warn_unused_result]] static inline uintptr_t PTR_ERR(const void *ptr)
+[[gnu::warn_unused_result]] static inline long PTR_ERR(const void *ptr)
 {
-    return (uintptr_t)ptr;
+    return (long)ptr;
 }
 
 [[gnu::warn_unused_result]] static inline bool IS_ERR(const void *ptr)

@@ -86,11 +86,9 @@ void gdt_init(void)
 
 void gdt_init_tss(void)
 {
-    Alloc heap = kmalloc_acquire();
-
-    void *ist1 = heap.malloc(KERNEL_STACK_SIZE);
-    void *ist0 = heap.malloc(KERNEL_STACK_SIZE);
-    void *rsp0 = heap.malloc(KERNEL_STACK_SIZE);
+    void *ist1 = kmalloc_alloc(KERNEL_STACK_SIZE);
+    void *ist0 = kmalloc_alloc(KERNEL_STACK_SIZE);
+    void *rsp0 = kmalloc_alloc(KERNEL_STACK_SIZE);
 
     if (IS_ERR(ist1) || IS_ERR(ist0) || IS_ERR(rsp0))
     {

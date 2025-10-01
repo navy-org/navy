@@ -14,14 +14,13 @@ Task *task_new(char const *name, HalPage *address_space, uintptr_t ip)
 {
     static size_t pid = 0;
 
-    Alloc kmalloc = kmalloc_acquire();
-    Task *task = (Task *)kmalloc.calloc(1, sizeof(Task));
+    Task *task = (Task *)kmalloc_calloc(1, sizeof(Task));
     if (IS_ERR(task))
     {
         return task;
     }
 
-    task->name = (char *)kmalloc.calloc(1, strlen(name) + 1);
+    task->name = (char *)kmalloc_calloc(1, strlen(name) + 1);
     if (IS_ERR(task->name))
     {
         task_destroy(task);
@@ -104,15 +103,13 @@ Task *task_new(char const *name, HalPage *address_space, uintptr_t ip)
 
 void task_destroy(Task *task)
 {
-    Alloc kmalloc = kmalloc_acquire();
-
     if (!IS_ERR_OR_NULL(task->name))
     {
-        kmalloc.free((void *)task->name);
+        kmalloc_free((void *)task->name, strlen(task->name) + 1);
     }
 
     if (!IS_ERR_OR_NULL(task))
     {
-        kmalloc.free((void *)task);
+        kmalloc_free((void *)task, sizeof(Task));
     }
 }

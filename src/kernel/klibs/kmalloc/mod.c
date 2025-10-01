@@ -1,74 +1,131 @@
-
 #include <errno.h>
 #include <hal>
-#include <libheap/libheap.h>
+#include <logger>
 #include <pmm>
+#include <string.h>
 
 #include "mod.h"
 
-static void *alloc_block([[gnu::unused]] void *ctx, size_t size)
-{
-    PhysObj page = pmm_alloc(align_up$(size, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+static SlabAllocator slabs[6] = {0};
 
-    if (page.base == 0)
+void kmalloc_init(void)
+{
+    Allocator pmm = pmm_allocator();
+
+    if (IS_ERR_VALUE(slab_create(&slabs[0], 8, &pmm)) ||
+        IS_ERR_VALUE(slab_create(&slabs[1], 16, &pmm)) ||
+        IS_ERR_VALUE(slab_create(&slabs[2], 32, &pmm)) ||
+        IS_ERR_VALUE(slab_create(&slabs[3], 64, &pmm)) ||
+        IS_ERR_VALUE(slab_create(&slabs[4], 128, &pmm)) ||
+        IS_ERR_VALUE(slab_create(&slabs[5], 256, &pmm)))
     {
-        return NULL;
+        error$("failed to create slab allocators");
+        hal_panic();
+    }
+}
+
+static void *_alloc([[gnu::unused]] void *ctx, size_t len)
+{
+    Allocator *alloc = NULL;
+
+    if (len <= 8)
+    {
+        alloc = &slabs[0].base;
+    }
+    else if (len <= 16)
+    {
+        alloc = &slabs[1].base;
+    }
+    else if (len <= 32)
+    {
+        alloc = &slabs[2].base;
+    }
+    else if (len <= 64)
+    {
+        alloc = &slabs[3].base;
+    }
+    else if (len <= 128)
+    {
+        alloc = &slabs[4].base;
+    }
+    else if (len <= 256)
+    {
+        alloc = &slabs[5].base;
+    }
+    else
+    {
+        Allocator pmm = pmm_allocator();
+        alloc = &pmm;
     }
 
-    return (void *)hal_mmap_l2h(page.base);
+    return alloc->alloc(alloc, len);
 }
 
-static void free_block([[gnu::unused]] void *ctx, void *block, size_t size)
+static long _free([[gnu::unused]] void *ctx, void *ptr, size_t len)
 {
-    PhysObj page = {
-        .base = hal_mmap_h2l((uintptr_t)block),
-        .len = align_up$(size, PMM_PAGE_SIZE),
-    };
+    Allocator *alloc = NULL;
 
-    pmm_free(page);
+    if (len <= 8)
+    {
+        alloc = &slabs[0].base;
+    }
+    else if (len <= 16)
+    {
+        alloc = &slabs[1].base;
+    }
+    else if (len <= 32)
+    {
+        alloc = &slabs[2].base;
+    }
+    else if (len <= 64)
+    {
+        alloc = &slabs[3].base;
+    }
+    else if (len <= 128)
+    {
+        alloc = &slabs[4].base;
+    }
+    else if (len <= 256)
+    {
+        alloc = &slabs[5].base;
+    }
+    else
+    {
+        Allocator pmm = pmm_allocator();
+        alloc = &pmm;
+    }
+
+    return alloc->free(alloc, ptr, len);
 }
 
-static void hook_log([[gnu::unused]] void *ctx, [[gnu::unused]] enum HeapLogType type,
-                     [[gnu::unused]] const char *msg, [[gnu::unused]] va_list args)
+void *kmalloc_alloc(size_t len)
 {
-    return;
+    return _alloc(NULL, len);
 }
 
-static struct Heap heap_impl = (struct Heap){
-    .alloc = alloc_block,
-    .free = free_block,
-    .log = hook_log,
-};
-
-static void *kmalloc_malloc(size_t size)
+void kmalloc_free(void *ptr, size_t len)
 {
-    void *ptr = heap_alloc(&heap_impl, size);
-    return ptr == NULL ? ERR_PTR(-ENOMEM) : ptr;
+    _free(NULL, ptr, len);
 }
 
-static void kmalloc_free(void *ptr)
+void *kmalloc_calloc(size_t count, size_t size)
 {
-    heap_free(&heap_impl, ptr);
+    size_t total = count * size;
+    void *ptr = _alloc(NULL, total);
+
+    if (!IS_ERR(ptr))
+    {
+        memset(ptr, 0, total);
+    }
+
+    return ptr;
 }
 
-static void *kmalloc_realloc(void *ptr, size_t size)
+Allocator kmalloc_allocator(void)
 {
-    void *new_ptr = heap_realloc(&heap_impl, ptr, size);
-    return new_ptr == NULL ? ERR_PTR(-ENOMEM) : new_ptr;
-}
-
-static void *kmalloc_calloc(size_t nmemb, size_t size)
-{
-    void *ptr = heap_calloc(&heap_impl, nmemb, size);
-    return ptr == NULL ? ERR_PTR(-ENOMEM) : ptr;
-}
-
-Alloc kmalloc_acquire(void)
-{
-    return (Alloc){
-        .malloc = kmalloc_malloc,
-        .free = kmalloc_free,
-        .realloc = kmalloc_realloc,
-        .calloc = kmalloc_calloc,
+    return (Allocator){
+        .alloc = _alloc,
+        .free = _free,
+        .realloc = NULL,
     };
 }

@@ -40,7 +40,7 @@ static void pmm_mark_used(uintptr_t base, size_t len)
         bitmap.bitmap[i / 8] |= 1 << (i % 8);
     }
 
-    available -= len / PMM_PAGE_SIZE;
+    available -= len;
 }
 
 long pmm_init(void)
@@ -149,4 +149,34 @@ void pmm_free(PhysObj obj)
 size_t pmm_available_pages(void)
 {
     return available;
+}
+
+// === ALLOCATOR ===
+
+static void *_alloc([[gnu::unused]] void *ctx, size_t len)
+{
+    PhysObj obj = pmm_alloc(align_up$(len, PMM_PAGE_SIZE) / PMM_PAGE_SIZE);
+
+    if (obj.len == 0)
+    {
+        return NULL;
+    }
+
+    return (void *)hal_mmap_l2h(obj.base);
+}
+
+static long _free([[gnu::unused]] void *ctx, void *ptr, size_t len)
+{
+    PhysObj obj = {.base = (uintptr_t)hal_mmap_h2l((uintptr_t)ptr), .len = len / PMM_PAGE_SIZE};
+    pmm_free(obj);
+    return 0;
+}
+
+Allocator pmm_allocator(void)
+{
+    return (Allocator){
+        .alloc = _alloc,
+        .free = _free,
+        .realloc = NULL,
+    };
 }

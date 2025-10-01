@@ -1,5 +1,6 @@
 #pragma once
 
+#include <allocators>
 #include <stddef.h>
 #include <stdint.h>
 #include <utils.h>
@@ -35,3 +36,5 @@ long pmm_init(void);
 void pmm_free(PhysObj obj);
 
 size_t pmm_available_pages(void);
+
+Allocator pmm_allocator(void);

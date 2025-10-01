@@ -1,4 +1,5 @@
 #include <hal>
+#include <kmalloc>
 #include <pmm>
 #include <traits>
 
@@ -24,6 +25,7 @@ void hal_setup(void)
     idt_init();
     pmm_init();
     paging_init();
+    kmalloc_init();
     gdt_init_tss();
     syscall_init();
     acpi_init();

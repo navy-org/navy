@@ -12,7 +12,7 @@ _Noreturn int _start()
     long sched = sched_init();
     if (IS_ERR_VALUE(sched))
     {
-        error$("Coudln't initialize scheduler");
+        error$("Coudln't initialize scheduler (Err: %d)", (int)-sched);
         hal_panic();
     }
 

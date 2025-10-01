@@ -13,9 +13,7 @@
 
 HalContext *hal_context_create(void)
 {
-    Alloc alloc = kmalloc_acquire();
-
-    HalContext *self = (HalContext *)alloc.calloc(1, sizeof(HalContext) + simd_context_size());
+    HalContext *self = (HalContext *)kmalloc_calloc(1, sizeof(HalContext) + simd_context_size());
     if (IS_ERR(self))
     {
         return self;
@@ -27,8 +25,7 @@ HalContext *hal_context_create(void)
 
 void hal_context_destroy(HalContext *self)
 {
-    Alloc alloc = kmalloc_acquire();
-    alloc.free(self);
+    kmalloc_free(self, sizeof(HalContext) + simd_context_size());
 }
 
 long hal_context_start(HalContext *self, uintptr_t ip, uintptr_t sp)
