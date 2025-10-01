@@ -1,12 +1,19 @@
-#ifndef HANDOVER_H_INCLUDED
-#define HANDOVER_H_INCLUDED
+#pragma once
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
-#define HANDOVER_KERNEL_BASE 0xffffffff80000000
-#define HANDOVER_UPPER_HALF  0xffff800000000000
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
+#ifdef __ck_bits_64__
+#    define KERNEL_BASE 0xffffffff80000000
+#    define UPPER_HALF  0xffff800000000000
+#else
+#    define KERNEL_BASE 0xc0000000
+#    define UPPER_HALF  0xc0000000
+#endif //!__ck_bits_64__
 
 #define HANDOVER_COOLBOOT 0xc001b001
 #define HANDOVER_SECTION  ".handover"
@@ -28,6 +35,7 @@
 
 typedef enum
 {
+
 #define TAG(NAME, VALUE) HANDOVER_##NAME = VALUE,
     HANDOVER_TAGS(TAG)
 #undef TAG
@@ -37,8 +45,8 @@ typedef struct
 {
     uint32_t tag;
     uint32_t flags;
-    uint64_t start;
-    uint64_t size;
+    uintptr_t start;
+    size_t size;
 
     union
     {
@@ -82,48 +90,47 @@ typedef void HandoverEntry(
 
 /* --- Header Utilities ----------------------------------------------------- */
 
-#ifdef HANDOVER_INCLUDE_MACROS
+#define HANDOVER_REQ_START \
+    {                      \
+        .tag = HANDOVER_MAGIC}
 
-#    define HANDOVER_REQ_START \
-        {                      \
-            .tag = HANDOVER_MAGIC}
+#define HANDOVER_REQ_END \
+    {                    \
+        .tag = HANDOVER_END}
 
-#    define HANDOVER_REQ_END \
-        {                    \
-            .tag = HANDOVER_END}
+#define WITH_FB \
+    {           \
+        .tag = HANDOVER_FB}
 
-#    define WITH_FB \
-        {           \
-            .tag = HANDOVER_FB}
+#define WITH_ACPI \
+    {             \
+        .tag = HANDOVER_RSDP}
 
-#    define WITH_ACPI \
-        {             \
-            .tag = HANDOVER_RSDP}
+#define WITH_FDT \
+    {            \
+        .tag = HANDOVER_FDT}
 
-#    define WITH_FDT \
-        {            \
-            .tag = HANDOVER_FDT}
+#define WITH_FILES \
+    {              \
+        .tag = HANDOVER_FILE}
 
-#    define WITH_FILES \
-        {              \
-            .tag = HANDOVER_FILE}
+#define WITH_CMDLINE \
+    {                \
+        .tag = HANDOVER_CMDLINE}
 
-#    define WITH_CMDLINE \
-        {                \
-            .tag = HANDOVER_CMDLINE}
+#define HANDOVER(...)                                                                             \
+    __attribute__((section(HANDOVER_SECTION), used)) static HandoverRequest handover_header[] = { \
+        {.tag = HANDOVER_MAGIC},                                                                  \
+        __VA_ARGS__ __VA_OPT__(, ){.tag = HANDOVER_END},                                          \
+    };
 
-#    define HANDOVER(...)                                                  \
-        __attribute__((section(HANDOVER_SECTION),                          \
-                       used)) static HandoverRequest handover_header[] = { \
-            {.tag = HANDOVER_MAGIC},                                       \
-            __VA_ARGS__ __VA_OPT__(, ){.tag = HANDOVER_END},               \
-        };
-
-#endif
+#define handover_foreach_record(h, r)                        \
+    if ((h)->count > 0)                                      \
+        for (size_t i = 0;                                   \
+             i < (h)->count && (((r) = (h)->records[i]), 1); \
+             ++i)
 
 /* --- Utilities ------------------------------------------------------------ */
-
-#ifdef HANDOVER_INCLUDE_UTILITES
 
 char const *handover_tag_name(HandoverTag tag);
 
@@ -147,6 +154,9 @@ void handover_append(HandoverPayload *payload, HandoverRecord record);
 
 char const *handover_str(HandoverPayload const *payload, uint32_t offset);
 
-#endif
+size_t handover_add_string(HandoverPayload *handover, char const *str);
 
-#endif
+HandoverPayload *handover(void);
+
+#pragma GCC diagnostic pop
+

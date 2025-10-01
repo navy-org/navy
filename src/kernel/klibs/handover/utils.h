@@ -8,16 +8,6 @@
 
 #    include "handover.h"
 
-static inline size_t handover_add_string(HandoverPayload *handover, const char *str)
-{
-    size_t len = strlen(str) + 1;
-    size_t offset = handover->size - len;
-    memset((void *)((uintptr_t)handover + offset), 0, len);
-    memcpy((void *)((uintptr_t)handover + offset), str, len);
-    handover->size -= len;
-    return offset;
-}
-
 static inline HandoverRecord handover_file_find(HandoverPayload *handover, char const *name)
 {
     for (size_t i = 0; i < handover->count; i++)

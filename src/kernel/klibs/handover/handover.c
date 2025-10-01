@@ -1,4 +1,7 @@
-#define HANDOVER_INCLUDE_UTILITES
+#include <hal>
+#include <logger>
+#include <stdlib.h>
+#include <string.h>
 
 #include "handover.h"
 
@@ -58,7 +61,7 @@ HandoverRecord handover_half_under(HandoverRecord self, HandoverRecord other)
         };
     }
 
-    return (HandoverRecord){};
+    return (HandoverRecord){0};
 }
 
 HandoverRecord handover_half_over(HandoverRecord self, HandoverRecord other)
@@ -74,7 +77,7 @@ HandoverRecord handover_half_over(HandoverRecord self, HandoverRecord other)
         };
     }
 
-    return (HandoverRecord){};
+    return (HandoverRecord){0};
 }
 
 void handover_insert(HandoverPayload *payload, size_t index, HandoverRecord record)
@@ -101,53 +104,65 @@ void handover_remove(HandoverPayload *payload, size_t index)
 void handover_append(HandoverPayload *payload, HandoverRecord record)
 {
     if (record.size == 0)
+    {
         return;
+    }
 
     for (size_t i = 0; i < payload->count; i++)
     {
-        HandoverRecord *other = &payload->records[i];
+        HandoverRecord other = payload->records[i];
 
-        if (record.tag == other->tag &&
-            handover_just_after(record, *other) &&
-            handover_mergeable(record.tag))
+        if (record.tag == other.tag && handover_just_after(record, other) && handover_mergeable(record.tag))
         {
-            other->size += record.size;
-            return;
-        }
-
-        if (record.tag == other->tag &&
-            handover_just_before(record, *other) &&
-            handover_mergeable(record.tag))
-        {
-            other->start -= record.size;
-            other->size += record.size;
-            return;
-        }
-
-        if (handover_overlap(record, *other))
-        {
-            if (!handover_mergeable(record.tag))
-            {
-                HandoverRecord tmp = record;
-                record = *other;
-                *other = tmp;
-            }
-
-            HandoverRecord half_under = handover_half_under(record, *other);
-            HandoverRecord half_over = handover_half_over(record, *other);
-
             handover_remove(payload, i);
-
-            if (half_under.size)
-                handover_insert(payload, i, half_under);
-
-            if (half_over.size)
-                handover_insert(payload, i, half_over);
-
+            other.size += record.size;
+            handover_append(payload, other);
             return;
         }
 
-        if (record.start < other->start)
+        if (record.tag == other.tag && handover_just_before(record, other) && handover_mergeable(record.tag))
+        {
+            handover_remove(payload, i);
+            other.start -= record.size;
+            other.size += record.size;
+            handover_append(payload, other);
+            return;
+        }
+
+        if (handover_overlap(record, other))
+        {
+            if ((handover_mergeable(record.tag) && !handover_mergeable(other.tag)) || other.tag == HANDOVER_FREE)
+            {
+                handover_remove(payload, i);
+
+                HandoverRecord lower = handover_half_under(other, record);
+                HandoverRecord upper = handover_half_over(other, record);
+
+                handover_append(payload, record);
+                handover_append(payload, lower);
+                handover_append(payload, upper);
+                return;
+            }
+            else if (!handover_mergeable(record.tag) && handover_mergeable(other.tag))
+            {
+                handover_remove(payload, i);
+
+                HandoverRecord lower = handover_half_under(record, other);
+                HandoverRecord upper = handover_half_over(record, other);
+
+                handover_append(payload, other);
+                handover_append(payload, lower);
+                handover_append(payload, upper);
+                return;
+            }
+            else
+            {
+                error$("handover: record %s (start: %x, len: %x) collides with %s (start: %x, len: %x)\n", handover_tag_name(record.tag), record.start, record.size, handover_tag_name(other.tag), other.start, other.size);
+                hal_panic();
+            }
+        }
+
+        if (record.start < other.start)
         {
             handover_insert(payload, i, record);
             return;
@@ -161,3 +176,14 @@ char const *handover_str(HandoverPayload const *payload, uint32_t offset)
 {
     return (char const *)payload + offset;
 }
+
+size_t handover_add_string(HandoverPayload *handover, char const *str)
+{
+    size_t len = strlen(str) + 1;
+    size_t offset = handover->size - len;
+    memset((void *)((uintptr_t)handover + offset), 0, len);
+    memcpy((void *)((uintptr_t)handover + offset), str, len);
+    handover->size -= len;
+    return offset;
+}
+
