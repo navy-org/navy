@@ -43,6 +43,15 @@ void hpet_init(void)
     log$("Hpet initialised");
 }
 
+size_t hal_get_ms(void)
+{
+    if (hpet_base == 0)
+    {
+        return 0;
+    }
+    return (hpet_read(HPET_MAIN_COUNTER_VALUE) * 1000) / hpet_tick;
+}
+
 void hpet_sleep(int ms)
 {
     uint64_t target = hpet_read(HPET_MAIN_COUNTER_VALUE) + (ms * 1000000000000) / hpet_tick;

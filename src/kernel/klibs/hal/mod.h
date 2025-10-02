@@ -103,3 +103,7 @@ typedef struct
 } SysArgs;
 
 long _syscall_handler(Syscalls no, SysArgs args);
+
+/* --- Misc --------------------------------------------------------------- */
+
+size_t hal_get_ms(void);

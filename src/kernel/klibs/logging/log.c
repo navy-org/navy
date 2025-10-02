@@ -12,7 +12,11 @@ void _log(LogEvent event, Loc loc, char const *format, ...)
 
     if (event != LOG_NONE)
     {
-        fmt(hal_dbg_stream(), "kernel | %s%s\e[0m %s:%d ", level_colors[event], level_names[event], loc.file, loc.line);
+        size_t ms = hal_get_ms();
+        size_t seconds = ms / 1000;
+        ms %= 1000;
+
+        fmt(hal_dbg_stream(), "[ %d.%D ] kernel | %s%s\e[0m %s:%d ", seconds, ms, level_colors[event], level_names[event], loc.file, loc.line);
     }
 
     vfmt(hal_dbg_stream(), format, args);

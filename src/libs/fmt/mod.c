@@ -123,6 +123,22 @@ long vfmt(Stream stream, char const fmt[static 1], va_list args)
                     break;
                 }
 
+                case 'D':
+                {
+                    s++;
+                    char buf[100];
+                    uint64_t value = va_arg(args, uint64_t);
+
+                    utoa(value, buf, 10);
+                    for (size_t i = 0; i < 6 - strlen(buf); i++)
+                    {
+                        stream.write(1, "0");
+                    }
+
+                    stream.write(strlen(buf), buf);
+                    break;
+                }
+
                 case 'p':
                 {
                     s++;
