@@ -122,13 +122,6 @@ static long _free(void *ctx, void *ptr, [[gnu::unused]] size_t len)
 
     Slab *free = (Slab *)((uintptr_t)ptr - sizeof(Slab));
 
-    if (free->magic == SLAB_FREE)
-    {
-        spinlock_release(&alloc->lock);
-        warn$("Double free detected");
-        return -EINVAL;
-    }
-
     if (free->magic != SLAB_MAGIC)
     {
         spinlock_release(&alloc->lock);
@@ -141,7 +134,6 @@ static long _free(void *ctx, void *ptr, [[gnu::unused]] size_t len)
         return -EINVAL;
     }
 
-    free->magic = SLAB_FREE;
     free->next = alloc->root;
     alloc->root = free;
     spinlock_release(&alloc->lock);

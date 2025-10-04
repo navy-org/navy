@@ -5,7 +5,6 @@
 #include <traits/allocator.h>
 
 #define SLAB_MAGIC 0xD00DC0DE
-#define SLAB_FREE  0xACCE55ED
 
 typedef struct _slab
 {
