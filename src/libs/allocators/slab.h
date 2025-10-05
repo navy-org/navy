@@ -9,7 +9,6 @@
 typedef struct _slab
 {
     uint32_t magic;
-    uintptr_t ptr;
     struct _slab *next;
 } Slab;
 

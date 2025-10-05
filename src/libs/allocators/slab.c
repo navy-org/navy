@@ -49,7 +49,6 @@ static long slab_replenish(SlabAllocator *self)
         return PTR_ERR(root);
     }
 
-    root->ptr = (uintptr_t)root;
     Slab *slab = root;
 
     while (1)
@@ -63,7 +62,6 @@ static long slab_replenish(SlabAllocator *self)
         }
 
         slab->next = ptr;
-        slab->next->ptr = (uintptr_t)ptr;
         slab->next->magic = SLAB_MAGIC;
         slab = slab->next;
     }
@@ -98,7 +96,7 @@ static void *_alloc(void *ctx, [[gnu::unused]] size_t len)
         return ERR_PTR(-EINVAL);
     }
 
-    void *ptr = (void *)(alloc->root->ptr + sizeof(Slab));
+    void *ptr = (void *)((uintptr_t)alloc->root + sizeof(Slab));
     alloc->root = alloc->root->next;
 
     if (alloc->root == NULL)
@@ -128,7 +126,7 @@ static long _free(void *ctx, void *ptr, [[gnu::unused]] size_t len)
         return -EINVAL;
     }
 
-    if (free->ptr + sizeof(Slab) != (uintptr_t)ptr)
+    if ((uintptr_t)free + sizeof(Slab) != (uintptr_t)ptr)
     {
         spinlock_release(&alloc->lock);
         return -EINVAL;
