@@ -26,10 +26,13 @@ void hal_setup(void)
     acpi_init();
     hpet_init();
     pmm_init();
-    paging_init();
-    kmalloc_init();
-    gdt_init_tss();
-    syscall_init();
-    apic_init();
-    simd_init();
+
+    for (;;)
+        ;
+    // paging_init();
+    // kmalloc_init();
+    // gdt_init_tss();
+    // syscall_init();
+    // apic_init();
+    // simd_init();
 }

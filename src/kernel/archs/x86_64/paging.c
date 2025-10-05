@@ -66,11 +66,16 @@ static uintptr_t *paging_get_pml_alloc(uintptr_t *pml, size_t index, bool alloc)
     }
     else if (alloc)
     {
-        PhysObj obj = pmm_alloc(1);
-        uintptr_t ptr_hddm = hal_mmap_l2h(obj.base);
-        memset((void *)ptr_hddm, 0, obj.len);
+        void *page = pmm_alloc_page();
+        if (IS_ERR(page))
+        {
+            return (uintptr_t *)page;
+        }
 
-        pml[index] = obj.base | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
+        uintptr_t ptr_hddm = hal_mmap_l2h((uintptr_t)page);
+        memset((void *)ptr_hddm, 0, PMM_PAGE_SIZE);
+
+        pml[index] = (uintptr_t)page | PAGE_PRESENT | PAGE_WRITABLE | PAGE_USER;
 
         return (void *)ptr_hddm;
     }
@@ -208,17 +213,18 @@ long hal_space_unmap(HalPage *space, uintptr_t virt, size_t len)
 void paging_init(void)
 {
     long err;
-    PhysObj obj = pmm_alloc(1);
-    if (obj.base == 0)
+
+    void *page = pmm_alloc_page();
+    if (IS_ERR(page))
     {
         error$("Couldn't allocate memory for PML4");
         hal_panic();
     }
 
-    log$("PML4: %p", obj.base);
-    pml4 = (uintptr_t *)hal_mmap_l2h((uintptr_t)obj.base);
+    log$("PML4: %p", page);
+    pml4 = (uintptr_t *)hal_mmap_l2h((uintptr_t)page);
 
-    memset((void *)pml4, 0, obj.len);
+    memset((void *)pml4, 0, PMM_PAGE_SIZE);
 
     if (cpuid_has_1gb_pages())
     {
@@ -283,15 +289,13 @@ void hal_space_apply(HalPage *space)
 
 long hal_space_create(HalPage **self)
 {
-    PhysObj obj = pmm_alloc(1);
-    uintptr_t *space = (uintptr_t *)hal_mmap_l2h(obj.base);
-    memset((void *)space, 0, obj.len);
-
-    if (obj.base == 0)
+    void *page = pmm_alloc_page();
+    if (IS_ERR(page))
     {
-        return -ENOMEM;
+        return PTR_ERR(page);
     }
 
+    uintptr_t *space = (uintptr_t *)hal_mmap_l2h((uintptr_t)page);
     memset((void *)space, 0, PMM_PAGE_SIZE);
 
     for (size_t i = 255; i < 512; i++)
