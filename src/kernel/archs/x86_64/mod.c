@@ -21,6 +21,7 @@ Stream hal_dbg_stream(void)
 
 void hal_setup(void)
 {
+    simd_init();
     gdt_init();
     idt_init();
     acpi_init();
@@ -31,5 +32,4 @@ void hal_setup(void)
     gdt_init_tss();
     syscall_init();
     apic_init();
-    simd_init();
 }
