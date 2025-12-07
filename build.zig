@@ -16,7 +16,7 @@
 
 const std = @import("std");
 
-const validLoaders = enum { booboot, limine };
+const validLoaders = enum { limine };
 
 fn fetchResource(b: *std.Build, base: []const u8, root: []const u8) !std.StringHashMap(*std.Build.Module) {
     var resList: std.StringHashMap(*std.Build.Module) = .init(b.allocator);
@@ -50,32 +50,13 @@ fn addImports(resList: std.StringHashMap(*std.Build.Module), module: *std.Build.
     }
 }
 
-fn addRunStep(b: *std.Build, loader: validLoaders, booboot: *std.Build.Step.Compile, kernel: *std.Build.Step.Compile) !void {
+fn addRunStep(b: *std.Build, loader: validLoaders, kernel: *std.Build.Step.Compile) !void {
     const wf = b.addWriteFiles();
 
     var configCopy: *std.Build.Step.InstallFile = undefined;
     var efiCopy: *std.Build.Step = undefined;
 
     switch (loader) {
-        .booboot => {
-            const config = wf.add("loader.json",
-                \\  {
-                \\      "entries": [
-                \\          {
-                \\              "name": "Navy",
-                \\              "kernel": "kernel.elf",
-                \\              "protocol": "handover"
-                \\          }
-                \\      ]
-                \\  }
-            );
-
-            const buildStep = b.addInstallArtifact(booboot, .{});
-            configCopy = b.addInstallFile(config, "./sysroot/loader.json");
-            efiCopy = &b.addInstallFile(booboot.getEmittedBin(), "./sysroot/efi/boot/bootx64.efi").step;
-            efiCopy.dependOn(&buildStep.step);
-        },
-
         .limine => {
             const config = wf.add("limine.conf",
                 \\timeout: 0
@@ -141,7 +122,7 @@ fn addRunStep(b: *std.Build, loader: validLoaders, booboot: *std.Build.Step.Comp
 }
 
 pub fn build(b: *std.Build) !void {
-    const loader = b.option(validLoaders, "loader", "Bootloader to use (for the run step)") orelse .booboot;
+    const loader = b.option(validLoaders, "loader", "Bootloader to use (for the run step)") orelse .limine;
     const arch = b.option(std.Target.Cpu.Arch, "arch", "Target Architecture") orelse .x86_64;
     const archName = std.enums.tagName(std.Target.Cpu.Arch, arch).?;
     const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .Debug });
@@ -152,7 +133,6 @@ pub fn build(b: *std.Build) !void {
         .ofmt = .elf,
     };
 
-    const booboot = b.dependency("booboot", .{}).artifact("booboot");
     const handover = b.dependency("handover", .{}).module("handover");
 
     const archImpl = b.createModule(.{
@@ -190,7 +170,6 @@ pub fn build(b: *std.Build) !void {
     addImports(libs, archImpl);
 
     b.installArtifact(kernel);
-    b.installArtifact(booboot);
 
-    try addRunStep(b, loader, booboot, kernel);
+    try addRunStep(b, loader, kernel);
 }
